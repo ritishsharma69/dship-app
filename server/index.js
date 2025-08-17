@@ -6,12 +6,20 @@ const { MongoClient, ObjectId } = require('mongodb')
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// CORS for Vite dev and general dev usage
-app.use(cors({ origin: [
-  'http://localhost:5173','http://127.0.0.1:5173',
-  'http://localhost:5174','http://127.0.0.1:5174',
-  'http://localhost:5175','http://127.0.0.1:5175'
-], credentials: false }))
+// CORS: allow local dev and Vercel preview/prod domains; optionally extend via ALLOWED_ORIGINS (comma-separated)
+const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true)
+    const ok =
+      allowedFromEnv.includes(origin) ||
+      origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:') ||
+      origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:') ||
+      origin.includes('.vercel.app')
+    cb(null, !!ok)
+  },
+  credentials: false
+}))
 app.use(express.json({ limit: '5mb' }))
 
 let client
@@ -401,7 +409,12 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`[server] listening on http://localhost:${PORT}`)
-})
+// Export handler for Vercel serverless, otherwise start local server
+if (process.env.VERCEL) {
+  module.exports = (req, res) => app(req, res)
+} else {
+  app.listen(PORT, () => {
+    console.log(`[server] listening on http://localhost:${PORT}`)
+  })
+}
 

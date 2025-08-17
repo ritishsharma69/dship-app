@@ -1,0 +1,407 @@
+require('dotenv').config()
+const express = require('express')
+const cors = require('cors')
+const { MongoClient, ObjectId } = require('mongodb')
+
+const app = express()
+const PORT = process.env.PORT || 5000
+
+// CORS for Vite dev and general dev usage
+app.use(cors({ origin: [
+  'http://localhost:5173','http://127.0.0.1:5173',
+  'http://localhost:5174','http://127.0.0.1:5174',
+  'http://localhost:5175','http://127.0.0.1:5175'
+], credentials: false }))
+app.use(express.json({ limit: '5mb' }))
+
+let client
+let db
+
+async function getDb() {
+  if (db) return db
+  const uri = process.env.MONGODB_URI
+  if (!uri) throw new Error('Missing MONGODB_URI')
+  client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 })
+  await client.connect()
+  db = client.db('dship')
+  return db
+}
+
+// ----- Email (optional) -----
+// Configure via .env: SMTP_HOST, SMTP_PORT=587, SMTP_USER, SMTP_PASS, FROM_EMAIL, STORE_NAME
+function getMailer() {
+  const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null
+  try {
+    const nodemailer = require('nodemailer')
+    const port = Number(process.env.SMTP_PORT || 587)
+    const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465
+    return nodemailer.createTransport({
+      host: SMTP_HOST,
+      port,
+      secure,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
+  } catch (e) {
+    console.warn('[mail] nodemailer not installed; skipping emails')
+    return null
+  }
+}
+
+async function sendOrderPlacedEmail({ to, orderId, customer, items, totals }) {
+  const transporter = getMailer()
+  if (!transporter) return false
+  const from = process.env.FROM_EMAIL || process.env.SMTP_USER
+  const store = process.env.STORE_NAME || 'KhushiyanaStore'
+
+  const list = (items || []).slice(0, 10).map(i => `<li>${(i.title||'Item')} × ${i.quantity} — ₹${i.unitPrice}</li>`).join('')
+  const html = `
+    <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.5;">
+      <h2 style="margin:0 0 12px">${store}: Order Placed ✅</h2>
+      <p>Hi ${customer?.name || ''},</p>
+      <p>Thanks for shopping with us. Your order <b>#${orderId}</b> has been placed successfully.</p>
+      <ul>${list}</ul>
+      <p><b>Total:</b> ₹${totals?.total ?? ''}</p>
+      <p>We will contact you soon with shipping details.</p>
+      <p style="color:#6b7280;font-size:12px;">If you did not place this order, reply to this email.</p>
+    </div>`
+  const text = `Hi ${customer?.name || ''},\nYour order #${orderId} has been placed. Total: ₹${totals?.total ?? ''}.\nThank you for shopping with ${store}.`
+
+  try {
+    await transporter.sendMail({ from, to, subject: `${store}: Your order has been placed (#${orderId})`, html, text })
+    return true
+  } catch (err) {
+    console.error('[mail] send failed', err)
+    return false
+  }
+}
+
+// Notify store owner when an order is received
+async function sendOrderReceivedEmailToOwner({ to, orderId, customer, items, totals }) {
+  const transporter = getMailer()
+  if (!transporter) return false
+  const from = process.env.FROM_EMAIL || process.env.SMTP_USER
+  const store = process.env.STORE_NAME || 'KhushiyanaStore'
+  const list = (items || []).slice(0, 10).map(i => `<li>${(i.title||'Item')} × ${i.quantity} — ₹${i.unitPrice}</li>`).join('')
+  const html = `
+    <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.5;">
+      <h2 style="margin:0 0 12px">${store}: New order received</h2>
+      <p><b>Order:</b> #${orderId}</p>
+      <p><b>Customer:</b> ${customer?.name || ''} &lt;${customer?.email || ''}&gt; ${customer?.phone ? '('+customer.phone+')' : ''}</p>
+      <ul>${list}</ul>
+      <p><b>Total:</b> ₹${totals?.total ?? ''}</p>
+    </div>`
+  const text = `New order #${orderId}\nCustomer: ${customer?.name || ''} <${customer?.email || ''}>\nTotal: ₹${totals?.total ?? ''}`
+  try {
+    await transporter.sendMail({ from, to, subject: `${store}: New order received (#${orderId})`, html, text })
+    return true
+  } catch (err) {
+    console.error('[mail] owner notify failed', err)
+    return false
+  }
+}
+
+
+// Send OTP email (separate lightweight template)
+async function sendOtpEmail({ to, code }) {
+  const transporter = getMailer()
+  const from = process.env.FROM_EMAIL || process.env.SMTP_USER
+  const store = process.env.STORE_NAME || 'KhushiyanaStore'
+  const html = `
+    <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6;">
+      <h2 style="margin:0 0 8px">${store}: Your OTP Code</h2>
+      <p>Use the following code to verify your email:</p>
+      <div style="font-size:28px; letter-spacing: 6px; font-weight: 800; background:#f8fafc; border:1px solid #e5e7eb; padding:12px 16px; display:inline-block; border-radius:10px;">${code}</div>
+      <p style="color:#6b7280; font-size:12px; margin-top:10px;">This code will expire in 5 minutes. Do not share this code with anyone.</p>
+    </div>`
+  const text = `Your OTP code is: ${code}. It expires in 5 minutes.`
+  try {
+    if (!transporter) {
+      console.warn('[mail] transporter not configured. OTP:', code)
+      return false
+    }
+    await transporter.sendMail({ from, to, subject: `${store}: Your OTP Code`, html, text })
+    return true
+  } catch (err) {
+    console.error('[mail] otp send failed', err)
+    return false
+  }
+}
+
+
+// In-memory OTP cache (for demo/dev). For production use a proper store with TTL.
+const otpCache = new Map() // key=email, value={code:string, expires:number}
+function generateOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000))
+}
+
+// Send OTP to email
+app.post('/api/auth/request-otp', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' })
+    const code = generateOtp()
+    const expires = Date.now() + 5 * 60 * 1000
+    otpCache.set(email, { code, expires })
+
+    // send OTP email
+    await sendOtpEmail({ to: email, code })
+
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/auth/request-otp error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Verify OTP and return a short-lived token (unsigned demo token)
+app.post('/api/auth/verify-otp', async (req, res) => {
+  try {
+    const email = String(req.body?.email || '').trim().toLowerCase()
+    const code = String(req.body?.code || '').trim()
+    const rec = otpCache.get(email)
+    if (!rec || rec.code !== code || rec.expires < Date.now()) return res.status(400).json({ error: 'Invalid or expired code' })
+    otpCache.delete(email)
+    // very simple token for demo: base64(email|ts)
+    const token = Buffer.from(`${email}|${Date.now()}`).toString('base64')
+    res.json({ token, email })
+  } catch (err) {
+    console.error('POST /api/auth/verify-otp error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+function parseDemoToken(authHeader) {
+  const raw = (authHeader || '').replace(/^Bearer\s+/i, '')
+  try { return Buffer.from(raw, 'base64').toString('utf8').split('|')[0] } catch { return null }
+}
+
+// Unified orders endpoint: if email is admin, return all; else return own
+app.get('/api/orders/me', async (req, res) => {
+  try {
+    const email = parseDemoToken(req.headers.authorization)
+    if (!email) return res.status(401).json({ error: 'Unauthorized' })
+    const database = await getDb()
+
+    const isAdmin = email === (process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com')
+    const q = isAdmin ? {} : { 'customer.email': email }
+
+    const docs = await database.collection('orders').find(q).sort({ createdAt: -1 }).limit(1000).toArray()
+    const out = docs.map(d => ({
+      id: String(d._id), createdAt: d.createdAt, status: d.status,
+      customer: d.customer, address: d.address, paymentMethod: d.paymentMethod,
+      totals: d.totals, total: d.totals?.total, items: d.items || [],
+      itemsCount: (d.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)
+    }))
+    res.json({ email, isAdmin, orders: out })
+  } catch (err) {
+    console.error('GET /api/orders/me error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, now: new Date().toISOString() })
+})
+
+// Submit return request – emails store owner and sends confirmation to customer
+app.post('/api/returns', async (req, res) => {
+  try {
+    const body = req.body || {}
+    const orderId = String(body.orderId || '').trim()
+    const email = String(body.email || '').trim().toLowerCase()
+    const reasons = Array.isArray(body.reasons) ? body.reasons.slice(0, 10) : []
+    const custom = String(body.customReason || '').trim()
+    const images = Array.isArray(body.images) ? body.images.slice(0, 5) : []
+
+    if (!orderId || !email) return res.status(400).json({ error: 'orderId and email required' })
+
+    const transporter = getMailer()
+    const from = process.env.FROM_EMAIL || process.env.SMTP_USER
+    const store = process.env.STORE_NAME || 'KhushiyanaStore'
+    const owner = process.env.RETURNS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+
+    const reasonList = reasons.map(r=>`<li>${r}</li>`).join('')
+
+    // Convert data URLs to inline attachments with CIDs so email clients (Gmail) display them
+    const attachments = []
+    const cidImgs = []
+    for (let i = 0; i < images.length; i++) {
+      const src = String(images[i] || '')
+      const m = src.match(/^data:([^;]+);base64,([A-Za-z0-9+/=]+)$/)
+      if (!m) continue
+      const mime = m[1]
+      const b64 = m[2]
+      const ext = (mime.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi,'')
+      const cid = `return-photo-${Date.now()}-${i}`
+      attachments.push({ filename: `photo-${i+1}.${ext}`, content: Buffer.from(b64, 'base64'), contentType: mime, cid })
+      cidImgs.push(`<img src="cid:${cid}" alt="photo" style="max-width:420px; display:block; margin:6px 0; border-radius:8px; border:1px solid #e5e7eb"/>`)
+    }
+
+    const ownerHtml = `
+      <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6">
+        <h2 style="margin:0 0 8px">${store}: New Return Request</h2>
+        <p><b>Order:</b> #${orderId}</p>
+        <p><b>Customer:</b> ${email}</p>
+        ${reasons.length ? `<div><b>Reasons:</b><ul>${reasonList}</ul></div>` : ''}
+        ${custom ? `<div><b>Details:</b><div>${custom}</div></div>` : ''}
+        ${cidImgs.join('')}
+      </div>`
+    const ownerText = `Return request\nOrder: #${orderId}\nCustomer: ${email}\nReasons: ${reasons.join(', ')}\nDetails: ${custom}`
+
+    if (!transporter) {
+      console.warn('[mail] transporter not configured. Return request:', { orderId, email, reasons, custom, images: images.length })
+      return res.json({ ok: true, simulated: true })
+    }
+
+    await transporter.sendMail({ from, to: owner, subject: `${store}: Return request (#${orderId})`, html: ownerHtml, text: ownerText, attachments })
+    await transporter.sendMail({ from, to: email, subject: `${store}: Return request received (#${orderId})`, html: `<p>We have received your return request for order <b>#${orderId}</b>. Our team will review and contact you soon.</p>`, text: `We have received your return request for order #${orderId}.` })
+
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/returns error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// GET /api/products – read products from dship.products
+app.get('/api/products', async (req, res) => {
+  try {
+    const database = await getDb()
+    const docs = await database.collection('products').find({}).limit(50).toArray()
+    const out = docs.map(d => ({
+      id: String(d._id),
+      title: d.title,
+      brand: d.brand,
+      price: d.price,
+      compareAtPrice: d.compareAtPrice,
+      images: d.images || [],
+      bullets: d.bullets || [],
+      description: d.description,
+      descriptionHeading: d.descriptionHeading,
+      descriptionPoints: d.descriptionPoints || [],
+      sku: d.sku,
+      inventoryStatus: d.inventoryStatus || 'IN_STOCK',
+    }))
+    res.json(out)
+  } catch (err) {
+    console.error('GET /api/products error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+
+// POST /api/orders – insert order into dship.orders
+app.post('/api/orders', async (req, res) => {
+  try {
+    const body = req.body || {}
+    // Basic validation
+
+
+    const requiredStrings = [
+      body?.name, body?.email, body?.phone,
+      body?.address?.country, body?.address?.line1,
+      body?.address?.city, body?.address?.state, body?.address?.zip,
+    ]
+    if (requiredStrings.some(v => !v || typeof v !== 'string')) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return res.status(400).json({ error: 'No items' })
+    }
+
+    // Normalize the doc
+    const doc = {
+      customer: { name: body.name, email: body.email, phone: body.phone },
+      address: body.address,
+      items: body.items.map(i => ({
+        productId: String(i.productId || ''),
+        title: String(i.title || ''),
+        quantity: Number(i.quantity || 0),
+        unitPrice: Number(i.unitPrice || 0),
+      })),
+      totals: body.totals || {},
+      paymentMethod: body.paymentMethod || 'cod',
+      status: 'pending',
+      createdAt: new Date(),
+      source: 'website',
+    }
+
+    const database = await getDb()
+    const { insertedId } = await database.collection('orders').insertOne(doc)
+
+    // Fire-and-forget emails (do not block response)
+    const orderId = String(insertedId)
+    const customerEmail = body.email
+    const ownerEmail = process.env.ORDERS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+    sendOrderPlacedEmail({ to: customerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
+    sendOrderReceivedEmailToOwner({ to: ownerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
+
+    res.json({ id: orderId })
+  } catch (err) {
+    console.error('POST /api/orders error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Find orders by customer email or phone (recent first)
+app.get('/api/orders/search', async (req, res) => {
+  try {
+    const { email, phone } = req.query || {}
+    if (!email && !phone) return res.status(400).json({ error: 'email or phone required' })
+    const database = await getDb()
+    const q = {}
+    if (email) q['customer.email'] = String(email)
+    if (phone) q['customer.phone'] = String(phone)
+    const docs = await database.collection('orders').find(q).sort({ createdAt: -1 }).limit(200).toArray()
+    const out = docs.map(d => ({ id: String(d._id), createdAt: d.createdAt, status: d.status, total: d.totals?.total, itemsCount: (d.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0) }))
+    res.json(out)
+  } catch (err) {
+    console.error('GET /api/orders/search error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin orders with optional date range (requires ADMIN_EMAIL or ADMIN_SECRET)
+app.get('/api/orders/admin', async (req, res) => {
+  try {
+    const { start, end, adminEmail, secret } = req.query || {}
+    const allowed = (process.env.ADMIN_SECRET && secret === process.env.ADMIN_SECRET) || (process.env.ADMIN_EMAIL && adminEmail === process.env.ADMIN_EMAIL)
+    if (!allowed) return res.status(403).json({ error: 'Forbidden' })
+
+    const database = await getDb()
+    const range = {}
+    if (start) range.$gte = new Date(String(start))
+    if (end) range.$lte = new Date(String(end))
+    const q = Object.keys(range).length ? { createdAt: range } : {}
+
+    const docs = await database.collection('orders').find(q).sort({ createdAt: -1 }).limit(1000).toArray()
+    const out = docs.map(d => ({
+      id: String(d._id), createdAt: d.createdAt, status: d.status,
+      customer: d.customer, total: d.totals?.total, items: d.items || []
+    }))
+    res.json(out)
+  } catch (err) {
+    console.error('GET /api/orders/admin error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+
+// GET /api/orders/:id – fetch by id
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const database = await getDb()
+    const _id = new ObjectId(req.params.id)
+    const doc = await database.collection('orders').findOne({ _id })
+    if (!doc) return res.status(404).json({ error: 'Not found' })
+    res.json({ id: String(doc._id), ...doc })
+  } catch (err) {
+    res.status(400).json({ error: 'Bad id' })
+  }
+})
+
+app.listen(PORT, () => {
+  console.log(`[server] listening on http://localhost:${PORT}`)
+})
+

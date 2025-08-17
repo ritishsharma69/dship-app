@@ -1,4 +1,4 @@
-import React from 'react'
+
 
 /**
  * PinkLoader: a sexy, satisfying loader overlay.

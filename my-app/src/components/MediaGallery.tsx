@@ -4,7 +4,7 @@ import type { Product } from '../types'
 import { events } from '../analytics'
 
 export default function MediaGallery({ product }: { product: Product }) {
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState(() => (product.youtubeUrl ? 1 : 0))
   const [lightbox, setLightbox] = useState(false)
   const mainRef = useRef<HTMLDivElement>(null)
 
@@ -66,13 +66,37 @@ export default function MediaGallery({ product }: { product: Product }) {
     return () => ctx.revert()
   }, [])
 
+  // Build a media list that inserts YouTube video as the 2nd item if provided
+  const media: Array<{ type: 'image' | 'youtube'; src: string; thumb?: string }> = (() => {
+    const arr: Array<{ type: 'image' | 'youtube'; src: string; thumb?: string }> = product.images.map(src => ({ type: 'image', src }))
+    if (product.youtubeUrl) {
+      const ytId = (product.youtubeUrl.match(/[?&]v=([^&]+)/) || product.youtubeUrl.match(/youtu\.be\/([^?]+)/))?.[1]
+      const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined
+      arr.splice(1, 0, { type: 'youtube', src: product.youtubeUrl, thumb })
+    }
+    return arr
+  })()
+
+  // Adjust active index bounds if media length changed
+  useEffect(() => {
+    setActive((a) => Math.max(0, Math.min(a, media.length - 1)))
+  }, [media.length])
+
   return (
     <section>
       <div ref={mainRef} style={{ position: 'relative' }}>
-        {product.video ? (
-          <video controls preload="metadata" onPlay={() => events.video_play({ id: product.id })} style={{ width: '100%' }}>
-            <source src={product.video} />
-          </video>
+        {media[active]?.type === 'youtube' ? (
+          <div style={{ position: 'relative', width: '100%', background: '#000' }}>
+            <div style={{ position: 'relative', paddingTop: '56.25%' }}>
+              <iframe
+                src={media[active].src.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/') + '?autoplay=1&mute=1&playsinline=1&rel=0'}
+                title="Product video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, borderRadius: 8 }}
+              />
+            </div>
+          </div>
         ) : (
           <button
             onClick={() => setLightbox(true)}
@@ -81,7 +105,7 @@ export default function MediaGallery({ product }: { product: Product }) {
             style={{ padding: 0, border: 'none', background: 'transparent', width: '100%', cursor: 'zoom-in' }}
           >
             <img
-              src={product.images[active]}
+              src={media[active]?.src}
               alt={product.title}
               style={{ width: '100%', aspectRatio: '1/1', objectFit: 'contain', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}
               loading="lazy"
@@ -92,21 +116,30 @@ export default function MediaGallery({ product }: { product: Product }) {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 8 }}>
-        {product.images.map((img, i) => (
+        {media.map((m, i) => (
           <button
-            key={img}
+            key={(m.type==='image'?'img':'yt') + i}
             onClick={() => setActive(i)}
             className="thumb"
             style={{ border: i === active ? '2px solid #2563eb' : '1px solid #e5e7eb', borderRadius: 10, padding: 0, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
-            aria-label={`Show image ${i + 1}`}
+            aria-label={`Show media ${i + 1}`}
           >
-            <img
-              src={img}
-              alt={`${product.title} ${i + 1}`}
-              style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
-              loading="lazy"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/200x200?text=Thumb' }}
-            />
+            {m.type === 'youtube' ? (
+              <div style={{ position: 'relative' }}>
+                <img src={m.thumb || 'https://placehold.co/200x200?text=Video'} alt="Video thumbnail" style={{ width: '100%', height: 80, objectFit: 'cover', background: '#000' }} />
+                <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
+                  <div style={{ width: 20, height: 20, background: '#ff2a6d', clipPath: 'polygon(25% 20%, 25% 80%, 80% 50%)', borderRadius: 4, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }} />
+                </div>
+              </div>
+            ) : (
+              <img
+                src={m.src}
+                alt={`${product.title} ${i + 1}`}
+                style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
+                loading="lazy"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/200x200?text=Thumb' }}
+              />
+            )}
           </button>
         ))}
       </div>

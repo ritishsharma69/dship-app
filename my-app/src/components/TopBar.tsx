@@ -21,6 +21,8 @@ export default function TopBar() {
   const go = (to: string) => { setDrawerOpen(false); navigate(to) }
   const showBack = path !== '/'
   const back = () => { if (window.history.length > 1) window.history.back(); else navigate('/') }
+  const active = (to: string) => path === to
+
 
   return (
     <AppBar position="sticky" color="transparent" sx={{ ml: 'calc(50% - 50vw)', mr: 'calc(50% - 50vw)', borderRadius: 0,
@@ -49,22 +51,22 @@ export default function TopBar() {
         {/* Desktop actions: right side, icon on top + label below */}
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'flex-end', gap: 2, ml: 'auto', mr: 6 }}>
           <Button color="inherit" onClick={() => go('/orders')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <AssignmentOutlined fontSize="medium" />
-            <Box component="span" sx={{ fontSize: 13 }}>Your Orders</Box>
+            <AssignmentOutlined fontSize="medium" sx={{ color: active('/orders') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/orders') ? '#F59E0B' : 'inherit' }}>Your Orders</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/contact')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <MailOutline fontSize="medium" />
-            <Box component="span" sx={{ fontSize: 13 }}>Contact</Box>
+            <MailOutline fontSize="medium" sx={{ color: active('/contact') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/privacy')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <Lock fontSize="medium" />
-            <Box component="span" sx={{ fontSize: 13 }}>Privacy</Box>
+            <Lock fontSize="medium" sx={{ color: active('/privacy') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/privacy') ? '#F59E0B' : 'inherit' }}>Privacy</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
             <Badge badgeContent={count} color="error">
-              <ShoppingCart fontSize="medium" />
+              <ShoppingCart fontSize="medium" sx={{ color: active('/checkout') ? '#F59E0B' : 'inherit' }} />
             </Badge>
-            <Box component="span" sx={{ fontSize: 13 }}>Your Cart</Box>
+            <Box component="span" sx={{ fontSize: 13, color: active('/checkout') ? '#F59E0B' : 'inherit' }}>Your Cart</Box>
           </Button>
         </Box>
 

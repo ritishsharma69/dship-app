@@ -11,6 +11,7 @@ export interface Product {
   compareAtPrice?: number;
   images: string[];
   video?: string; // URL to mp4/webm
+  youtubeUrl?: string; // optional YouTube URL for gallery (embed as 2nd item)
   bullets: string[];
   sku: string;
   inventoryStatus: InventoryStatus;

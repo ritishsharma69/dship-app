@@ -1,14 +1,28 @@
 /** React */
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { events } from '../analytics'
 
+async function loadRazorpayScript() {
+  if (document.getElementById('razorpay-js')) return true
+  return new Promise<boolean>((resolve) => {
+    const s = document.createElement('script')
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    s.id = 'razorpay-js'
+    s.onload = () => resolve(true)
+    s.onerror = () => resolve(false)
+    document.body.appendChild(s)
+  })
+}
+
 export default function CheckoutPage() {
   const { items, update, remove, clear } = useCart()
   const { navigate } = useRouter()
   const { push } = useToast()
+  const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
+  const [paymentMethod, setPaymentMethod] = useState<string>(hasPaymentKey ? 'razorpay' : 'cod')
 
   useEffect(() => {
     // SEO noindex + canonical
@@ -43,11 +57,13 @@ export default function CheckoutPage() {
     overlay.innerHTML = '<div class="pink-loader-card"><div class="pink-spinner"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span><span class="ring"></span></div><div class="pink-loader-text">Placing your order…</div></div>'
     root.appendChild(overlay)
 
-    // Gather form data (used for mock order and future integration)
+    // Gather form data
     const form = e.target as HTMLFormElement
     const fd = new FormData(form)
-    // Prepare payload (used in mock + for future API integration)
-    const payload = {
+    const paymentMethod = String(fd.get('payment') || 'cod')
+
+    // Prepare order payload
+    const payload: any = {
       email: fd.get('email'),
       name: fd.get('name'),
       phone: fd.get('phone'),
@@ -56,23 +72,74 @@ export default function CheckoutPage() {
         city: fd.get('city'), state: fd.get('state'), zip: fd.get('zip')
       },
       items: items.map(i => ({ productId: i.product.id, title: i.product.title, quantity: i.quantity, unitPrice: i.product.price })),
-      totals: { subtotal, shipping, tax, total }
-    } as const
-    void payload // keep for analytics/diagnostics; avoids TS unused error
+      totals: { subtotal, shipping, tax, total },
+      paymentMethod
+    }
+
+    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
     try {
-      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-      const res = await fetch(`${base}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (!res.ok) throw new Error(await res.text() || 'Order failed')
-      const data = await res.json()
-      clear()
-      push('Order placed!')
-      const oid = data.id || data._id || ''
-      navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+      if (paymentMethod === 'razorpay') {
+        if (!hasPaymentKey) { push('Payment key not configured'); return }
+        // Online payment via Razorpay
+        const ok = await loadRazorpayScript()
+        if (!ok) throw new Error('Failed to load Razorpay')
+        const key = import.meta.env.VITE_RAZORPAY_KEY_ID
+
+        // 1) Create Razorpay order on server
+        const rpOrderRes = await fetch(`${base}/api/payments/razorpay/order`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: total, receipt: `rcpt_${Date.now()}` })
+        })
+        if (!rpOrderRes.ok) throw new Error(await rpOrderRes.text() || 'Payment init failed')
+        const { order } = await rpOrderRes.json()
+
+        // 2) Open Razorpay Checkout
+        const rzp = new (window as any).Razorpay({
+          key,
+          amount: order.amount,
+          currency: order.currency,
+          order_id: order.id,
+          name: 'Order Payment',
+          description: 'Pay securely',
+          prefill: { name: String(fd.get('name')||''), email: String(fd.get('email')||''), contact: String(fd.get('phone')||'') },
+          notes: { source: 'dship' },
+          theme: { color: '#ff2a6d' },
+          handler: async (resp: any) => {
+            // 3) Verify signature
+            const verifyRes = await fetch(`${base}/api/payments/razorpay/verify`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(resp)
+            })
+            const verify = await verifyRes.json()
+            if (!verify.valid) { push('Payment verification failed'); overlay.remove(); return }
+
+            // 4) Place order in DB as paid
+            payload.payment = { provider: 'razorpay', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, captured: true }
+            const res = await fetch(`${base}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+            if (!res.ok) throw new Error(await res.text() || 'Order failed')
+            const data = await res.json()
+            clear(); push('Payment successful!')
+            const oid = data.id || data._id || ''
+            navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+          },
+          modal: {
+            ondismiss: () => { overlay.remove(); push('Payment cancelled') }
+          }
+        })
+        rzp.open()
+        return
+      } else {
+        // COD
+        const res = await fetch(`${base}/api/orders`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        })
+        if (!res.ok) throw new Error(await res.text() || 'Order failed')
+        const data = await res.json()
+        clear(); push('Order placed!')
+        const oid = data.id || data._id || ''
+        navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+      }
     } catch (err: any) {
       push(err?.message || 'Payment failed. Try again.')
     } finally {
@@ -112,10 +179,30 @@ export default function CheckoutPage() {
                 <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" />
 
                 <div style={{ fontWeight: 700, marginTop: 8 }}>Payment</div>
-                <label className="payment-row">
-                  <input type="checkbox" name="cod" defaultChecked required /> Cash on Delivery (COD)
+                <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
+                  <input type="radio" name="payment" value="razorpay" defaultChecked={hasPaymentKey} disabled={!hasPaymentKey}
+                    onChange={() => setPaymentMethod('razorpay')} />
+                  <div>
+                    <div style={{ fontWeight: 600 }}>Pay Online</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4, color: '#111' }}>
+                      {['UPI','Cards','NetBanking'].map((t, i) => (
+                        <span key={i} style={{ fontSize: 12, padding: '2px 8px', background: 'var(--color-bg-muted)', border: '1px solid var(--color-border)', borderRadius: 999, opacity: hasPaymentKey ? 1 : 0.55 }}>{t}</span>
+                      ))}
+                    </div>
+                    {!hasPaymentKey && (
+                      <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Configure payment key to enable</div>
+                    )}
+                  </div>
                 </label>
-                <button className="btn btn-buy order-btn" type="submit">Order Now</button>
+                <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
+                  <input type="radio" name="payment" value="cod" defaultChecked={!hasPaymentKey}
+                    onChange={() => setPaymentMethod('cod')} />
+                  <div>
+                    <div style={{ fontWeight: 600 }}>Cash on Delivery (COD)</div>
+                    <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
+                  </div>
+                </label>
+                <button className="btn btn-buy order-btn" type="submit">{paymentMethod === 'razorpay' ? 'Pay & Order' : 'Place COD Order'}</button>
               </form>
 
               <aside className="card order-summary-card">

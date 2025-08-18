@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
-import { reviews } from '../data'
+import { product as localProduct, reviews } from '../data'
 import { events } from '../analytics'
 import type { Product } from '../types'
 import MediaGallery from '../components/MediaGallery'
 import FeatureList from '../components/FeatureList'
 import ReviewCarousel from '../components/ReviewCarousel'
-import { withLoader } from '../lib/loader'
 
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
@@ -31,14 +30,9 @@ export default function MainPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-    withLoader(
-      fetch(`${base}/api/products`).then(r => r.json()),
-      'Loading products…'
-    )
-      .then((list: any[]) => { setP(list[0] as Product) })
-      .catch((e) => setError(e?.message || 'Failed to load'))
-      .finally(() => setLoading(false))
+    // Use local product data (Head Massager) during setup
+    setP(localProduct)
+    setLoading(false)
   }, [])
 
   const out = p?.inventoryStatus === 'OUT_OF_STOCK'
@@ -237,14 +231,10 @@ export default function MainPage() {
               <FeatureList bullets={p.bullets.slice(1)} />
             </Box>
 
-            {/* Bank Offers */}
-            <Paper sx={{ p: 1.5, mb: 3 }}>
-              <Typography fontWeight={700} sx={{ mb: 1, color: '#000000' }}>Bank Offers</Typography>
-              <ul style={{ margin: 0, paddingLeft: 18, color: '#000000' }}>
-                <li>5% Cashback on Axis Bank Credit Card</li>
-                <li>Instant Discount on Prepaid Orders</li>
-                <li>No-Cost EMI Available</li>
-              </ul>
+            {/* Payment Offer */}
+            <Paper sx={{ p: 1.5, mb: 0 }}>
+              <Typography fontWeight={700} sx={{ mb: 1, color: '#000000' }}>Payment Offer</Typography>
+              <Typography sx={{ color: '#000000' }}>Extra 5% OFF (up to ₹50) on online payments</Typography>
             </Paper>
 
 

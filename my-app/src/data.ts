@@ -1,26 +1,33 @@
 import type { Product, ReviewsSummary } from './types';
 
 export const product: Product = {
-  id: 'prod_1',
-  title: 'Adivasi Neelambari Herbal Hair Oil (200ml)',
-  brand: 'Bio Health India',
-  price: 699,
-  compareAtPrice: 1299,
+  id: 'prod_head_massager_1',
+  title: 'Electric Head & Body Massager (Rechargeable)',
+  brand: 'Khushiyan',
+  price: 999,
+  compareAtPrice: 1899,
   images: [
-    '/products/adivasi/adivasi-1.png',
-    '/products/adivasi/adivasi-2.png',
-    '/products/adivasi/adivasi-3.png',
-    '/products/adivasi/adivasi-4.png'
+    '/products/head-massager/1.jpg',
+    '/products/head-massager/2.jpg',
+    '/products/head-massager/3.jpg',
+    '/products/head-massager/4.jpg'
   ],
-  video: undefined,
+  youtubeUrl: 'https://www.youtube.com/watch?v=RAKbZazdgqk',
   bullets: [
-    'Reduces hair fall and breakage',
-    'Promotes new hair growth',
-    'Herbal formulation with natural oils',
-    'Deep scalp nourishment',
-    'Suitable for all hair types'
+    'Instant relaxation for head, neck and shoulders',
+    'Improves blood circulation — relieves stress and headaches',
+    'Deep scalp massage helps reduce hair fall and promotes growth',
+    'Soft, flexible massage nodes — comfortable for all hair types',
+    'Use on face, scalp, back and legs — full body relaxation',
+    'Rechargeable and cordless — use anywhere, anytime'
   ],
-  sku: 'ADIVASI-200ML',
+  descriptionHeading: 'Spa-like relaxation at home',
+  descriptionPoints: [
+    '3D kneading action targets pressure points',
+    'Daily 10 minutes helps improve sleep quality',
+    'Lightweight and ergonomic design for easy grip',
+  ],
+  sku: 'HEAD-MASSAGER-RECHARGEABLE',
   inventoryStatus: 'IN_STOCK'
 };
 

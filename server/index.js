@@ -35,6 +35,49 @@ async function getDb() {
   return db
 }
 
+// ----- Razorpay (optional online payments) -----
+const https = require('https')
+const crypto = require('crypto')
+
+function razorpayRequest(path, method, data) {
+  return new Promise((resolve, reject) => {
+    const keyId = process.env.RAZORPAY_KEY_ID
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    if (!keyId || !keySecret) return reject(new Error('Razorpay not configured'))
+
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64')
+    const body = data ? JSON.stringify(data) : ''
+
+    const req = https.request({
+      hostname: 'api.razorpay.com',
+      port: 443,
+      path,
+      method,
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    }, (r) => {
+      let buf = ''
+      r.on('data', (d) => (buf += d))
+      r.on('end', () => {
+        try {
+          const json = JSON.parse(buf || '{}')
+          if (r.statusCode >= 200 && r.statusCode < 300) return resolve(json)
+          const msg = json?.error?.description || `Razorpay API error (${r.statusCode})`
+          return reject(new Error(msg))
+        } catch (e) {
+          return reject(new Error(`Razorpay parse error: ${buf}`))
+        }
+      })
+    })
+    req.on('error', reject)
+    if (body) req.write(body)
+    req.end()
+  })
+}
+
 // ----- Email (optional) -----
 // Configure via .env: SMTP_HOST, SMTP_PORT=587, SMTP_USER, SMTP_PASS, FROM_EMAIL, STORE_NAME
 function getMailer() {
@@ -212,6 +255,47 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
 
+// Create Razorpay order (amount in INR rupees; converted to paise)
+app.post('/api/payments/razorpay/order', async (req, res) => {
+  try {
+    const amountRupees = Math.round(Number(req.body?.amount || 0))
+    const receipt = String(req.body?.receipt || `rcpt_${Date.now()}`)
+    if (!amountRupees || amountRupees <= 0) return res.status(400).json({ error: 'amount required' })
+
+    const order = await razorpayRequest('/v1/orders', 'POST', {
+      amount: amountRupees * 100, // paise
+      currency: 'INR',
+      receipt,
+      payment_capture: 1
+    })
+    res.json({ order })
+  } catch (err) {
+    console.error('POST /api/payments/razorpay/order error', err)
+    res.status(500).json({ error: 'payment_init_failed', message: err?.message || 'Internal error' })
+  }
+})
+
+// Verify Razorpay signature
+app.post('/api/payments/razorpay/verify', (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {}
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ error: 'missing_fields' })
+    }
+    const keySecret = process.env.RAZORPAY_KEY_SECRET
+    if (!keySecret) return res.status(500).json({ error: 'Razorpay not configured' })
+
+    const hmac = crypto.createHmac('sha256', keySecret)
+    hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    const expected = hmac.digest('hex')
+    const valid = expected === razorpay_signature
+    res.json({ valid })
+  } catch (err) {
+    console.error('POST /api/payments/razorpay/verify error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
 // Submit return request – emails store owner and sends confirmation to customer
 app.post('/api/returns', async (req, res) => {
   try {
@@ -288,6 +372,8 @@ app.get('/api/products', async (req, res) => {
       description: d.description,
       descriptionHeading: d.descriptionHeading,
       descriptionPoints: d.descriptionPoints || [],
+      youtubeUrl: d.youtubeUrl,
+      video: d.video,
       sku: d.sku,
       inventoryStatus: d.inventoryStatus || 'IN_STOCK',
     }))
@@ -330,7 +416,8 @@ app.post('/api/orders', async (req, res) => {
       })),
       totals: body.totals || {},
       paymentMethod: body.paymentMethod || 'cod',
-      status: 'pending',
+      payment: body.payment || null,
+      status: body?.payment?.captured ? 'paid' : 'pending',
       createdAt: new Date(),
       source: 'website',
     }
@@ -409,12 +496,7 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-// Export handler for Vercel serverless, otherwise start local server
-if (process.env.VERCEL) {
-  module.exports = (req, res) => app(req, res)
-} else {
-  app.listen(PORT, () => {
-    console.log(`[server] listening on http://localhost:${PORT}`)
-  })
-}
-
+// Start local server
+app.listen(PORT, () => {
+  console.log(`[server] listening on http://localhost:${PORT}`)
+})

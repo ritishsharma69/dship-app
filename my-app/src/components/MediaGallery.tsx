@@ -107,7 +107,7 @@ export default function MediaGallery({ product }: { product: Product }) {
             <img
               src={media[active]?.src}
               alt={product.title}
-              style={{ width: '100%', aspectRatio: '1/1', objectFit: 'contain', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}
+              className="gallery-main"
               loading="lazy"
               onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/1200x1200?text=Image' }}
             />

@@ -18,7 +18,7 @@ async function loadRazorpayScript() {
 }
 
 export default function CheckoutPage() {
-  const { items, update, remove, clear } = useCart()
+  const { items, clear } = useCart()
   const { navigate } = useRouter()
   const { push } = useToast()
   const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
@@ -150,7 +150,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="container">
-      <div className="page-surface">
+      <div className="page-surface checkout-surface">
         {!items.length ? (
           <div className="card" style={{ padding: 24, textAlign: 'center' }}>
             <h2 style={{ marginBottom: 8 }}>Your cart is empty</h2>
@@ -158,27 +158,29 @@ export default function CheckoutPage() {
           </div>
         ) : (
           <div>
-            <header style={{ padding: '8px 8px 16px 8px' }}>
-              <h1 style={{ margin: 0, fontSize: 28, letterSpacing: 0.2 }}>Checkout</h1>
+            <header style={{ padding: '8px 8px 12px 8px' }}>
+              <h1 style={{ margin: 0, fontSize: 24, letterSpacing: 0.2 }}>Checkout</h1>
             </header>
             <div className="checkout-grid">
               <form className="card checkout-form" onSubmit={placeOrder}>
-                <div style={{ fontWeight: 700 }}>Contact</div>
-                <input className="input" name="email" placeholder="Email" required type="email" />
-                <input className="input" name="name" placeholder="Full name" required />
-                <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" />
+                <div style={{ fontWeight: 800 }}>Contact</div>
+                <div className="form-grid">
+                  <input className="input" name="email" placeholder="Email" required type="email" />
+                  <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" />
+                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} />
+                </div>
 
-                <div style={{ fontWeight: 700, marginTop: 8 }}>Shipping address</div>
-                <input className="input" name="country" placeholder="Country" required defaultValue="India" />
-                <input className="input" name="line1" placeholder="Address line 1" required />
-                <input className="input" name="line2" placeholder="Address line 2" />
-                <div className="address-row-2">
+                <div style={{ fontWeight: 800, marginTop: 6 }}>Shipping</div>
+                <div className="form-grid">
+                  <input className="input" name="line1" placeholder="Address line 1" required style={{ gridColumn: '1 / -1' }} />
+                  <input className="input" name="line2" placeholder="Address line 2 (optional)" style={{ gridColumn: '1 / -1' }} />
                   <input className="input" name="city" placeholder="City" required />
                   <input className="input" name="state" placeholder="State" required />
+                  <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" />
                 </div>
-                <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" />
+                <input type="hidden" name="country" value="India" />
 
-                <div style={{ fontWeight: 700, marginTop: 8 }}>Payment</div>
+                <div style={{ fontWeight: 800, marginTop: 6 }}>Payment</div>
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
                   <input type="radio" name="payment" value="razorpay" defaultChecked={hasPaymentKey} disabled={!hasPaymentKey}
                     onChange={() => setPaymentMethod('razorpay')} />
@@ -186,7 +188,7 @@ export default function CheckoutPage() {
                     <div style={{ fontWeight: 600 }}>Pay Online</div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4, color: '#111' }}>
                       {['UPI','Cards','NetBanking'].map((t, i) => (
-                        <span key={i} style={{ fontSize: 12, padding: '2px 8px', background: 'var(--color-bg-muted)', border: '1px solid var(--color-border)', borderRadius: 999, opacity: hasPaymentKey ? 1 : 0.55 }}>{t}</span>
+                        <span key={i} className="pill" style={{ opacity: hasPaymentKey ? 1 : 0.55 }}>{t}</span>
                       ))}
                     </div>
                     {!hasPaymentKey && (
@@ -206,25 +208,25 @@ export default function CheckoutPage() {
               </form>
 
               <aside className="card order-summary-card">
-                <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 4 }}>Order Summary</div>
-                {items.map(i => (
-                  <div key={i.product.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 8, alignItems: 'center', padding: '12px 0', borderBottom: '1px dashed var(--color-border)' }}>
-                    <div style={{ fontWeight: 600 }}>{i.product.title}</div>
-                    <div className="qty-stepper">
-                      <button className="stepper-btn" aria-label="Decrease" onClick={() => update(i.product.id, i.quantity - 1)}>-</button>
-                      <span className="stepper-value" aria-live="polite">{i.quantity}</span>
-                      <button className="stepper-btn" aria-label="Increase" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
-                    </div>
-                    <div style={{ fontWeight: 700 }}>₹{i.product.price * i.quantity}</div>
-                    <div style={{ gridColumn: '1 / -1', marginTop: 10 }}>
-                      <button className="btn btn-remove order-btn" onClick={() => remove(i.product.id)}>Remove</button>
+                <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>Order Summary</div>
+                {items.slice(0,5).map(i => (
+                  <div key={i.product.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed var(--color-border)' }}>
+                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.product.title}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <span className="qty-pill">x{i.quantity}</span>
+                      <span style={{ fontWeight: 800 }}>₹{i.product.price * i.quantity}</span>
                     </div>
                   </div>
                 ))}
+                {items.length > 5 && (
+                  <div className="small-muted" style={{ paddingTop: 6 }}>
+                    +{items.length - 5} more item(s)
+                  </div>
+                )}
                 <div className="list-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
                 <div className="list-row"><span>Shipping</span><span>₹{shipping}</span></div>
                 <div className="list-row"><span>Tax</span><span>₹{tax}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: 18, marginTop: 4 }}>
+                <div className="order-total">
                   <span>Total</span><span>₹{total}</span>
                 </div>
               </aside>

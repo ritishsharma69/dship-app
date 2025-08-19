@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useLayoutEffect } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import type { Product } from '../types'
-import { events } from '../analytics'
 
 export default function MediaGallery({ product }: { product: Product }) {
   const [active, setActive] = useState(() => (product.youtubeUrl ? 1 : 0))

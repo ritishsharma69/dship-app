@@ -27,7 +27,7 @@ const pctOff = (price: number, original?: number) => !original || original <= pr
 export default function MainPage() {
   const [p, setP] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error] = useState<string | null>(null)
 
   useEffect(() => {
     // Use local product data (Head Massager) during setup

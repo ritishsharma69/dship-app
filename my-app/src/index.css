@@ -315,3 +315,31 @@ body:has([role="dialog"][aria-modal="true"]) header.MuiAppBar-root {
     max-width: none !important;
   }
 }
+
+
+
+
+/* Checkout redesign: compact, single-screen, professional */
+.checkout-surface { padding: 12px; }
+.form-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.form-grid .input { min-width: 0; }
+.pill { font-size: 12px; padding: 2px 8px; background: var(--color-badge-bg); border: 1px solid var(--color-border); border-radius: 999px; }
+.qty-pill { display:inline-flex; align-items:center; padding: 2px 8px; background:#F8FAFC; border:1px solid #e2e8f0; border-radius: 999px; font-weight: 800; color:#111827; }
+
+@media (max-width: 899px) {
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* Desktop: reduce visual weight and cap height so no page scroll needed */
+@media (min-width: 1024px) {
+  .checkout-surface { padding: 12px; }
+  .checkout-grid { grid-template-columns: 1fr 0.9fr; gap: 12px; }
+  .checkout-form, .order-summary-card { padding: 12px; }
+  .checkout-form { gap: 8px; }
+  .address-row-2 { gap: 6px; }
+  .input { padding: 10px 12px; }
+  .payment-row { margin: 2px 0 6px; }
+  .order-btn { margin-top: 4px; }
+  .checkout-grid > .checkout-form,
+  .checkout-grid > .order-summary-card { max-height: calc(100vh - 170px); overflow: auto; }
+}

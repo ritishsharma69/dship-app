@@ -42,7 +42,7 @@ export default function OrdersPage() {
     overlay.innerHTML = '<div class="pink-loader-card"><div class="pink-spinner"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span><span class="ring"></span></div><div class="pink-loader-text">Sending OTP…</div></div>'
     document.body.appendChild(overlay)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/api/auth/request-otp`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/request-otp`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim() })
       })
       if (!res.ok) throw new Error(await res.text())
@@ -71,7 +71,7 @@ export default function OrdersPage() {
       const trimmedCode = code.trim()
       if (!trimmedEmail || !trimmedCode) { setError('Enter email and OTP'); return }
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/api/auth/verify-otp`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: trimmedEmail, code: trimmedCode })
@@ -113,7 +113,7 @@ export default function OrdersPage() {
   async function loadOrders(tok?: string) {
     setError(null); setLoading(true); setList([])
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')}/api/orders/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/orders/me`, {
         headers: tok ? { 'Authorization': `Bearer ${tok}` } : undefined
       })
       if (!res.ok) throw new Error(await res.text())

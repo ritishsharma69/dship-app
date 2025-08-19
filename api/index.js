@@ -1,5 +1,5 @@
-import app from '../server/index.js'
+const app = require('../server/index')
 
-// Vercel uses the filename as the function. Export the express handler directly (ESM).
-export default function handler(req, res) { return app(req, res) }
+// Vercel uses the filename as the function. Export the express handler directly.
+module.exports = app
 

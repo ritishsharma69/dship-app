@@ -12,6 +12,8 @@ import Alert from '@mui/material/Alert'
 
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any }
 
+type AdminStatus = 'pending' | 'accepted' | 'delivered'
+
 export default function OrdersPage() {
   const [email, setEmail] = useState('')
   const [otpSent, setOtpSent] = useState(false)
@@ -170,13 +172,14 @@ export default function OrdersPage() {
                 {isAdmin ? (
                   <div style={{ display: 'grid', gap: 12 }}>
                     {list.map((o) => (
-                      <div key={o.id} className="card" style={{ padding: 16 }}>
+                      <div key={o.id} className="card" style={{ padding: 16, borderRadius: 12, borderColor: 'var(--color-border)', background:'#fff' }}>
                         <button onClick={() => setOpen(prev => ({...prev, [o.id]: !prev[o.id]}))} style={{ all:'unset', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', cursor: 'pointer', width: '100%' }}>
                           <div>
                             <div style={{ fontWeight: 700 }}>{o.customer?.name || '-'}</div>
                             <div className="muted" style={{ color:'#6b7280', fontSize:12 }}>{o.customer?.email || ''}</div>
                           </div>
-                          <div style={{ display:'flex', gap:8, alignItems:'center', color:'#6b7280' }}>
+                          <div style={{ display:'flex', gap:12, alignItems:'center', color:'#6b7280' }}>
+                            <span className="badge" style={{ textTransform: 'capitalize', background: o.status==='pending' ? '#fff7ed' : o.status==='accepted' ? '#ecfeff' : '#ecfdf5', border: '1px solid var(--color-border)' }}>{o.status}</span>
                             <span>#{o.id.slice(-8)} • {new Date(o.createdAt).toLocaleString()}</span>
                             <span className={`fa-solid fa-chevron-${open[o.id] ? 'up' : 'down'}`} />
                           </div>
@@ -184,12 +187,35 @@ export default function OrdersPage() {
                         {open[o.id] ? (
                           <div style={{ marginTop: 8, display:'grid', gap:10 }}>
                             <div style={{ display:'grid', gap:6 }}>
-                              <div><b>Status:</b> <span style={{ textTransform:'capitalize' }}>{o.status}</span></div>
+                              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                                  <b>Status:</b>
+                                  <select defaultValue={o.status as AdminStatus} onChange={async (e)=>{
+                                    const newStatus = e.target.value as AdminStatus
+                                    try {
+                                      const tok = token || localStorage.getItem('auth_token')
+                                      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/orders/${o.id}/status`, {
+                                        method: 'PATCH',
+                                        headers: { 'Content-Type': 'application/json', ...(tok ? { 'Authorization': `Bearer ${tok}` } : {}) },
+                                        body: JSON.stringify({ status: newStatus })
+                                      })
+                                      if (!res.ok) throw new Error(await res.text())
+                                      const updated = await res.json()
+                                      setList(prev => prev.map(x => x.id === o.id ? { ...x, status: updated.status } : x))
+                                      push(`Status updated to ${newStatus}`)
+                                    } catch (err: any) {
+                                      push(err?.message || 'Failed to update status')
+                                    }
+                                  }} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                                    <option value="pending">Pending</option>
+                                    <option value="accepted">Accepted</option>
+                                    <option value="delivered">Delivered</option>
+                                  </select>
+                                </div>
                               <div><b>Payment:</b> {o.paymentMethod || 'cod'}</div>
                               <div><b>Address:</b> {o.address?.line1}, {o.address?.city}, {o.address?.state} {o.address?.zip}</div>
                             </div>
                             <div>
-                              <div style={{ fontWeight: 600, marginBottom: 6 }}>Items</div>
+                              <div style={{ fontWeight: 800, marginBottom: 6 }}>Items</div>
                               <div style={{ border: '1px dashed var(--color-border)', borderRadius: 8, padding: 8 }}>
                                 {(o.items||[]).map((i, idx) => (
                                   <div key={idx} className="list-row" style={{ display:'flex', justifyContent:'space-between' }}>

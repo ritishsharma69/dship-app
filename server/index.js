@@ -6,7 +6,7 @@ const { MongoClient, ObjectId } = require('mongodb')
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// CORS: allow local dev and Vercel preview/prod domains; optionally extend via ALLOWED_ORIGINS (comma-separated)
+// CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
 app.use(cors({
   origin: (origin, cb) => {
@@ -14,8 +14,7 @@ app.use(cors({
     const ok =
       allowedFromEnv.includes(origin) ||
       origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:') ||
-      origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:') ||
-      origin.includes('.vercel.app')
+      origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:')
     cb(null, !!ok)
   },
   credentials: false
@@ -153,25 +152,32 @@ async function sendOrderReceivedEmailToOwner({ to, orderId, customer, items, tot
 }
 
 
-// Send OTP email (separate lightweight template)
+// Send OTP email (polished, professional template)
 async function sendOtpEmail({ to, code }) {
   const transporter = getMailer()
   const from = process.env.FROM_EMAIL || process.env.SMTP_USER
   const store = process.env.STORE_NAME || 'KhushiyanaStore'
+  const brand = '#FF3F6C'
   const html = `
-    <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6;">
-      <h2 style="margin:0 0 8px">${store}: Your OTP Code</h2>
-      <p>Use the following code to verify your email:</p>
-      <div style="font-size:28px; letter-spacing: 6px; font-weight: 800; background:#f8fafc; border:1px solid #e5e7eb; padding:12px 16px; display:inline-block; border-radius:10px;">${code}</div>
-      <p style="color:#6b7280; font-size:12px; margin-top:10px;">This code will expire in 5 minutes. Do not share this code with anyone.</p>
+    <div style="background:#f7f7fb;padding:24px">
+      <div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111827">
+        <div style="background:${brand};color:#fff;padding:14px 18px;font-weight:800;font-size:18px;letter-spacing:.2px">${store}</div>
+        <div style="padding:20px 18px">
+          <h2 style="margin:0 0 8px;font-size:20px">Verify your login</h2>
+          <p style="margin:0 0 14px;color:#374151">Use the One‑Time Password (OTP) below to continue. This code is valid for the next 5 minutes.</p>
+          <div style="display:inline-block;font-size:30px;letter-spacing:8px;font-weight:900;background:#f8fafc;border:1px dashed #d1d5db;padding:12px 16px;border-radius:12px;color:#111827">${code}</div>
+          <p style="margin:16px 0 0;color:#6b7280;font-size:12px">Do not share this code with anyone. If you didn’t request it, you can safely ignore this email.</p>
+        </div>
+        <div style="padding:12px 18px;background:#fafafa;color:#6b7280;font-size:12px">Need help? Reply to this email and our team will assist you.</div>
+      </div>
     </div>`
-  const text = `Your OTP code is: ${code}. It expires in 5 minutes.`
+  const text = `Your ${store} OTP is ${code}. It expires in 5 minutes. Do not share this code with anyone.`
   try {
     if (!transporter) {
       console.warn('[mail] transporter not configured. OTP:', code)
       return false
     }
-    await transporter.sendMail({ from, to, subject: `${store}: Your OTP Code`, html, text })
+    await transporter.sendMail({ from, to, subject: `${store} — Your OTP to Sign In`, html, text })
     return true
   } catch (err) {
     console.error('[mail] otp send failed', err)
@@ -496,7 +502,41 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-// Export app for serverless (Vercel) and start only when run directly
+// Admin: update order status (pending | accepted | delivered)
+app.patch('/api/orders/:id/status', async (req, res) => {
+  try {
+    const email = parseDemoToken(req.headers.authorization)
+    const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+    if (!email || email !== adminEmail) return res.status(403).json({ error: 'Forbidden' })
+
+    const status = String(req.body?.status || '').toLowerCase()
+    const allowed = new Set(['pending', 'accepted', 'delivered'])
+    if (!allowed.has(status)) return res.status(400).json({ error: 'invalid_status' })
+
+    const database = await getDb()
+    const _id = new ObjectId(req.params.id)
+    const result = await database.collection('orders').findOneAndUpdate(
+      { _id },
+      { $set: { status, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+    const doc = result?.value
+    if (!doc) return res.status(404).json({ error: 'Not found' })
+
+    const out = {
+      id: String(doc._id), createdAt: doc.createdAt, status: doc.status,
+      customer: doc.customer, address: doc.address, paymentMethod: doc.paymentMethod,
+      totals: doc.totals, total: doc.totals?.total, items: doc.items || [],
+      itemsCount: (doc.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)
+    }
+    res.json(out)
+  } catch (err) {
+    console.error('PATCH /api/orders/:id/status error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Export app for serverless adapters and start only when run directly
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[server] listening on http://localhost:${PORT}`)

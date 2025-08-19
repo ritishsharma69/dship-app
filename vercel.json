@@ -1,9 +1,0 @@
-{
-  "installCommand": "cd my-app && npm i && cd ../server && npm i",
-  "buildCommand": "cd my-app && npm run build",
-  "outputDirectory": "my-app/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}

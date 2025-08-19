@@ -496,7 +496,11 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-// Start local server
-app.listen(PORT, () => {
-  console.log(`[server] listening on http://localhost:${PORT}`)
-})
+// Export app for serverless (Vercel) and start only when run directly
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`[server] listening on http://localhost:${PORT}`)
+  })
+}
+
+module.exports = app

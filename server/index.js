@@ -35,6 +35,18 @@ async function getDb() {
   return db
 }
 
+// ----- Memory mode (no DB) fallback -----
+const USE_MEMORY = !process.env.MONGODB_URI
+const mem = { orders: [] }
+function memInsertOrder(doc) {
+  const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`
+  const rec = { id, ...doc }
+  mem.orders.unshift(rec)
+  return id
+}
+
+
+
 // ----- Razorpay (optional online payments) -----
 const https = require('https')
 const crypto = require('crypto')
@@ -232,11 +244,21 @@ app.get('/api/orders/me', async (req, res) => {
   try {
     const email = parseDemoToken(req.headers.authorization)
     if (!email) return res.status(401).json({ error: 'Unauthorized' })
-    const database = await getDb()
-
     const isAdmin = email === (process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com')
-    const q = isAdmin ? {} : { 'customer.email': email }
 
+    if (USE_MEMORY) {
+      const orders = (isAdmin ? mem.orders : mem.orders.filter(o => o.customer?.email === email))
+      const out = orders.map(d => ({
+        id: d.id, createdAt: d.createdAt, status: d.status,
+        customer: d.customer, address: d.address, paymentMethod: d.paymentMethod,
+        totals: d.totals, total: d.totals?.total, items: d.items || [],
+        itemsCount: (d.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)
+      }))
+      return res.json({ email, isAdmin, orders: out })
+    }
+
+    const database = await getDb()
+    const q = isAdmin ? {} : { 'customer.email': email }
     const docs = await database.collection('orders').find(q).sort({ createdAt: -1 }).limit(1000).toArray()
     const out = docs.map(d => ({
       id: String(d._id), createdAt: d.createdAt, status: d.status,
@@ -359,6 +381,10 @@ app.post('/api/returns', async (req, res) => {
 // GET /api/products – read products from dship.products
 app.get('/api/products', async (req, res) => {
   try {
+    if (USE_MEMORY) {
+      // No products in memory mode; return empty list to avoid DB requirement
+      return res.json([])
+    }
     const database = await getDb()
     const docs = await database.collection('products').find({}).limit(50).toArray()
     const out = docs.map(d => ({
@@ -422,11 +448,16 @@ app.post('/api/orders', async (req, res) => {
       source: 'website',
     }
 
-    const database = await getDb()
-    const { insertedId } = await database.collection('orders').insertOne(doc)
+    let orderId
+    if (USE_MEMORY) {
+      orderId = memInsertOrder(doc)
+    } else {
+      const database = await getDb()
+      const { insertedId } = await database.collection('orders').insertOne(doc)
+      orderId = String(insertedId)
+    }
 
     // Fire-and-forget emails (do not block response)
-    const orderId = String(insertedId)
     const customerEmail = body.email
     const ownerEmail = process.env.ORDERS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
     sendOrderPlacedEmail({ to: customerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})

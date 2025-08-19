@@ -84,7 +84,7 @@ export default function ReturnRequestPage() {
     overlay.innerHTML = '<div class="pink-loader-card"><div class="pink-spinner"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span><span class="ring"></span></div><div class="pink-loader-text">Submitting…</div></div>'
     document.body.appendChild(overlay)
     try {
-      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+      const base = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : '')
       const res = await fetch(`${base}/api/returns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

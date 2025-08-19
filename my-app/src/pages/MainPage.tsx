@@ -5,7 +5,7 @@ import { events } from '../analytics'
 import type { Product } from '../types'
 import MediaGallery from '../components/MediaGallery'
 import FeatureList from '../components/FeatureList'
-import ReviewCarousel from '../components/ReviewCarousel'
+import ReviewGrid from '../components/ReviewGrid'
 
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
@@ -246,7 +246,7 @@ export default function MainPage() {
       <Container sx={{ py: 2 }}>
         <Box className="reveal" sx={{ p: 2, display: 'grid', gap: 1.5, textAlign: 'center', boxShadow: 'none', border: 'none' }}>
           <Typography variant="h6" sx={{ color: '#000000', fontWeight: 'bold' }}>What customers say</Typography>
-          <ReviewCarousel />
+          <ReviewGrid />
         </Box>
       </Container>
 

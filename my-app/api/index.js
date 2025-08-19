@@ -1,6 +1,6 @@
-const express = require('express')
-const crypto = require('crypto')
-const https = require('https')
+import express from 'express'
+import crypto from 'crypto'
+import https from 'https'
 
 // Minimal Express app for Vercel serverless (project root = my-app)
 const app = express()
@@ -88,7 +88,7 @@ async function getMailer() {
   const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null
   try {
-    const nodemailer = require('nodemailer')
+    const { default: nodemailer } = await import('nodemailer')
     const port = Number(process.env.SMTP_PORT || 587)
     const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465
     return nodemailer.createTransport({ host: SMTP_HOST, port, secure, auth: { user: SMTP_USER, pass: SMTP_PASS } })
@@ -167,5 +167,5 @@ app.post(['/api/orders', '/orders'], (req, res) => {
   }
 })
 
-module.exports = (req, res) => app(req, res)
+export default function handler(req, res) { return app(req, res) }
 

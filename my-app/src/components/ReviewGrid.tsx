@@ -1,7 +1,8 @@
+import { memo, useMemo } from 'react'
 import { reviews } from '../data'
 
-export default function ReviewGrid() {
-  const items = reviews.testimonials.slice(0, 20)
+function ReviewGridInner() {
+  const items = useMemo(() => reviews.testimonials.slice(0, 20), [])
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
       {items.map((t, i) => (
@@ -21,3 +22,4 @@ export default function ReviewGrid() {
   )
 }
 
+export default memo(ReviewGridInner)

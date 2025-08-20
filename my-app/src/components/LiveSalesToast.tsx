@@ -1,4 +1,4 @@
-import React from 'react'
+
 import Paper from '@mui/material/Paper'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
@@ -34,7 +34,7 @@ export default function LiveSalesToast({ open, name, city, title, image, timeAgo
           </Box>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2" sx={{ color: '#111827', lineHeight: 1.2, overflowWrap: 'anywhere' }}>
-              Someone from {city} recently purchased
+              {name} from {city} recently purchased
             </Typography>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#111827', lineHeight: 1.1, overflowWrap: 'anywhere' }}>
               {title}

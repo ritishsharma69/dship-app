@@ -19,7 +19,8 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
-import LiveSalesToast from '../components/LiveSalesToast'
+import { Suspense, lazy } from 'react'
+const LiveSalesToast = lazy(() => import('../components/LiveSalesToast'))
 
 import { AddShoppingCart, ShoppingCartCheckout, FlashOn, Star, StarHalf, NotificationsNone, LocalOffer, Payments, CheckCircle } from '@mui/icons-material'
 
@@ -187,15 +188,17 @@ export default function MainPage() {
 	        <div className="page-surface">
 
           {/* Live sales popup */}
-          <LiveSalesToast
-            open={showToast}
-            name={currentName}
-            city={currentCity}
-            title={p.title}
-            image={p.images[0]}
-            timeAgo={timeAgo}
-            onClose={() => setShowToast(false)}
-          />
+          <Suspense fallback={null}>
+            <LiveSalesToast
+              open={showToast}
+              name={currentName}
+              city={currentCity}
+              title={p.title}
+              image={p.images[0]}
+              timeAgo={timeAgo}
+              onClose={() => setShowToast(false)}
+            />
+          </Suspense>
 
       {/* Product + Details grid (Myntra-style layout) */}
       <Container sx={{ py: 3 }}>

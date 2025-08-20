@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from '../lib/router'
+import { apiPostJson } from '../lib/api'
 
 export default function ReturnRequestPage() {
   const { navigate } = useRouter()
@@ -84,13 +85,7 @@ export default function ReturnRequestPage() {
     overlay.innerHTML = '<div class="pink-loader-card"><div class="pink-spinner"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span><span class="ring"></span></div><div class="pink-loader-text">Submitting…</div></div>'
     document.body.appendChild(overlay)
     try {
-      const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-      const res = await fetch(`${base}/api/returns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-      if (!res.ok) throw new Error(await res.text())
+      await apiPostJson('/api/returns', payload)
       setOk(true)
     } catch (e: any) {
       setError(e?.message || 'Failed to submit return request')

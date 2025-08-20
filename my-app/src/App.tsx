@@ -1,49 +1,53 @@
 import './App.css'
-import MainPage from './pages/MainPage'
-import CheckoutPage from './pages/CheckoutPage'
-import SuccessPage from './pages/SuccessPage' // legacy
-import OrderSuccessPage from './pages/OrderSuccessPage'
-// import OrderTrackPage from './pages/OrderTrackPage' // temporarily disabled
-import ContactPage from './pages/ContactPage'
-import PrivacyPage from './pages/PrivacyPage'
-import OrdersPage from './pages/OrdersPage'
-import ReturnRequestPage from './pages/ReturnRequestPage'
+import { lazy, Suspense } from 'react'
 import { Route, Switch } from './lib/router'
 import TopBar from './components/TopBar'
+
+const MainPage = lazy(() => import('./pages/MainPage'))
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
+const SuccessPage = lazy(() => import('./pages/SuccessPage')) // legacy
+const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
+// const OrderTrackPage = lazy(() => import('./pages/OrderTrackPage')) // temporarily disabled
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const OrdersPage = lazy(() => import('./pages/OrdersPage'))
+const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
 
 export default function App() {
   return (
     <>
       <TopBar />
-      <Switch>
-        <Route path="/">
-          <MainPage />
-        </Route>
-        <Route path="/contact">
-          <ContactPage />
-        </Route>
-        <Route path="/privacy">
-          <PrivacyPage />
-        </Route>
-        <Route path="/orders">
-          <OrdersPage />
-        </Route>
-        <Route path="/order/return">
-          <ReturnRequestPage />
-        </Route>
-        <Route path="/checkout">
-          <CheckoutPage />
-        </Route>
-        <Route path="/success">
-          <SuccessPage />
-        </Route>
-        <Route path="/order/success">
-          <OrderSuccessPage />
-        </Route>
-        {/* <Route path="/order/track/:id">
-          <OrderTrackPage />
-        </Route> */}
-      </Switch>
+      <Suspense fallback={<div style={{ padding: 16 }} />}> {/* small, non-blocking fallback */}
+        <Switch>
+          <Route path="/">
+            <MainPage />
+          </Route>
+          <Route path="/contact">
+            <ContactPage />
+          </Route>
+          <Route path="/privacy">
+            <PrivacyPage />
+          </Route>
+          <Route path="/orders">
+            <OrdersPage />
+          </Route>
+          <Route path="/order/return">
+            <ReturnRequestPage />
+          </Route>
+          <Route path="/checkout">
+            <CheckoutPage />
+          </Route>
+          <Route path="/success">
+            <SuccessPage />
+          </Route>
+          <Route path="/order/success">
+            <OrderSuccessPage />
+          </Route>
+          {/* <Route path="/order/track/:id">
+            <OrderTrackPage />
+          </Route> */}
+        </Switch>
+      </Suspense>
     </>
   )
 }

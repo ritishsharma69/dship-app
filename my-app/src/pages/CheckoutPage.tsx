@@ -4,6 +4,7 @@ import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { events } from '../analytics'
+import { apiPostJson } from '../lib/api'
 
 async function loadRazorpayScript() {
   if (document.getElementById('razorpay-js')) return true
@@ -48,14 +49,7 @@ export default function CheckoutPage() {
     e.preventDefault()
     if (!items.length) { push('Cart is empty'); return }
 
-    // Show submitting overlay
-    // Pink loader overlay
-    const root = document.body
-    const overlay = document.createElement('div')
-    overlay.id = 'pink-loader-overlay'
-    overlay.className = 'pink-loader-overlay'
-    overlay.innerHTML = '<div class="pink-loader-card"><div class="pink-spinner"><span class="blob a"></span><span class="blob b"></span><span class="blob c"></span><span class="ring"></span></div><div class="pink-loader-text">Placing your order…</div></div>'
-    root.appendChild(overlay)
+    // Show submitting overlay (global loader wrapper already exists; no double overlay)
 
     // Gather form data
     const form = e.target as HTMLFormElement
@@ -76,7 +70,6 @@ export default function CheckoutPage() {
       paymentMethod
     }
 
-    const base = import.meta.env.VITE_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}` : '')
 
     try {
       if (paymentMethod === 'razorpay') {
@@ -87,12 +80,7 @@ export default function CheckoutPage() {
         const key = import.meta.env.VITE_RAZORPAY_KEY_ID
 
         // 1) Create Razorpay order on server
-        const rpOrderRes = await fetch(`${base}/api/payments/razorpay/order`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: total, receipt: `rcpt_${Date.now()}` })
-        })
-        if (!rpOrderRes.ok) throw new Error(await rpOrderRes.text() || 'Payment init failed')
-        const { order } = await rpOrderRes.json()
+        const { order } = await apiPostJson<any>(`/api/payments/razorpay/order`, { amount: total, receipt: `rcpt_${Date.now()}` })
 
         // 2) Open Razorpay Checkout
         const rzp = new (window as any).Razorpay({
@@ -107,44 +95,31 @@ export default function CheckoutPage() {
           theme: { color: '#ff2a6d' },
           handler: async (resp: any) => {
             // 3) Verify signature
-            const verifyRes = await fetch(`${base}/api/payments/razorpay/verify`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(resp)
-            })
-            const verify = await verifyRes.json()
-            if (!verify.valid) { push('Payment verification failed'); overlay.remove(); return }
+            const verify = await apiPostJson<any>(`/api/payments/razorpay/verify`, resp)
+            if (!verify.valid) { push('Payment verification failed'); return }
 
             // 4) Place order in DB as paid
             payload.payment = { provider: 'razorpay', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, captured: true }
-            const res = await fetch(`${base}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-            if (!res.ok) throw new Error(await res.text() || 'Order failed')
-            const data = await res.json()
+            const data = await apiPostJson<any>(`/api/orders`, payload)
             clear(); push('Payment successful!')
             const oid = data.id || data._id || ''
             navigate(`/success?orderId=${encodeURIComponent(oid)}`)
           },
           modal: {
-            ondismiss: () => { overlay.remove(); push('Payment cancelled') }
+            ondismiss: () => { push('Payment cancelled') }
           }
         })
         rzp.open()
         return
       } else {
         // COD
-        const res = await fetch(`${base}/api/orders`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-        })
-        if (!res.ok) throw new Error(await res.text() || 'Order failed')
-        const data = await res.json()
+        const data = await apiPostJson<any>(`/api/orders`, payload)
         clear(); push('Order placed!')
         const oid = data.id || data._id || ''
         navigate(`/success?orderId=${encodeURIComponent(oid)}`)
       }
     } catch (err: any) {
       push(err?.message || 'Payment failed. Try again.')
-    } finally {
-      // Remove overlay if still present
-      overlay.remove()
     }
   }
 

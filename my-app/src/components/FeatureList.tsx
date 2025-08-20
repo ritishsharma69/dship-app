@@ -1,4 +1,6 @@
-export default function FeatureList({ bullets }: { bullets: string[] }) {
+import { memo } from 'react'
+
+function FeatureList({ bullets }: { bullets: string[] }) {
   return (
     <ul style={{ display: 'grid', gap: 10, listStyle: 'none', paddingLeft: 0, margin: 0 }}>
       {bullets.map((b, idx) => (
@@ -11,3 +13,4 @@ export default function FeatureList({ bullets }: { bullets: string[] }) {
   )
 }
 
+export default memo(FeatureList)

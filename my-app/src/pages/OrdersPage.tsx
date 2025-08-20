@@ -129,6 +129,26 @@ export default function OrdersPage() {
     }
   }
 
+  function handleLogout() {
+    try {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_email')
+    } catch {}
+    setToken(null)
+    setEmail('')
+    setCode('')
+    setOtpSent(false)
+    setInfo(null)
+    setError(null)
+    setList([])
+    setIsAdmin(false)
+    setOpen({})
+    setLoading(false)
+    setSendingOtp(false)
+    setVerifyingOtp(false)
+  }
+
+
   return (
     <Container sx={{ py: 3 }}>
       <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: token ? '100%' : 640, mx: 'auto', p: token ? 2 : 3, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
@@ -163,7 +183,7 @@ export default function OrdersPage() {
           <div style={{ marginTop: 16 }}>
             <div style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
               <div style={{ color:'#6b7280' }}>{isAdmin ? 'Viewing all orders (admin)' : `Logged in as ${email}`}</div>
-              <button className="btn" onClick={()=>{ setToken(null); setList([]); setIsAdmin(false); setOtpSent(false); setCode('') }}>Logout</button>
+              <button className="btn" onClick={handleLogout}>Logout</button>
             </div>
             {list.length === 0 && !loading ? (
               <div style={{ color: '#6b7280' }}>No orders yet.</div>

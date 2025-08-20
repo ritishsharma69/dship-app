@@ -20,7 +20,8 @@ export interface Product {
 export interface Testimonial {
   author: string;
   quote: string;
-  avatar?: string;
+  rating?: number; // 1..5
+  // avatar?: string; // no images per request
 }
 
 export interface ReviewsSummary {

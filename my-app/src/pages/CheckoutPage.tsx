@@ -18,7 +18,7 @@ async function loadRazorpayScript() {
 }
 
 export default function CheckoutPage() {
-  const { items, clear } = useCart()
+  const { items, clear, update } = useCart()
   const { navigate } = useRouter()
   const { push } = useToast()
   const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
@@ -213,7 +213,11 @@ export default function CheckoutPage() {
                   <div key={i.product.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed var(--color-border)' }}>
                     <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.product.title}</div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <span className="qty-pill">x{i.quantity}</span>
+                      <div className="qty-stepper">
+                        <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity - 1)}>-</button>
+                        <span className="stepper-value">x{i.quantity}</span>
+                        <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
+                      </div>
                       <span style={{ fontWeight: 800 }}>₹{i.product.price * i.quantity}</span>
                     </div>
                   </div>

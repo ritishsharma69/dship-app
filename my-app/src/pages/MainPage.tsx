@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
-import { product as localProduct, reviews } from '../data'
+import { product as localProduct, reviews, liveNames, liveCities } from '../data'
 import { events } from '../analytics'
 import type { Product } from '../types'
 import MediaGallery from '../components/MediaGallery'
@@ -19,7 +19,9 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
-import { AddShoppingCart, ShoppingCartCheckout, FlashOn, Star, StarHalf, Shield, LocalShipping, Replay, NotificationsNone } from '@mui/icons-material'
+import LiveSalesToast from '../components/LiveSalesToast'
+
+import { AddShoppingCart, ShoppingCartCheckout, FlashOn, Star, StarHalf, NotificationsNone, LocalOffer, Payments, CheckCircle } from '@mui/icons-material'
 
 const formatINR = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
 const pctOff = (price: number, original?: number) => !original || original <= price ? null : Math.round(((original - price) / original) * 100)
@@ -70,6 +72,51 @@ export default function MainPage() {
   }, [p])
 
   const pct = p ? pctOff(p.price, p.compareAtPrice ?? undefined) : null
+
+
+	  // Live sales toast state (6s visible, then hidden for 5s, repeat)
+	  const [showToast, setShowToast] = useState(false)
+	  const [currentName, setCurrentName] = useState('')
+	  const [currentCity, setCurrentCity] = useState('')
+	  const [timeAgo, setTimeAgo] = useState('a few seconds ago')
+	  const cycleRef = useRef<number | null>(null)
+	  useEffect(() => {
+	    const pick = () => {
+	      const n = liveNames[Math.floor(Math.random() * liveNames.length)]
+	      const c = liveCities[Math.floor(Math.random() * liveCities.length)]
+	      setCurrentName(n)
+	      setCurrentCity(c)
+	      const mins = Math.floor(Math.random() * 59) + 1
+	      setTimeAgo(`${mins} minutes ago`)
+	    }
+	    pick()
+	    setShowToast(true)
+	    let visible = true
+	    cycleRef.current = window.setInterval(() => {
+	      visible = !visible
+	      if (visible) pick()
+	      setShowToast(visible)
+	    }, visible ? 6000 : 5000)
+	    // The above interval delay won't change dynamically; use two alternating timeouts instead
+
+			// Override with 5s show / 15s gap cycle
+			if (cycleRef.current) window.clearInterval(cycleRef.current)
+			const __clearToastTimer = () => { if (cycleRef.current) window.clearTimeout(cycleRef.current) }
+			const __showThenHide = () => {
+			  pick()
+			  setShowToast(true)
+			  __clearToastTimer()
+			  cycleRef.current = window.setTimeout(() => {
+			    setShowToast(false)
+			    cycleRef.current = window.setTimeout(__showThenHide, 15000)
+			  }, 5000)
+			}
+			__showThenHide()
+
+	    return () => { if (cycleRef.current) window.clearInterval(cycleRef.current) }
+	  }, [])
+
+
 
   // GSAP animations (place hooks before any early returns to keep order stable)
   const heroRef = useRef<HTMLDivElement>(null)
@@ -138,6 +185,17 @@ export default function MainPage() {
 	      {/* Page surface wrapper for white center with grey gutters */}
 	      <div className="container">
 	        <div className="page-surface">
+
+          {/* Live sales popup */}
+          <LiveSalesToast
+            open={showToast}
+            name={currentName}
+            city={currentCity}
+            title={p.title}
+            image={p.images[0]}
+            timeAgo={timeAgo}
+            onClose={() => setShowToast(false)}
+          />
 
       {/* Product + Details grid (Myntra-style layout) */}
       <Container sx={{ py: 3 }}>
@@ -209,33 +267,48 @@ export default function MainPage() {
               </Stack>
             )}
 
-            {/* Trust badges */}
-            <Stack direction="row" spacing={2} sx={{ mb: 3, width: '100%', justifyContent: 'space-evenly', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#000000' }}>
-                <Shield fontSize="small" /> 100% Genuine
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#000000' }}>
-                <LocalShipping fontSize="small" /> Fast Delivery
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#000000' }}>
-                <Replay fontSize="small" /> Easy Returns
-              </Box>
-            </Stack>
+
+
 
             {/* Product Features */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 1.5, color: '#000000' }}>Product Details</Typography>
-              <Paper sx={{ p: 1.5, mb: 1.5 }}>
-                <Typography variant="subtitle1" fontWeight={800} sx={{ color: '#000000' }}>{p.bullets[0]}</Typography>
+              <Typography variant="h6" sx={{ mb: 1.5, color: '#000000', fontWeight: 800 }}>Why you’ll love it</Typography>
+              <Paper sx={{ p: 2, mb: 1.5, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
+                <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#000000', fontSize: 18 }}>{p.bullets[0]}</Typography>
               </Paper>
               <FeatureList bullets={p.bullets.slice(1)} />
             </Box>
 
+
+
+
             {/* Payment Offer */}
-            <Paper sx={{ p: 1.5, mb: 0 }}>
-              <Typography fontWeight={700} sx={{ mb: 1, color: '#000000' }}>Payment Offer</Typography>
-              <Typography sx={{ color: '#000000' }}>Extra 5% OFF (up to ₹50) on online payments</Typography>
+            <Paper sx={{ p: 2, mb: 0, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                <LocalOffer fontSize="small" sx={{ color: '#FF3F6C' }} />
+                <Typography fontWeight={800} sx={{ color: '#000000' }}>Payment Offer</Typography>
+              </Stack>
+              <Typography sx={{ color: '#000000', fontSize: 16, mb: 1 }}>
+                <Box component="span" sx={{ color: '#FF3F6C', fontWeight: 800 }}>Extra 5% OFF</Box> (up to ₹50) on online payments
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+                  <Payments sx={{ fontSize: 14, color: '#FF3F6C' }} /> UPI/Cards
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Instant confirmation
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Secure payments
+                </Box>
+              </Stack>
             </Paper>
+
+	            {/* Marketing Banner below Payment Offer */}
+	            <Box sx={{ mt: 2 }}>
+	              <img src="/banner.jpeg" alt="Offer banner" style={{ width: '100%', borderRadius: 12, display: 'block' }} />
+	            </Box>
+
 
 
           </Box>

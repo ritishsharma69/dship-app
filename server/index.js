@@ -8,10 +8,12 @@ const PORT = process.env.PORT || 5000
 
 // CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+const allowAll = allowedFromEnv.includes('*')
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true)
     const ok =
+      allowAll ||
       allowedFromEnv.includes(origin) ||
       origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:') ||
       origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:')
@@ -543,3 +545,5 @@ if (require.main === module) {
   })
 }
 
+// For serverless platforms (e.g., Vercel) export the Express app as the handler
+module.exports = app

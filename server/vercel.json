@@ -1,0 +1,12 @@
+{
+  "version": 2,
+
+  "routes": [
+    { "src": "/api/auth/request-otp", "dest": "/api/auth/request-otp.js" },
+    { "src": "/api/auth/verify-otp", "dest": "/api/auth/verify-otp.js" },
+    { "src": "/api/orders/me", "dest": "/api/orders/me.js" },
+    { "src": "/api/products", "dest": "/api/products.js" },
+    { "src": "/api/(.*)", "dest": "/api/[...path].js" }
+  ]
+}
+

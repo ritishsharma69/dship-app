@@ -21,6 +21,9 @@ app.use(cors({
   },
   credentials: false
 }))
+// Respond to CORS preflight requests for all routes
+app.options('*', cors())
+
 app.use(express.json({ limit: '5mb' }))
 
 let client

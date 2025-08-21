@@ -543,7 +543,3 @@ if (require.main === module) {
   })
 }
 
-// Vercel Node functions expect a handler (req, res) => void
-// We expose both the handler and the express app (for local/dev usage)
-module.exports = (req, res) => app(req, res)
-module.exports.app = app

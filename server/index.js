@@ -285,18 +285,6 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
 
-// Quick DB health check to surface exact connection errors (temporary)
-app.get('/api/health-db', async (_req, res) => {
-  try {
-    const database = await getDb()
-    const ping = await database.command({ ping: 1 })
-    res.json({ ok: true, ping: ping?.ok === 1 })
-  } catch (err) {
-    console.error('[health-db] error', err)
-    res.status(500).json({ ok: false, error: err?.message || 'db_error' })
-  }
-})
-
 
 // Create Razorpay order (amount in INR rupees; converted to paise)
 app.post('/api/payments/razorpay/order', async (req, res) => {
@@ -583,5 +571,4 @@ if (require.main === module) {
   })
 }
 
-// For serverless platforms (e.g., Vercel) export the Express app as the handler
 module.exports = app

@@ -530,12 +530,14 @@ app.get('/api/orders/admin', async (req, res) => {
 app.get('/api/orders/:id', async (req, res) => {
   try {
     const database = await getDb()
-    const _id = new ObjectId(req.params.id)
-    const doc = await database.collection('orders').findOne({ _id })
+    const idStr = String(req.params.id)
+    let filter
+    try { filter = { _id: new ObjectId(idStr) } } catch { filter = { _id: idStr } }
+    const doc = await database.collection('orders').findOne(filter)
     if (!doc) return res.status(404).json({ error: 'Not found' })
     res.json({ id: String(doc._id), ...doc })
   } catch (err) {
-    res.status(400).json({ error: 'Bad id' })
+    res.status(500).json({ error: 'Internal error' })
   }
 })
 
@@ -551,13 +553,14 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     if (!allowed.has(status)) return res.status(400).json({ error: 'invalid_status' })
 
     const database = await getDb()
-    const _id = new ObjectId(req.params.id)
-    const result = await database.collection('orders').findOneAndUpdate(
-      { _id },
-      { $set: { status, updatedAt: new Date() } },
-      { returnDocument: 'after' }
-    )
-    const doc = result?.value
+    const idStr = String(req.params.id)
+    let filter
+    try { filter = { _id: new ObjectId(idStr) } } catch { filter = { _id: idStr } }
+
+    const upd = await database.collection('orders').updateOne(filter, { $set: { status, updatedAt: new Date() } })
+    if (!upd.matchedCount) return res.status(404).json({ error: 'Not found' })
+
+    const doc = await database.collection('orders').findOne(filter)
     if (!doc) return res.status(404).json({ error: 'Not found' })
 
     const out = {

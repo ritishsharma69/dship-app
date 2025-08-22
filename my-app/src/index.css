@@ -343,3 +343,13 @@ body:has([role="dialog"][aria-modal="true"]) header.MuiAppBar-root {
   .checkout-grid > .checkout-form,
   .checkout-grid > .order-summary-card { max-height: calc(100vh - 170px); overflow: auto; }
 }
+
+/* Orders page mobile tweaks */
+.orders-page .orders-head { gap: 8px; }
+.orders-page .orders-head-note { font-size: 12px; }
+.orders-page .order-card { padding: 12px; }
+.orders-page .order-head { padding: 0; }
+.orders-page .order-meta .order-id-time { display: none; }
+@media (min-width: 520px) {
+  .orders-page .order-meta .order-id-time { display: inline; }
+}

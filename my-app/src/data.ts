@@ -36,7 +36,7 @@ export const reviews: ReviewsSummary = {
   ratingCount: 1287,
   testimonials: [
     { author: 'Aman K.', quote: 'Within 2 weeks hair fall kam ho gaya. Scalp fresh aur nourished lagta hai.', rating: 5 },
-    { author: 'Ritika S.', quote: 'Dandruff almost gayab! Baal zyada soft aur shiny ho gaye.', rating: 5 },
+    { author: 'Ritika S.', quote: 'Dandruff almost g̀ayab! Baal zyada soft aur shiny ho gaye.', rating: 5 },
     { author: 'Neha P.', quote: 'Raat ko lagao, subah wash karo — growth me naya baby hair dikh raha hai. Totally worth it!', rating: 5 },
     { author: 'Vineet K.', quote: 'Value for money! Use karne me bahut comfortable aur daily relaxation milta hai.', rating: 4 },
     { author: 'Shreya G.', quote: 'Mom ke liye liya tha, migraine me kaafi relief milta hai. Build quality bhi acchi hai.', rating: 5 },

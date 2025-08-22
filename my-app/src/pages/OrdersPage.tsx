@@ -112,29 +112,24 @@ export default function OrdersPage() {
 
 
   return (
-    <Container sx={{ py: 3 }}>
-      <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: token ? '100%' : 640, mx: 'auto', p: token ? 2 : 3, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
-        <Typography variant="h4" align="center" sx={{ fontWeight: 800, mb: 1 }}>Your Orders</Typography>
-        <Typography align="center" color="text.secondary" sx={{ mb: 2 }}>Enter your email to login</Typography>
+    <Container className="orders-page" sx={{ py: 3 }}>
+      <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 640, mx: 'auto', p: 2, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
+        <Typography variant="h5" align="center" sx={{ fontWeight: 800, mb: 1 }}>Your Orders</Typography>
+        <Typography align="center" color="text.secondary" sx={{ mb: 2, fontSize: 14 }}>Enter your email to login</Typography>
 
         {!token ? (
-          <Stack spacing={2}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'stretch', sm: 'center' }}>
-              <TextField fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="medium" />
+          <Stack spacing={1.25}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
+              <TextField fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="small" />
               {!otpSent ? (
-                <Button variant="contained" onClick={requestOtp} disabled={!validEmail || sendingOtp} sx={{ minWidth: 150, borderRadius: 0, py: 1.2, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
+                <Button variant="contained" onClick={requestOtp} disabled={!validEmail || sendingOtp} sx={{ minWidth: 120, borderRadius: 1, py: 1, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
                   {sendingOtp ? 'Sending…' : 'Send OTP'}
                 </Button>
               ) : (
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <TextField
-                    value={code}
-                    onChange={e=>setCode(e.target.value)}
-                    placeholder="OTP"
-                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }}
-                    sx={{ width: 160 }}
-                  />
-                  <Button variant="contained" onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ minWidth: 120, borderRadius: 0, py: 1.1, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
+                  <TextField value={code} onChange={e=>setCode(e.target.value)} placeholder="OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }} sx={{ width: 140 }} />
+                  <Button variant="contained" onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ minWidth: 100, borderRadius: 1, py: 0.9, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
+
                     {verifyingOtp ? 'Verifying…' : 'Verify'}
                   </Button>
                 </Stack>
@@ -148,34 +143,34 @@ export default function OrdersPage() {
         {token && error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
 
         {token && (
-          <div style={{ marginTop: 16 }}>
-            <div style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-              <div style={{ color:'#6b7280' }}>{isAdmin ? 'Viewing all orders (admin)' : `Logged in as ${email}`}</div>
-              <button className="btn" onClick={handleLogout}>Logout</button>
+          <div style={{ marginTop: 12 }}>
+            <div className="orders-head" style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+              <div className="orders-head-note" style={{ color:'#6b7280', fontSize: 12 }}>{isAdmin ? 'Viewing all orders (admin)' : `Logged in as ${email}`}</div>
+              <button className="btn" style={{ padding: '8px 12px' }} onClick={handleLogout}>Logout</button>
             </div>
             {list.length === 0 && !loading ? (
               <div style={{ color: '#6b7280' }}>No orders yet.</div>
             ) : (
               <div>
                 {isAdmin ? (
-                  <div style={{ display: 'grid', gap: 12 }}>
+                  <div className="orders-list" style={{ display: 'grid', gap: 10 }}>
                     {list.map((o) => (
-                      <div key={o.id} className="card" style={{ padding: 16, borderRadius: 12, borderColor: 'var(--color-border)', background:'#fff' }}>
-                        <button onClick={() => setOpen(prev => ({...prev, [o.id]: !prev[o.id]}))} style={{ all:'unset', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', cursor: 'pointer', width: '100%' }}>
-                          <div>
-                            <div style={{ fontWeight: 700 }}>{o.customer?.name || '-'}</div>
-                            <div className="muted" style={{ color:'#6b7280', fontSize:12 }}>{o.customer?.email || ''}</div>
+                      <div key={o.id} className="card order-card" style={{ padding: 12, borderRadius: 10, borderColor: 'var(--color-border)', background:'#fff' }}>
+                        <button className="order-head" onClick={() => setOpen(prev => ({...prev, [o.id]: !prev[o.id]}))} style={{ all:'unset', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', cursor: 'pointer', width: '100%' }}>
+                          <div className="order-cust">
+                            <div className="order-name" style={{ fontWeight: 700 }}>{o.customer?.name || '-'}</div>
+                            <div className="order-email muted" style={{ color:'#6b7280', fontSize:12 }}>{o.customer?.email || ''}</div>
                           </div>
-                          <div style={{ display:'flex', gap:12, alignItems:'center', color:'#6b7280' }}>
-                            <span className="badge" style={{ textTransform: 'capitalize', background: o.status==='pending' ? '#fff7ed' : o.status==='accepted' ? '#ecfeff' : '#ecfdf5', border: '1px solid var(--color-border)' }}>{o.status}</span>
-                            <span>#{o.id.slice(-8)} • {new Date(o.createdAt).toLocaleString()}</span>
+                          <div className="order-meta" style={{ display:'flex', gap:10, alignItems:'center', color:'#6b7280' }}>
+                            <span className="badge order-status" style={{ textTransform: 'capitalize', background: o.status==='pending' ? '#fff7ed' : o.status==='accepted' ? '#ecfeff' : '#ecfdf5', border: '1px solid var(--color-border)' }}>{o.status}</span>
+                            <span className="order-id-time" style={{ display:'none' }}>#{o.id.slice(-8)} • {new Date(o.createdAt).toLocaleString()}</span>
                             <span className={`fa-solid fa-chevron-${open[o.id] ? 'up' : 'down'}`} />
                           </div>
                         </button>
                         {open[o.id] ? (
-                          <div style={{ marginTop: 8, display:'grid', gap:10 }}>
+                          <div className="order-details" style={{ marginTop: 8, display:'grid', gap:8 }}>
                             <div style={{ display:'grid', gap:6 }}>
-                              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                              <div className="order-status-row" style={{ display:'flex', alignItems:'center', gap:8 }}>
                                   <b>Status:</b>
                                   <select defaultValue={o.status as AdminStatus} onChange={async (e)=>{
                                     const newStatus = e.target.value as AdminStatus
@@ -193,12 +188,12 @@ export default function OrdersPage() {
                                     <option value="delivered">Delivered</option>
                                   </select>
                                 </div>
-                              <div><b>Payment:</b> {o.paymentMethod || 'cod'}</div>
-                              <div><b>Address:</b> {o.address?.line1}, {o.address?.city}, {o.address?.state} {o.address?.zip}</div>
+                              <div className="order-pay"><b>Payment:</b> {o.paymentMethod || 'cod'}</div>
+                              <div className="order-addr"><b>Address:</b> {o.address?.line1}, {o.address?.city}, {o.address?.state} {o.address?.zip}</div>
                             </div>
                             <div>
-                              <div style={{ fontWeight: 800, marginBottom: 6 }}>Items</div>
-                              <div style={{ border: '1px dashed var(--color-border)', borderRadius: 8, padding: 8 }}>
+                              <div style={{ fontWeight: 800, marginBottom: 4 }}>Items</div>
+                              <div className="order-items" style={{ border: '1px dashed var(--color-border)', borderRadius: 8, padding: 8 }}>
                                 {(o.items||[]).map((i, idx) => (
                                   <div key={idx} className="list-row" style={{ display:'flex', justifyContent:'space-between' }}>
                                     <div>{i.title} × {i.quantity}</div>
@@ -207,7 +202,7 @@ export default function OrdersPage() {
                                 ))}
                               </div>
                             </div>
-                            <div style={{ marginTop: 4, display:'flex', justifyContent:'space-between' }}>
+                            <div className="order-summary" style={{ marginTop: 2, display:'flex', justifyContent:'space-between' }}>
                               <div className="muted" style={{ color:'#6b7280' }}>Items: {o.itemsCount ?? (o.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)}</div>
                               <div style={{ fontWeight: 700 }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</div>
                             </div>

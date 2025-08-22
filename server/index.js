@@ -191,20 +191,38 @@ async function sendOtpEmail({ to, code }) {
 }
 
 
-// In-memory OTP cache (for demo/dev). For production use a proper store with TTL.
-const otpCache = new Map() // key=email, value={code:string, expires:number}
+// OTP storage using MongoDB with TTL index
+let otpIndexReady = false
+async function getOtpCollection() {
+  const database = await getDb()
+  const coll = database.collection('otps')
+  if (!otpIndexReady) {
+    try {
+      await coll.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 })
+      await coll.createIndex({ email: 1 }, { background: true })
+    } catch (e) {
+      console.warn('[otp] index creation failed', e?.message || e)
+    }
+    otpIndexReady = true
+  }
+  return coll
+}
 function generateOtp() {
   return String(Math.floor(100000 + Math.random() * 900000))
 }
 
-// Send OTP to email
+// Send OTP to email (store code in MongoDB with TTL)
 app.post('/api/auth/request-otp', async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase()
     if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' })
     const code = generateOtp()
-    const expires = Date.now() + 5 * 60 * 1000
-    otpCache.set(email, { code, expires })
+    const coll = await getOtpCollection()
+    await coll.updateOne(
+      { email },
+      { $set: { email, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) } },
+      { upsert: true }
+    )
 
     // send OTP email
     await sendOtpEmail({ to: email, code })
@@ -221,9 +239,10 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase()
     const code = String(req.body?.code || '').trim()
-    const rec = otpCache.get(email)
-    if (!rec || rec.code !== code || rec.expires < Date.now()) return res.status(400).json({ error: 'Invalid or expired code' })
-    otpCache.delete(email)
+    const coll = await getOtpCollection()
+    const rec = await coll.findOne({ email, code, expiresAt: { $gt: new Date() } })
+    if (!rec) return res.status(400).json({ error: 'Invalid or expired code' })
+    await coll.deleteOne({ _id: rec._id })
     // very simple token for demo: base64(email|ts)
     const token = Buffer.from(`${email}|${Date.now()}`).toString('base64')
     res.json({ token, email })
@@ -265,6 +284,19 @@ app.get('/api/orders/me', async (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
+
+// Quick DB health check to surface exact connection errors (temporary)
+app.get('/api/health-db', async (_req, res) => {
+  try {
+    const database = await getDb()
+    const ping = await database.command({ ping: 1 })
+    res.json({ ok: true, ping: ping?.ok === 1 })
+  } catch (err) {
+    console.error('[health-db] error', err)
+    res.status(500).json({ ok: false, error: err?.message || 'db_error' })
+  }
+})
+
 
 // Create Razorpay order (amount in INR rupees; converted to paise)
 app.post('/api/payments/razorpay/order', async (req, res) => {

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { createRoot, Root } from 'react-dom/client'
+import { useEffect, useRef } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import { Box, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { gsap } from '../lib/gsap'

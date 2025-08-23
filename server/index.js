@@ -25,6 +25,8 @@ app.use(cors({
   methods: ['GET','HEAD','POST','PATCH','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }))
+// Express 5-safe preflight for all routes
+app.options(/.*/, cors())
 
 
 app.use(express.json({ limit: '5mb' }))

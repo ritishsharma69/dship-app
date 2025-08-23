@@ -29,12 +29,12 @@ export default function CheckoutPage() {
   // Discount modal state
   const [showDiscount, setShowDiscount] = useState(false)
   const [pendingProductId, setPendingProductId] = useState<string | null>(null)
-  const [couponApplied, setCouponApplied] = useState<boolean>(() => {
-    try { return sessionStorage.getItem('coupon:YOUARESPECIAL') === 'applied' } catch { return false }
-  })
+  // Do NOT auto-apply coupon; only apply when user explicitly claims it
+  const [couponApplied, setCouponApplied] = useState<boolean>(false)
   const exitedOnceRef = useRef(false)
 
-  // Show when user navigates away from Checkout the first time
+  // Show discount only when user navigates away from Checkout the first time
+  // but do NOT auto-apply without user action
   useEffect(() => {
     const onPop = () => {
       if (!exitedOnceRef.current) {
@@ -223,6 +223,15 @@ export default function CheckoutPage() {
                         <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
                       </div>
                       <span style={{ fontWeight: 800 }}>₹{i.product.price * i.quantity}</span>
+                      <button
+                        type="button"
+                        className="btn btn-remove"
+                        onClick={() => { setPendingProductId(i.product.id); setShowDiscount(true) }}
+                        style={{ marginLeft: 6 }}
+                        aria-label={`Remove ${i.product.title} from cart`}
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -261,7 +270,6 @@ export default function CheckoutPage() {
         }}
         onClaim={async () => {
           try {
-            sessionStorage.setItem('coupon:YOUARESPECIAL', 'applied')
             setCouponApplied(true)
             push('₹50 OFF applied')
             // Keep cart as-is; user claimed discount so we won't remove the item

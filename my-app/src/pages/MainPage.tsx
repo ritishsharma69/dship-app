@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
-import { product as localProduct, reviews, liveNames, liveCities } from '../data'
+import { productsBySlug, product as localProduct, reviewsBySlug, liveNames, liveCities } from '../data'
 import { events } from '../analytics'
 import type { Product } from '../types'
 import MediaGallery from '../components/MediaGallery'
@@ -33,8 +33,10 @@ export default function MainPage() {
   const [error] = useState<string | null>(null)
 
   useEffect(() => {
-    // Use local product data (Head Massager) during setup
-    setP(localProduct)
+    // Pick by slug from the URL: /p/:slug
+    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager'
+    const chosen = productsBySlug[slug] ?? localProduct
+    setP(chosen)
     setLoading(false)
   }, [])
 
@@ -54,11 +56,13 @@ export default function MainPage() {
   // JSON-LD
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
+    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager'
+    const rev = reviewsBySlug[slug]
     return {
       '@context': 'https://schema.org', '@type': 'Product', name: p.title, sku: p.sku,
       brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
       image: p.images,
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: reviews.ratingAvg.toFixed(1), reviewCount: reviews.ratingCount },
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: rev.ratingAvg.toFixed(1), reviewCount: rev.ratingCount },
       offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: p.price,
         availability: out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
@@ -222,7 +226,7 @@ export default function MainPage() {
               <Star fontSize="small" sx={{ color: '#000000' }} />
               <Star fontSize="small" sx={{ color: '#000000' }} />
               <StarHalf fontSize="small" sx={{ color: '#000000' }} />
-              <Typography variant="body2" sx={{ color: '#000000' }}>({reviews.ratingCount} reviews)</Typography>
+              <Typography variant="body2" sx={{ color: '#000000' }}>({(reviewsBySlug[(window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager']?.ratingCount) ?? 0} reviews)</Typography>
             </Stack>
 
             {/* Price */}
@@ -286,25 +290,25 @@ export default function MainPage() {
 
 
             {/* Payment Offer */}
-            <Paper sx={{ p: 2, mb: 0, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
+            <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 0, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                 <LocalOffer fontSize="small" sx={{ color: '#FF3F6C' }} />
-                <Typography fontWeight={800} sx={{ color: '#000000' }}>Payment Offer</Typography>
+                <Typography fontWeight={800} sx={{ color: '#000000', fontSize: { xs: 16, sm: 18 } }}>Payment Offer</Typography>
               </Stack>
-              <Typography sx={{ color: '#000000', fontSize: 16, mb: 1 }}>
+              <Typography sx={{ color: '#000000', fontSize: { xs: 15, sm: 16 }, lineHeight: 1.45, mb: 1 }}>
                 <Box component="span" sx={{ color: '#FF3F6C', fontWeight: 800 }}>Extra 5% OFF</Box> (up to ₹50) on online payments
               </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
                   <Payments sx={{ fontSize: 14, color: '#FF3F6C' }} /> UPI/Cards
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
                   <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Instant confirmation
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1, py: 0.5, fontSize: 12 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
                   <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Secure payments
                 </Box>
-              </Stack>
+              </Box>
             </Paper>
 
 	            {/* Marketing Banner below Payment Offer */}

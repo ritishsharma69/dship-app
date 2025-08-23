@@ -76,6 +76,25 @@ export default function MediaGallery({ product }: { product: Product }) {
     return arr
   })()
 
+  // Compute proper YouTube embed URL (handles t/start params) so autoplay works
+  const embedSrc = (() => {
+    const m = media[active]
+    if (!m || m.type !== 'youtube') return ''
+    const raw = m.src
+    const ytId = (raw.match(/[?&]v=([^&]+)/) || raw.match(/youtu\.be\/([^?]+)/))?.[1]
+    if (!ytId) return raw
+    const tParam = (raw.match(/[?&]t=([^&]+)/) || raw.match(/[?&]start=([^&]+)/))?.[1]
+    let start = 0
+    if (tParam) {
+      if (/^\d+$/.test(tParam)) start = parseInt(tParam, 10)
+      else {
+        const mm = tParam.match(/(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/)
+        if (mm) start = (parseInt(mm[1]||'0')*3600) + (parseInt(mm[2]||'0')*60) + parseInt(mm[3]||'0')
+      }
+    }
+    return `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0${start?`&start=${start}`:''}`
+  })()
+
   // Adjust active index bounds if media length changed
   useEffect(() => {
     setActive((a) => Math.max(0, Math.min(a, media.length - 1)))
@@ -88,7 +107,7 @@ export default function MediaGallery({ product }: { product: Product }) {
           <div style={{ position: 'relative', width: '100%', background: '#000' }}>
             <div style={{ position: 'relative', paddingTop: '56.25%' }}>
               <iframe
-                src={media[active].src.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/') + '?autoplay=1&mute=1&playsinline=1&rel=0'}
+                src={embedSrc || media[active].src}
                 title="Product video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen

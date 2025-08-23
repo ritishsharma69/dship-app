@@ -3,6 +3,6 @@
 
 const app = require('../index.js')
 
-// Export the Express app as the handler
-module.exports = app
+// Export a handler function so Vercel Node runtime invokes Express correctly
+module.exports = (req, res) => app(req, res)
 

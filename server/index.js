@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000
 // CORS: be permissive by default so frontend (Vercel) can call backend reliably
 // If you want to restrict later, set ALLOWED_ORIGINS to a comma-separated list or "*"
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
-const allowAll = allowedFromEnv.includes('*') || process.env.ALLOWED_ORIGINS === undefined
+const allowAll = allowedFromEnv.includes('*') || !process.env.ALLOWED_ORIGINS || process.env.ALLOWED_ORIGINS.trim() === ''
 app.use(cors({
   origin: (origin, cb) => {
     // Allow SSR/no-origin, local dev, and any explicit origins. If none configured, allow all.

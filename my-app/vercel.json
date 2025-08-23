@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://backend-ten-theta-66.vercel.app/api/$1" }
+  ]
+}
+

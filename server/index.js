@@ -6,27 +6,23 @@ const { MongoClient, ObjectId } = require('mongodb')
 const app = express()
 const PORT = process.env.PORT || 5000
 
-// CORS: be permissive by default so frontend (Vercel) can call backend reliably
-// If you want to restrict later, set ALLOWED_ORIGINS to a comma-separated list or "*"
+// CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
-const allowAll = allowedFromEnv.includes('*') || process.env.ALLOWED_ORIGINS === undefined
+const allowAll = allowedFromEnv.includes('*')
 app.use(cors({
   origin: (origin, cb) => {
-    // Allow SSR/no-origin, local dev, and any explicit origins. If none configured, allow all.
     if (!origin) return cb(null, true)
-    if (allowAll) return cb(null, true)
     const ok =
+      allowAll ||
       allowedFromEnv.includes(origin) ||
       origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:') ||
       origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:')
     cb(null, !!ok)
   },
-  credentials: false,
-  methods: ['GET','HEAD','POST','PATCH','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization']
+  credentials: false
 }))
-// Ensure preflight succeeds universally
-app.options('*', cors())
+// Respond to CORS preflight requests for all routes
+// Note: app.use(cors({...})) above will handle OPTIONS requests automatically.
 
 
 app.use(express.json({ limit: '5mb' }))

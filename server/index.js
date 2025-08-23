@@ -22,7 +22,8 @@ app.use(cors({
   credentials: false
 }))
 // Respond to CORS preflight requests for all routes
-app.options('*', cors())
+// Note: app.use(cors({...})) above will handle OPTIONS requests automatically.
+
 
 app.use(express.json({ limit: '5mb' }))
 
@@ -286,45 +287,20 @@ app.get('/api/health', (req, res) => {
 })
 
 
-// Create Razorpay order (amount in INR rupees; converted to paise)
-app.post('/api/payments/razorpay/order', async (req, res) => {
-  try {
-    const amountRupees = Math.round(Number(req.body?.amount || 0))
-    const receipt = String(req.body?.receipt || `rcpt_${Date.now()}`)
-    if (!amountRupees || amountRupees <= 0) return res.status(400).json({ error: 'amount required' })
-
-    const order = await razorpayRequest('/v1/orders', 'POST', {
-      amount: amountRupees * 100, // paise
-      currency: 'INR',
-      receipt,
-      payment_capture: 1
-    })
-    res.json({ order })
-  } catch (err) {
-    console.error('POST /api/payments/razorpay/order error', err)
-    res.status(500).json({ error: 'payment_init_failed', message: err?.message || 'Internal error' })
-  }
+// Online payments temporarily disabled — return friendly message
+app.post('/api/payments/razorpay/order', (req, res) => {
+  return res.status(503).json({
+    error: 'payment_disabled',
+    message: 'Online payments are temporarily disabled. Please choose Cash on Delivery (COD).'
+  })
 })
 
-// Verify Razorpay signature
+// Online payments temporarily disabled — verification not available
 app.post('/api/payments/razorpay/verify', (req, res) => {
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {}
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ error: 'missing_fields' })
-    }
-    const keySecret = process.env.RAZORPAY_KEY_SECRET
-    if (!keySecret) return res.status(500).json({ error: 'Razorpay not configured' })
-
-    const hmac = crypto.createHmac('sha256', keySecret)
-    hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    const expected = hmac.digest('hex')
-    const valid = expected === razorpay_signature
-    res.json({ valid })
-  } catch (err) {
-    console.error('POST /api/payments/razorpay/verify error', err)
-    res.status(500).json({ error: 'Internal error' })
-  }
+  return res.status(503).json({
+    error: 'payment_disabled',
+    message: 'Online payments are temporarily disabled. Please use COD.'
+  })
 })
 
 // Submit return request – emails store owner and sends confirmation to customer

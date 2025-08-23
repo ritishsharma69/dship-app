@@ -25,6 +25,8 @@ app.use(cors({
   methods: ['GET','HEAD','POST','PATCH','PUT','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 }))
+// Ensure preflight succeeds universally
+app.options('*', cors())
 
 
 app.use(express.json({ limit: '5mb' }))

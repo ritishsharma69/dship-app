@@ -1,5 +1,8 @@
-// Vercel serverless entry using serverless-http
-const serverless = require('serverless-http')
+// Vercel serverless entry that reuses the Express app from ../index.js
+// This allows deploying the server/ folder as a Vercel project with Root Directory = server
+
 const app = require('../index.js')
-module.exports = serverless(app)
+
+// Export a handler function so Vercel Node runtime invokes Express correctly
+module.exports = (req, res) => app(req, res)
 

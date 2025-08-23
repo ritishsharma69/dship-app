@@ -1,10 +1,11 @@
 /** React */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { events } from '../analytics'
 import { apiPostJson } from '../lib/api'
+import DiscountModal from '../components/DiscountModal'
 
 async function loadRazorpayScript() {
   if (document.getElementById('razorpay-js')) return true
@@ -24,6 +25,26 @@ export default function CheckoutPage() {
   const { push } = useToast()
   const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
   const [paymentMethod, setPaymentMethod] = useState<string>(hasPaymentKey ? 'razorpay' : 'cod')
+
+  // Discount modal state
+  const [showDiscount, setShowDiscount] = useState(false)
+  const [pendingProductId, setPendingProductId] = useState<string | null>(null)
+  const [couponApplied, setCouponApplied] = useState<boolean>(() => {
+    try { return sessionStorage.getItem('coupon:YOUARESPECIAL') === 'applied' } catch { return false }
+  })
+  const exitedOnceRef = useRef(false)
+
+  // Show when user navigates away from Checkout the first time
+  useEffect(() => {
+    const onPop = () => {
+      if (!exitedOnceRef.current) {
+        setShowDiscount(true)
+        exitedOnceRef.current = true
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
 
   useEffect(() => {
     // SEO noindex + canonical
@@ -189,7 +210,15 @@ export default function CheckoutPage() {
                     <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.product.title}</div>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                       <div className="qty-stepper">
-                        <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity - 1)}>-</button>
+                        <button type="button" className="stepper-btn" onClick={() => {
+                          const nextQty = i.quantity - 1
+                          if (nextQty <= 0) {
+                            setPendingProductId(i.product.id)
+                            setShowDiscount(true)
+                          } else {
+                            update(i.product.id, nextQty)
+                          }
+                        }}>-</button>
                         <span className="stepper-value">x{i.quantity}</span>
                         <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
                       </div>
@@ -203,16 +232,43 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <div className="list-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
+                {couponApplied && (
+                  <div className="list-row" style={{ color:'#22c55e' }}>
+                    <span>Coupon (YOUARESPECIAL)</span><span>-₹50</span>
+                  </div>
+                )}
                 <div className="list-row"><span>Shipping</span><span>₹{shipping}</span></div>
                 <div className="list-row"><span>Tax</span><span>₹{tax}</span></div>
                 <div className="order-total">
-                  <span>Total</span><span>₹{total}</span>
+                  <span>Total</span><span>₹{Math.max(0, total - (couponApplied ? 50 : 0))}</span>
                 </div>
               </aside>
             </div>
           </div>
         )}
       </div>
+
+      {/* Discount modal */}
+      <DiscountModal
+        open={showDiscount}
+        onClose={() => {
+          // No Thanks: apply the pending 0-qty update if any
+          if (pendingProductId) {
+            update(pendingProductId, 0)
+            setPendingProductId(null)
+          }
+          setShowDiscount(false)
+        }}
+        onClaim={async () => {
+          try {
+            sessionStorage.setItem('coupon:YOUARESPECIAL', 'applied')
+            setCouponApplied(true)
+            push('₹50 OFF applied')
+            // Keep cart as-is; user claimed discount so we won't remove the item
+            setShowDiscount(false)
+          } catch {}
+        }}
+      />
     </div>
   )
 }

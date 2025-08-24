@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: dship-backend
+    env: node
+    plan: free
+    region: singapore
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        # Set this in the Render dashboard after deploy
+        sync: false
+      - key: ALLOWED_ORIGINS
+        # Comma-separated origins allowed by CORS. Replace with your real domains.
+        value: https://your-frontend.onrender.com,https://your-custom-domain.com,http://localhost:5173
+      - key: ADMIN_EMAIL
+        # Admin email used for viewing all orders and admin actions
+        value: khushiyanstore@gmail.com
+      - key: ORDERS_EMAIL
+        # Where new order notifications are sent (default falls back to ADMIN_EMAIL)
+        value: khushiyanstore@gmail.com
+      - key: RETURNS_EMAIL
+        # Where return requests are sent (default falls back to ADMIN_EMAIL)
+        value: khushiyanstore@gmail.com
+      - key: SMTP_HOST
+        # Optional: enable emails (order/OTP). Provide SMTP creds to enable.
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: STORE_NAME
+        value: KhushiyanaStore
+      - key: FROM_EMAIL
+        value: no-reply@yourdomain.com
+      - key: ADMIN_SECRET
+        # Optional: allows /api/orders/admin access with ?secret=
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        # Optional: if you enable online payments later
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+

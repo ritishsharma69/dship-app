@@ -286,6 +286,12 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, now: new Date().toISOString() })
 })
 
+// Friendly root route so hitting http://localhost:5000/ doesn't show "Cannot GET /"
+app.get('/', (req, res) => {
+  res.type('text/plain').send('DShip backend is running. Try: GET /api/health, GET /api/products, POST /api/orders')
+})
+
+
 
 // Online payments temporarily disabled — return friendly message
 app.post('/api/payments/razorpay/order', (req, res) => {

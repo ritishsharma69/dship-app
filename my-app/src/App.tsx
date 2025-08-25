@@ -9,8 +9,9 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const SuccessPage = lazy(() => import('./pages/SuccessPage')) // legacy
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
 // const OrderTrackPage = lazy(() => import('./pages/OrderTrackPage')) // temporarily disabled
-const ContactPage = lazy(() => import('./pages/ContactPage'))
+const ContactPage = lazy(() => import('./pages/ContactUsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
+const ShippingReturnsPage = lazy(() => import('./pages/ShippingReturnsPage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
 
@@ -35,6 +36,9 @@ export default function App() {
           </Route>
           <Route path="/privacy">
             <PrivacyPage />
+          </Route>
+          <Route path="/shipping-returns">
+            <ShippingReturnsPage />
           </Route>
           <Route path="/orders">
             <OrdersPage />

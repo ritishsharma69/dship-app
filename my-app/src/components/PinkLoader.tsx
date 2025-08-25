@@ -1,8 +1,5 @@
-import { useEffect, useRef } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { Box, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
-import { gsap } from '../lib/gsap'
+import { Box } from '@mui/material'
 
 /**
  * Minimal pink + dark loader (centered, simple)
@@ -14,7 +11,7 @@ declare global { interface Window { __pinkLoaderCount?: number } }
 
 let root: Root | null = null
 let containerEl: HTMLDivElement | null = null
-let currentText = 'Loading…'
+let currentText = 'Loading...'
 
 function mount(text?: string) {
   if (!containerEl) {
@@ -48,54 +45,68 @@ export function hidePinkLoader() {
 }
 
 function Overlay({ text }: { text: string }) {
-  const orbitRef = useRef<HTMLDivElement>(null)
-  const ringRef = useRef<HTMLDivElement>(null)
-  const haloRef = useRef<HTMLDivElement>(null)
-  const textRef = useRef<HTMLDivElement>(null)
+  // Brand loader: keep page visible; only subtle blur, no colored background. Spinner ring is purple.
+  const PINK = '#FF2A6D'
+  const GOLD = '#C7A100' // for bag gradient only
+  const PURPLE = '#6D28D9'
+  const TRACK = 'rgba(124,58,237,0.22)'
+  const OVERLAY_BG = 'rgba(0,0,0,0.04)'
 
-  // Keep pink, darken the rest
-  const pink = '#FF2A6D'
-  const dark = '#0B0B0F'
-  const purple = '#4B2AA4'
-
-  useEffect(() => {
-    const spin = gsap.to(orbitRef.current, { rotate: 360, duration: 2.1, ease: 'linear', repeat: -1 })
-    const pulse = gsap.to(ringRef.current, { scale: 1.045, duration: 1.2, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-    const halo = gsap.to(haloRef.current, { opacity: 0.9, duration: 1.6, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-    const textBlink = gsap.to(textRef.current, { opacity: 0.9, duration: 1, yoyo: true, repeat: -1, ease: 'sine.inOut' })
-    return () => { spin.kill(); pulse.kill(); halo.kill(); textBlink.kill() }
-  }, [])
+  const size = 96
+  const thickness = 6
 
   return (
     <Box sx={{
       position: 'fixed', inset: 0,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
-      background: `radial-gradient(900px circle at 50% 40%, ${alpha(purple, 0.12)}, transparent 70%), rgba(0,0,0,0.70)`,
-      backdropFilter: 'blur(4px)'
+      display: 'grid', placeItems: 'center',
+      background: OVERLAY_BG, // keep page visible under
+      backdropFilter: 'blur(1.5px) saturate(110%)',
+      zIndex: 2000
     }}>
-      {/* Simple circle */}
-      <Box sx={{ position: 'relative', width: 140, height: 140, borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
-        {/* soft halo */}
-        <Box ref={haloRef} sx={{ position: 'absolute', inset: 0, borderRadius: '50%', background: `radial-gradient(65% 65% at 50% 45%, ${alpha(pink, 0.25)}, ${alpha(purple, 0.18)} 60%, transparent 70%)`, filter: 'blur(8px)' }} />
-        {/* ring */}
-        <Box ref={ringRef} sx={{ position: 'absolute', inset: 22, borderRadius: '50%', border: `2px solid ${alpha(pink, 0.6)}`, boxShadow: `0 0 12px ${alpha(pink, 0.35)}, inset 0 0 18px ${alpha(purple, 0.45)}` }} />
-        {/* single orbit with 3 dots */}
-        <Box ref={orbitRef} sx={{ position: 'absolute', inset: 16 }}>
-          <Dot sx={{ top: -6, left: '50%', transform: 'translateX(-50%)' }} color={pink} />
-          <Dot sx={{ right: -6, top: '50%', transform: 'translateY(-50%)' }} color={alpha(purple, 0.8)} />
-          <Dot sx={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }} color={alpha(dark, 0.8)} />
-        </Box>
-      </Box>
-
-      <Typography ref={textRef} variant="caption" sx={{ mt: 1.6, fontWeight: 800, color: '#FDE7EF', letterSpacing: 0.4 }}>
-        {text || 'Loading…'}
-      </Typography>
+      <div style={{ display:'grid', placeItems:'center', gap: 12 }}>
+        <div style={{ position: 'relative', width: size, height: size }}>
+          {/* Track ring */}
+          <span style={{ position:'absolute', inset: 0, borderRadius: 999, border: `${thickness}px solid ${TRACK}` }} />
+          {/* Rotating arc (purple) using conic-gradient and mask to create stroke */}
+          <span style={{
+            position:'absolute', inset: 0, borderRadius: 999,
+            background: `conic-gradient(${PURPLE} 0 90deg, rgba(0,0,0,0) 90deg)`,
+            WebkitMask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 0)` as any,
+            mask: `radial-gradient(farthest-side, transparent calc(100% - ${thickness}px), #000 0)` as any,
+            animation: 'spin 1.05s linear infinite'
+          }} />
+          {/* Center bag icon */}
+          <div style={{ position:'absolute', inset: thickness + 8, display:'grid', placeItems:'center' }}>
+            <BagIcon pink={PINK} gold={GOLD} />
+          </div>
+        </div>
+        <div style={{ fontWeight: 800, color: '#4C1D95', letterSpacing: 0.3 }}>{text || 'Loading...'}</div>
+      </div>
     </Box>
   )
 }
 
-function Dot({ sx, color }: { sx: any; color: string }) {
-  return <Box sx={{ position: 'absolute', width: 12, height: 12, borderRadius: '50%', bgcolor: color, boxShadow: `0 0 12px ${alpha(color, 0.8)}`, ...sx }} />
+function BagIcon({ pink, gold }: { pink: string; gold: string }) {
+  // Simple shopping bag with smile; gradient from pink to dark yellow
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bagGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor={pink} />
+          <stop offset="1" stopColor={gold} />
+        </linearGradient>
+      </defs>
+      {/* Bag body */}
+      <rect x="12" y="18" width="40" height="36" rx="6" fill="url(#bagGrad)" />
+      {/* Handles */}
+      <path d="M20 22c0-6 4-10 12-10s12 4 12 10" stroke="#fff" strokeWidth="3" strokeLinecap="round" fill="none" />
+      {/* Eyes */}
+      <circle cx="28" cy="36" r="2" fill="#fff" />
+      <circle cx="40" cy="36" r="2" fill="#fff" />
+      {/* Smile */}
+      <path d="M28 42c2 2 6 2 8 0" stroke="#fff" strokeWidth="3" strokeLinecap="round" fill="none" />
+    </svg>
+  )
 }
 
 export default function PinkLoader() { return null }

@@ -12,7 +12,7 @@ import theme from './theme'
 import('./lib/loader').then(({ show, hide }) => {
   const orig = window.fetch
   window.fetch = async (input: any, init?: any) => {
-    let timer: number | null = window.setTimeout(() => show('Loading…'), 350)
+    let timer: number | null = window.setTimeout(() => show(''), 450)
     try {
       const res = await orig(input, init)
       return res

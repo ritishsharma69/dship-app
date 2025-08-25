@@ -10,7 +10,7 @@ import ListItemText from '@mui/material/ListItemText'
 import Button from '@mui/material/Button'
 import Badge from '@mui/material/Badge'
 import Box from '@mui/material/Box'
-import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew } from '@mui/icons-material'
+import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping } from '@mui/icons-material'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 
@@ -56,11 +56,15 @@ export default function TopBar() {
           </Button>
           <Button color="inherit" onClick={() => go('/contact')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
             <MailOutline fontSize="medium" sx={{ color: active('/contact') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact</Box>
+            <Box component="span" sx={{ fontSize: 13, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact Us</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/privacy')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
             <Lock fontSize="medium" sx={{ color: active('/privacy') ? '#F59E0B' : 'inherit' }} />
             <Box component="span" sx={{ fontSize: 13, color: active('/privacy') ? '#F59E0B' : 'inherit' }}>Privacy</Box>
+          </Button>
+          <Button color="inherit" onClick={() => go('/shipping-returns')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+            <LocalShipping fontSize="medium" sx={{ color: active('/shipping-returns') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/shipping-returns') ? '#F59E0B' : 'inherit' }}>Shipping & Returns</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
             <Badge badgeContent={count} color="error">
@@ -86,11 +90,15 @@ export default function TopBar() {
               </ListItemButton>
               <ListItemButton onClick={() => go('/contact')}>
                 <ListItemIcon><MailOutline fontSize="medium" /></ListItemIcon>
-                <ListItemText primary="Contact" />
+                <ListItemText primary="Contact Us" />
               </ListItemButton>
               <ListItemButton onClick={() => go('/privacy')}>
                 <ListItemIcon><Lock fontSize="medium" /></ListItemIcon>
                 <ListItemText primary="Privacy" />
+              </ListItemButton>
+              <ListItemButton onClick={() => go('/shipping-returns')}>
+                <ListItemIcon><LocalShipping fontSize="medium" /></ListItemIcon>
+                <ListItemText primary="Shipping & Returns" />
               </ListItemButton>
               <ListItemButton onClick={() => go('/checkout')}>
                 <ListItemIcon>

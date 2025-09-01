@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { apiGetJson, apiPostJson, apiPatchJson } from '../lib/api'
@@ -28,11 +28,61 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [open, setOpen] = useState<Record<string, boolean>>({})
+
   const { push } = useToast()
   const { navigate } = useRouter()
 
+  // Admin UI filters/sort/search
+  const [q, setQ] = useState('')
+  const [statusFilter, setStatusFilter] = useState<AdminStatus | 'all'>('all')
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'cod' | 'razorpay'>('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_desc' | 'amount_asc'>('newest')
+
+
+  // Keep user logged in across refresh and preload orders
+  useEffect(() => {
+    try {
+      const tok = localStorage.getItem('auth_token')
+      const em = localStorage.getItem('auth_email') || ''
+      if (tok) {
+        setToken(tok)
+        if (em) setEmail(em)
+        loadOrders(tok)
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const validEmail = /^\S+@\S+\.\S+$/.test(email.trim())
   // const fmtINR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
+  const filteredSorted = useMemo(() => {
+    let arr = list.slice()
+    // Text search in id, name, email, city, state
+    const t = q.trim().toLowerCase()
+    if (t) {
+      arr = arr.filter(o =>
+        o.id.toLowerCase().includes(t) ||
+        String(o.customer?.name || '').toLowerCase().includes(t) ||
+        String(o.customer?.email || '').toLowerCase().includes(t) ||
+        String(o.address?.city || '').toLowerCase().includes(t) ||
+        String(o.address?.state || '').toLowerCase().includes(t)
+      )
+    }
+    if (statusFilter !== 'all') arr = arr.filter(o => o.status === statusFilter)
+    if (paymentFilter !== 'all') arr = arr.filter(o => (o.paymentMethod || 'cod') === paymentFilter)
+    switch (sortBy) {
+      case 'oldest':
+        arr.sort((a,b)=> new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); break
+      case 'amount_desc':
+        arr.sort((a,b)=> (b.total ?? b.totals?.total ?? 0) - (a.total ?? a.totals?.total ?? 0)); break
+      case 'amount_asc':
+        arr.sort((a,b)=> (a.total ?? a.totals?.total ?? 0) - (b.total ?? b.totals?.total ?? 0)); break
+      default:
+        arr.sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    }
+    return arr
+  }, [list, q, statusFilter, paymentFilter, sortBy])
+
 
   async function requestOtp() {
     setError(null); setInfo(null)
@@ -75,6 +125,8 @@ export default function OrdersPage() {
       const msg = 'Network error while verifying OTP'
       setError(msg); push(msg)
     } finally {
+
+
       setVerifyingOtp(false)
     }
   }
@@ -111,9 +163,47 @@ export default function OrdersPage() {
   }
 
 
+  // Admin helper actions
+  async function setOrderStatus(orderId: string, newStatus: AdminStatus) {
+    try {
+      const tok = token || localStorage.getItem('auth_token')
+      const updated = await apiPatchJson<any>(`/api/orders/${orderId}/status`, { status: newStatus }, tok ? { authToken: tok } : undefined)
+      setList(prev => prev.map(x => x.id === orderId ? { ...x, status: updated.status } : x))
+      push(`Status updated to ${newStatus}`)
+    } catch (err: any) {
+      push(err?.message || 'Failed to update status')
+    }
+  }
+  function handleRefresh() {
+    const tok = token || localStorage.getItem('auth_token') || undefined
+    loadOrders(tok as any)
+  }
+
+  function copyAddress(o: OrderLite) {
+    const addr = `${o.customer?.name || ''}, ${o.address?.line1 || ''}, ${o.address?.city || ''}, ${o.address?.state || ''} ${o.address?.zip || ''}`.trim()
+    try {
+      // @ts-ignore
+      navigator?.clipboard?.writeText(addr)
+      push('Address copied')
+    } catch {}
+  }
+  function openMaps(o: OrderLite) {
+    const addr = `${o.address?.line1 || ''}, ${o.address?.city || ''}, ${o.address?.state || ''} ${o.address?.zip || ''}`.trim()
+    window.open(`https://www.google.com/maps/search/${encodeURIComponent(addr)}`, '_blank')
+  }
+  function expandAll(ids: string[], openVal: boolean) {
+    setOpen(prev => {
+      const next = { ...prev }
+      ids.forEach(id => { next[id] = openVal })
+      return next
+    })
+  }
+
+
   return (
     <Container className="orders-page" sx={{ py: 3 }}>
-      <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 640, mx: 'auto', p: 2, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
+      <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 680, mx: 'auto', p: 2, borderRadius: 2, borderColor: 'rgba(0,0,0,0.12)', backgroundImage: 'radial-gradient(80% 50% at 50% 0%, rgba(255,63,108,0.06), transparent 70%)' }}>
+
         <Typography variant="h5" align="center" sx={{ fontWeight: 800, mb: 1 }}>Your Orders</Typography>
         <Typography align="center" color="text.secondary" sx={{ mb: 2, fontSize: 14 }}>Enter your email to login</Typography>
 
@@ -146,15 +236,50 @@ export default function OrdersPage() {
           <div style={{ marginTop: 12 }}>
             <div className="orders-head" style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
               <div className="orders-head-note" style={{ color:'#6b7280', fontSize: 12 }}>{isAdmin ? 'Viewing all orders (admin)' : `Logged in as ${email}`}</div>
-              <button className="btn" style={{ padding: '8px 12px' }} onClick={handleLogout}>Logout</button>
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn" onClick={handleRefresh} title="Refresh orders" aria-label="Refresh orders">
+                  <span className="fa-solid fa-rotate-right" style={{ marginRight: 6 }} /> Refresh
+                </button>
+                <button className="btn" style={{ padding: '8px 12px' }} onClick={handleLogout} title="Logout" aria-label="Logout">
+                  <span className="fa-solid fa-right-from-bracket" style={{ marginRight: 6 }} /> Logout
+                </button>
+              </div>
             </div>
+                {isAdmin && (
+                  <div className="admin-tools" style={{ display:'grid', gap:8, marginBottom:10 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8 }}>
+                      <input className="input" placeholder="Search name, email, city, order id…" value={q} onChange={e=>setQ(e.target.value)} />
+                      <select className="input" value={statusFilter} onChange={e=>setStatusFilter(e.target.value as any)}>
+                        <option value="all">All statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
+                      <select className="input" value={paymentFilter} onChange={e=>setPaymentFilter(e.target.value as any)}>
+                        <option value="all">All payments</option>
+                        <option value="cod">COD</option>
+                        <option value="razorpay">Online</option>
+                      </select>
+                      <select className="input" value={sortBy} onChange={e=>setSortBy(e.target.value as any)}>
+                        <option value="newest">Newest first</option>
+                        <option value="oldest">Oldest first</option>
+                        <option value="amount_desc">Amount high → low</option>
+                        <option value="amount_asc">Amount low → high</option>
+                      </select>
+                    </div>
+                  <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                    <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), true)}>Expand All</button>
+                    <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), false)}>Collapse All</button>
+                  </div>
+                  </div>
+                )}
             {list.length === 0 && !loading ? (
               <div style={{ color: '#6b7280' }}>No orders yet.</div>
             ) : (
               <div>
                 {isAdmin ? (
                   <div className="orders-list" style={{ display: 'grid', gap: 10 }}>
-                    {list.map((o) => (
+                    {filteredSorted.map((o) => (
                       <div key={o.id} className="card order-card" style={{ padding: 12, borderRadius: 10, borderColor: 'var(--color-border)', background:'#fff' }}>
                         <button className="order-head" onClick={() => setOpen(prev => ({...prev, [o.id]: !prev[o.id]}))} style={{ all:'unset', display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', cursor: 'pointer', width: '100%' }}>
                           <div className="order-cust">
@@ -172,17 +297,7 @@ export default function OrdersPage() {
                             <div style={{ display:'grid', gap:6 }}>
                               <div className="order-status-row" style={{ display:'flex', alignItems:'center', gap:8 }}>
                                   <b>Status:</b>
-                                  <select defaultValue={o.status as AdminStatus} onChange={async (e)=>{
-                                    const newStatus = e.target.value as AdminStatus
-                                    try {
-                                      const tok = token || localStorage.getItem('auth_token')
-                                      const updated = await apiPatchJson<any>(`/api/orders/${o.id}/status`, { status: newStatus }, tok ? { authToken: tok } : undefined)
-                                      setList(prev => prev.map(x => x.id === o.id ? { ...x, status: updated.status } : x))
-                                      push(`Status updated to ${newStatus}`)
-                                    } catch (err: any) {
-                                      push(err?.message || 'Failed to update status')
-                                    }
-                                  }} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+                                  <select defaultValue={o.status as AdminStatus} onChange={(e)=>setOrderStatus(o.id, e.target.value as AdminStatus)} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--color-border)' }}>
                                     <option value="pending">Pending</option>
                                     <option value="accepted">Accepted</option>
                                     <option value="delivered">Delivered</option>
@@ -206,13 +321,25 @@ export default function OrdersPage() {
                               <div className="muted" style={{ color:'#6b7280' }}>Items: {o.itemsCount ?? (o.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)}</div>
                               <div style={{ fontWeight: 700 }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</div>
                             </div>
+                              <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginTop: 8 }}>
+                                {o.status !== 'accepted' && (
+                                  <button className="btn" onClick={()=>setOrderStatus(o.id, 'accepted' as AdminStatus)}>Mark Accepted</button>
+                                )}
+                                {o.status !== 'delivered' && (
+                                  <button className="btn" onClick={()=>setOrderStatus(o.id, 'delivered' as AdminStatus)}>Mark Delivered</button>
+                                )}
+                                <button className="btn" onClick={()=>copyAddress(o)}>Copy Address</button>
+                                <button className="btn" onClick={()=>openMaps(o)}>Open in Maps</button>
+                              </div>
                           </div>
                         ) : null}
                       </div>
                     ))}
                   </div>
                 ) : (
+                                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                   <div style={{ overflowX: 'auto' }}>
+
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>
@@ -225,7 +352,7 @@ export default function OrdersPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {list.map((o) => (
+                        {filteredSorted.map((o) => (
                           <tr key={o.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                             <td style={{ padding: 8 }}><code>#{o.id.slice(-8)}</code></td>
                             <td style={{ padding: 8 }}>{new Date(o.createdAt).toLocaleString()}</td>
@@ -239,6 +366,7 @@ export default function OrdersPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
                   </div>
                 )}
               </div>

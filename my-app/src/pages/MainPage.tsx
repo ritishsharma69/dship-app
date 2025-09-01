@@ -33,8 +33,8 @@ export default function MainPage() {
   const [error] = useState<string | null>(null)
 
   useEffect(() => {
-    // Pick by slug from the URL: /p/:slug
-    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager'
+    // Pick by slug from the URL: /p/:slug; default to mini-butterfly-massager for single-product site
+    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager'
     const chosen = productsBySlug[slug] ?? localProduct
     setP(chosen)
     setLoading(false)
@@ -56,7 +56,7 @@ export default function MainPage() {
   // JSON-LD
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
-    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager'
+    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager'
     const rev = reviewsBySlug[slug]
     return {
       '@context': 'https://schema.org', '@type': 'Product', name: p.title, sku: p.sku,

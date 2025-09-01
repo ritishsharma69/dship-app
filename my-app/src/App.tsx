@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react'
 import { Route, Switch } from './lib/router'
 import TopBar from './components/TopBar'
 
-const HomePage = lazy(() => import('./pages/SimpleHomePage'))
+
 const MainPage = lazy(() => import('./pages/MainPage'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const SuccessPage = lazy(() => import('./pages/SuccessPage')) // legacy
@@ -21,9 +21,9 @@ export default function App() {
       <TopBar />
       <Suspense fallback={<div style={{ padding: 16 }} />}> {/* small, non-blocking fallback */}
         <Switch>
-          {/* Home / Landing */}
+          {/* Start directly on the product page */}
           <Route path="/">
-            <HomePage />
+            <MainPage />
           </Route>
 
           {/* Product details (slugged) */}

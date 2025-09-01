@@ -19,7 +19,7 @@ export default function TopBar() {
   const { navigate, path } = useRouter()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const go = (to: string) => { setDrawerOpen(false); navigate(to) }
-  const showBack = path !== '/'
+  const showBack = path !== '/' && !path.startsWith('/p/')
   const back = () => { if (window.history.length > 1) window.history.back(); else navigate('/') }
   const active = (to: string) => path === to
 

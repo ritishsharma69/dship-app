@@ -666,7 +666,7 @@ export const reviewsPosture: ReviewsSummary = {
 };
 
 // Backwards-compat default export used across components
-export const reviews: ReviewsSummary = reviewsHead;
+export const reviews: ReviewsSummary = reviewsButterfly;
 
 // Reviews by slug
 export const reviewsBySlug: Record<string, ReviewsSummary> = {

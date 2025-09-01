@@ -402,35 +402,56 @@ app.get('/api/products', async (req, res) => {
 app.post('/api/orders', async (req, res) => {
   try {
     const body = req.body || {}
-    // Basic validation
 
+    // Coerce all incoming fields to the expected types to avoid intermittent type errors
+    const name = String(body?.name ?? '').trim()
+    const email = String(body?.email ?? '').trim().toLowerCase()
+    const phone = String(body?.phone ?? '').trim()
 
-    const requiredStrings = [
-      body?.name, body?.email, body?.phone,
-      body?.address?.country, body?.address?.line1,
-      body?.address?.city, body?.address?.state, body?.address?.zip,
-    ]
+    const address = {
+      country: String(body?.address?.country ?? '').trim(),
+      line1: String(body?.address?.line1 ?? '').trim(),
+      line2: String(body?.address?.line2 ?? '').trim(),
+      city: String(body?.address?.city ?? '').trim(),
+      state: String(body?.address?.state ?? '').trim(),
+      zip: String(body?.address?.zip ?? '').trim(),
+    }
+
+    // Validate required fields
+    const requiredStrings = [name, email, phone, address.country, address.line1, address.city, address.state, address.zip]
     if (requiredStrings.some(v => !v || typeof v !== 'string')) {
-      return res.status(400).json({ error: 'Missing required fields' })
-    }
-    if (!Array.isArray(body.items) || body.items.length === 0) {
-      return res.status(400).json({ error: 'No items' })
+      return res.status(400).json({ error: 'missing_required_fields' })
     }
 
-    // Normalize the doc
+    // Validate and normalize items
+    const itemsIn = Array.isArray(body.items) ? body.items : []
+    if (itemsIn.length === 0) return res.status(400).json({ error: 'no_items' })
+    const items = itemsIn.map((i) => ({
+      productId: String(i?.productId ?? ''),
+      title: String(i?.title ?? ''),
+      quantity: Math.max(1, Number(i?.quantity ?? 0) || 0),
+      unitPrice: Math.max(0, Number(i?.unitPrice ?? 0) || 0),
+    }))
+
+    // Totals: trust server calculations when client is off
+    const subtotal = items.reduce((a, i) => a + (i.unitPrice * i.quantity), 0)
+    const clientTotals = body?.totals || {}
+    const shipping = Number(clientTotals.shipping ?? 0) || 0
+    const tax = Number(clientTotals.tax ?? 0) || 0
+    const total = subtotal + shipping + tax
+
+    const paymentMethod = String(body?.paymentMethod || 'cod').toLowerCase() === 'razorpay' ? 'razorpay' : 'cod'
+    const payment = body?.payment && typeof body.payment === 'object' ? body.payment : null
+    const status = payment?.captured ? 'paid' : 'pending'
+
     const doc = {
-      customer: { name: body.name, email: body.email, phone: body.phone },
-      address: body.address,
-      items: body.items.map(i => ({
-        productId: String(i.productId || ''),
-        title: String(i.title || ''),
-        quantity: Number(i.quantity || 0),
-        unitPrice: Number(i.unitPrice || 0),
-      })),
-      totals: body.totals || {},
-      paymentMethod: body.paymentMethod || 'cod',
-      payment: body.payment || null,
-      status: body?.payment?.captured ? 'paid' : 'pending',
+      customer: { name, email, phone },
+      address,
+      items,
+      totals: { subtotal, shipping, tax, total },
+      paymentMethod,
+      payment,
+      status,
       createdAt: new Date(),
       source: 'website',
     }
@@ -440,7 +461,7 @@ app.post('/api/orders', async (req, res) => {
 
     // Fire-and-forget emails (do not block response)
     const orderId = String(insertedId)
-    const customerEmail = body.email
+    const customerEmail = email
     const ownerEmail = process.env.ORDERS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
     sendOrderPlacedEmail({ to: customerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
     sendOrderReceivedEmailToOwner({ to: ownerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})

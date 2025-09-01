@@ -79,16 +79,16 @@ export default function CheckoutPage() {
 
     // Prepare order payload
     const payload: any = {
-      email: fd.get('email'),
-      name: fd.get('name'),
-      phone: fd.get('phone'),
+      email: String(fd.get('email')||''),
+      name: String(fd.get('name')||''),
+      phone: String(fd.get('phone')||''),
       address: {
-        country: fd.get('country'), line1: fd.get('line1'), line2: fd.get('line2'),
-        city: fd.get('city'), state: fd.get('state'), zip: fd.get('zip')
+        country: String(fd.get('country')||''), line1: String(fd.get('line1')||''), line2: String(fd.get('line2')||''),
+        city: String(fd.get('city')||''), state: String(fd.get('state')||''), zip: String(fd.get('zip')||'')
       },
-      items: items.map(i => ({ productId: i.product.id, title: i.product.title, quantity: i.quantity, unitPrice: i.product.price })),
-      totals: { subtotal, shipping, tax, total },
-      paymentMethod
+      items: items.map(i => ({ productId: String(i.product.id), title: String(i.product.title), quantity: Number(i.quantity), unitPrice: Number(i.product.price) })),
+      totals: { subtotal: Number(subtotal), shipping: Number(shipping), tax: Number(tax), total: Number(total) },
+      paymentMethod: String(paymentMethod || 'cod')
     }
 
 

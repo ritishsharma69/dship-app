@@ -47,13 +47,19 @@ async function doFetchWithOptionalLoader(input: RequestInfo | URL, init: Request
 
 async function parseJsonOrThrow<T>(res: Response): Promise<T> {
   const ct = res.headers.get('content-type') || ''
+  const text = await res.text()
+  const tryJson = () => { try { return JSON.parse(text) } catch { return null } }
   if (!res.ok) {
-    const msg = ct.includes('application/json') ? (await res.json()).message : await res.text()
-    throw new Error(msg || `HTTP ${res.status}`)
+    const j = ct.includes('application/json') ? tryJson() : tryJson() // try regardless
+    const msg = (j && (j.message || j.error || (Array.isArray((j as any).errors) && (j as any).errors[0]?.message))) || text || `HTTP ${res.status}`
+    throw new Error(typeof msg === 'string' ? msg : `HTTP ${res.status}`)
   }
-  if (ct.includes('application/json')) return (await res.json()) as T
-  // Fallback: try text
-  return (await res.text()) as unknown as T
+  if (ct.includes('application/json')) {
+    const j = tryJson()
+    return (j ?? (text as unknown)) as T
+  }
+  // Fallback to text when content-type is not JSON
+  return (text as unknown) as T
 }
 
 export async function apiJson<T = any>(pathOrUrl: string, init?: JsonInit, opts?: ApiOptions): Promise<T> {

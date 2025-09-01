@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { useEffect, useRef, useState, useLayoutEffect, useMemo, useCallback } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import type { Product } from '../types'
 
@@ -52,8 +52,8 @@ export default function MediaGallery({ product }: { product: Product }) {
     }
   }, [lightbox, product.images.length])
 
-  const next = () => setActive((a) => Math.min(a + 1, product.images.length - 1))
-  const prev = () => setActive((a) => Math.max(a - 1, 0))
+  const next = useCallback(() => setActive((a) => Math.min(a + 1, product.images.length - 1)), [product.images.length])
+  const prev = useCallback(() => setActive((a) => Math.max(a - 1, 0)), [])
 
   // Animations
   useLayoutEffect(() => {
@@ -77,7 +77,7 @@ export default function MediaGallery({ product }: { product: Product }) {
   })()
 
   // Compute proper YouTube embed URL (handles t/start params) so autoplay works
-  const embedSrc = (() => {
+  const embedSrc = useMemo(() => {
     const m = media[active]
     if (!m || m.type !== 'youtube') return ''
     const raw = m.src
@@ -93,7 +93,7 @@ export default function MediaGallery({ product }: { product: Product }) {
       }
     }
     return `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0${start?`&start=${start}`:''}`
-  })()
+  }, [media, active])
 
   // Adjust active index bounds if media length changed
   useEffect(() => {

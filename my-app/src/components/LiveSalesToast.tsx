@@ -17,7 +17,7 @@ export interface LiveSalesToastProps {
   onClose?: () => void
 }
 
-export default function LiveSalesToast({ open, name, city, title, image, timeAgo, onClose }: LiveSalesToastProps) {
+function LiveSalesToast({ open, name, city, title, image, timeAgo, onClose }: LiveSalesToastProps) {
   return (
     <Slide direction="up" in={open} mountOnEnter unmountOnExit>
       <Paper elevation={6} sx={{
@@ -46,4 +46,6 @@ export default function LiveSalesToast({ open, name, city, title, image, timeAgo
     </Slide>
   )
 }
+
+export default LiveSalesToast
 

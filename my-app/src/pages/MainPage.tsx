@@ -226,7 +226,7 @@ export default function MainPage() {
               <Star fontSize="small" sx={{ color: '#000000' }} />
               <Star fontSize="small" sx={{ color: '#000000' }} />
               <StarHalf fontSize="small" sx={{ color: '#000000' }} />
-              <Typography variant="body2" sx={{ color: '#000000' }}>({(reviewsBySlug[(window.location.pathname.split('/').filter(Boolean)[1]) || 'head-massager']?.ratingCount) ?? 0} reviews)</Typography>
+              <Typography variant="body2" sx={{ color: '#000000' }}>({(reviewsBySlug[(window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager']?.ratingCount) ?? 0} reviews)</Typography>
             </Stack>
 
             {/* Price */}

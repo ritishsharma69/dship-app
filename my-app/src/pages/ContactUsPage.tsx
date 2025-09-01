@@ -10,7 +10,7 @@ export default function ContactUsPage() {
       <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 820, mx: 'auto', p: 3, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Contact Us</Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
-          Returns/Cancel ke liye: Your Orders section me Return/Cancel button se request daaliye.
+          For returns or cancellations: go to Your Orders and use the Return/Cancel button to submit a request.
         </Typography>
 
         <Stack spacing={1.5}>

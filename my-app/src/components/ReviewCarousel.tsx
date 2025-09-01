@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { reviews } from '../data'
+import { reviewsBySlug } from '../data'
 
 export default function ReviewCarousel() {
   const [idx, setIdx] = useState(0)
+  const slug = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean)[1]) : 'mini-butterfly-massager') || 'mini-butterfly-massager'
+  const reviews = reviewsBySlug[slug]
   useEffect(() => {
     const t = setInterval(() => setIdx((i) => (i + 1) % reviews.testimonials.length), 4000)
     return () => clearInterval(t)
-  }, [])
+  }, [reviews.testimonials.length])
   const t = reviews.testimonials[idx]
   return (
     <div style={{ border: '1px solid var(--color-border)', borderRadius: 12, padding: 16 }}>

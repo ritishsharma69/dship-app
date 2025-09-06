@@ -62,9 +62,17 @@ export default function TopBar() {
             <Lock fontSize="medium" sx={{ color: active('/privacy') ? '#F59E0B' : 'inherit' }} />
             <Box component="span" sx={{ fontSize: 13, color: active('/privacy') ? '#F59E0B' : 'inherit' }}>Privacy</Box>
           </Button>
-          <Button color="inherit" onClick={() => go('/shipping-returns')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <LocalShipping fontSize="medium" sx={{ color: active('/shipping-returns') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/shipping-returns') ? '#F59E0B' : 'inherit' }}>Shipping & Returns</Box>
+          <Button color="inherit" onClick={() => go('/shipping')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+            <LocalShipping fontSize="medium" sx={{ color: active('/shipping') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/shipping') ? '#F59E0B' : 'inherit' }}>Shipping</Box>
+          </Button>
+          <Button color="inherit" onClick={() => go('/cancellation-refund')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+            <AssignmentOutlined fontSize="medium" sx={{ color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }}>Cancellation & Refund</Box>
+          </Button>
+          <Button color="inherit" onClick={() => go('/terms-conditions')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+            <Lock fontSize="medium" sx={{ color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }} />
+            <Box component="span" sx={{ fontSize: 13, color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }}>Terms & Conditions</Box>
           </Button>
           <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
             <Badge badgeContent={count} color="error">
@@ -96,9 +104,17 @@ export default function TopBar() {
                 <ListItemIcon><Lock fontSize="medium" /></ListItemIcon>
                 <ListItemText primary="Privacy" />
               </ListItemButton>
-              <ListItemButton onClick={() => go('/shipping-returns')}>
+              <ListItemButton onClick={() => go('/shipping')}>
                 <ListItemIcon><LocalShipping fontSize="medium" /></ListItemIcon>
-                <ListItemText primary="Shipping & Returns" />
+                <ListItemText primary="Shipping" />
+              </ListItemButton>
+              <ListItemButton onClick={() => go('/cancellation-refund')}>
+                <ListItemIcon><AssignmentOutlined fontSize="medium" /></ListItemIcon>
+                <ListItemText primary="Cancellation & Refund" />
+              </ListItemButton>
+              <ListItemButton onClick={() => go('/terms-conditions')}>
+                <ListItemIcon><Lock fontSize="medium" /></ListItemIcon>
+                <ListItemText primary="Terms & Conditions" />
               </ListItemButton>
               <ListItemButton onClick={() => go('/checkout')}>
                 <ListItemIcon>

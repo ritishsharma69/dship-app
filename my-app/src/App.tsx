@@ -14,6 +14,10 @@ const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
 const ContactPage = lazy(() => import('./pages/ContactUsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ShippingReturnsPage = lazy(() => import('./pages/ShippingReturnsPage'))
+const ShippingPage = lazy(() => import('./pages/ShippingPage'))
+const CancellationRefundPage = lazy(() => import('./pages/CancellationRefundPage'))
+const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'))
+
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
 
@@ -39,6 +43,16 @@ export default function App() {
           <Route path="/privacy">
             <PrivacyPage />
           </Route>
+          <Route path="/shipping">
+            <ShippingPage />
+          </Route>
+          <Route path="/cancellation-refund">
+            <CancellationRefundPage />
+          </Route>
+          <Route path="/terms-conditions">
+            <TermsConditionsPage />
+          </Route>
+          {/* Backward-compat route */}
           <Route path="/shipping-returns">
             <ShippingReturnsPage />
           </Route>

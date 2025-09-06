@@ -3,6 +3,8 @@ import { lazy, Suspense } from 'react'
 import { Route, Switch } from './lib/router'
 import TopBar from './components/TopBar'
 
+import PageLoader from './components/PageLoader'
+
 
 const MainPage = lazy(() => import('./pages/MainPage'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
@@ -19,7 +21,7 @@ export default function App() {
   return (
     <>
       <TopBar />
-      <Suspense fallback={<div style={{ padding: 16 }} />}> {/* small, non-blocking fallback */}
+      <Suspense fallback={<PageLoader />}> {/* show full-screen loader until page resolves */}
         <Switch>
           {/* Start directly on the product page */}
           <Route path="/">

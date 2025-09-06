@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <Container sx={{ py: 3 }}>
       <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 980, mx: 'auto', p: 3, borderRadius: 0, textAlign: 'left', borderColor: 'rgba(0,0,0,0.18)' }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Privacy Policy</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Privacy</Typography>
         <Typography color="text.secondary" sx={{ mb: 2 }}>
           We respect your privacy and are committed to keeping your information safe. This policy explains what we collect, why we collect it, and how you can control your data.
         </Typography>

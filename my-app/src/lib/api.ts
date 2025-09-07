@@ -1,7 +1,7 @@
 // Small API helper with base URL, timeout, JSON handling, and optional pink loader
 import { withLoader } from './loader'
 
-const DEFAULT_TIMEOUT_MS = 12000
+const DEFAULT_TIMEOUT_MS = 20000
 
 function getBaseUrl() {
   const cfg = (import.meta as any).env?.VITE_API_BASE_URL
@@ -33,6 +33,11 @@ async function doFetch(input: RequestInfo | URL, init?: RequestInit, timeoutMs =
   try {
     const res = await fetch(input, { ...init, signal: controller.signal })
     return res
+  } catch (err: any) {
+    if (err?.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.')
+    }
+    throw err
   } finally {
     window.clearTimeout(t)
   }

@@ -225,8 +225,8 @@ app.post('/api/auth/request-otp', async (req, res) => {
       { upsert: true }
     )
 
-    // send OTP email
-    await sendOtpEmail({ to: email, code })
+    // send OTP email in background (do not block response to avoid client timeouts)
+    sendOtpEmail({ to: email, code }).catch(() => {})
 
     res.json({ ok: true })
   } catch (err) {

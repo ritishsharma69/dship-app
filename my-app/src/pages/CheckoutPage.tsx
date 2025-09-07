@@ -121,7 +121,7 @@ export default function CheckoutPage() {
 
             // 4) Place order in DB as paid
             payload.payment = { provider: 'razorpay', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, captured: true }
-            const data = await apiPostJson<any>(`/api/orders`, payload)
+            const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing order…', timeoutMs: 30000 })
             clear(); push('Payment successful!')
             const oid = data.id || data._id || ''
             navigate(`/success?orderId=${encodeURIComponent(oid)}`)
@@ -134,7 +134,7 @@ export default function CheckoutPage() {
         return
       } else {
         // COD
-        const data = await apiPostJson<any>(`/api/orders`, payload)
+        const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing COD order…', timeoutMs: 30000 })
         clear(); push('Order placed!')
         const oid = data.id || data._id || ''
         navigate(`/success?orderId=${encodeURIComponent(oid)}`)

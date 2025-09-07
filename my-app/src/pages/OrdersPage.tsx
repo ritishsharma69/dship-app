@@ -89,7 +89,7 @@ export default function OrdersPage() {
     if (!validEmail) { setError('Enter a valid email'); return }
     setSendingOtp(true)
     try {
-      await apiPostJson('/api/auth/request-otp', { email: email.trim() })
+      await apiPostJson('/api/auth/request-otp', { email: email.trim() }, { loaderText: 'Sending OTP…', timeoutMs: 25000 })
       setOtpSent(true)
       setInfo(`OTP has been sent to ${email.trim()}`)
       push(`OTP sent to ${email.trim()}`)

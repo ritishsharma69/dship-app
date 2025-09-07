@@ -362,3 +362,15 @@ body:has([role="dialog"][aria-modal="true"]) header.MuiAppBar-root {
 @media (min-width: 520px) {
   .orders-page .order-meta .order-id-time { display: inline; }
 }
+
+
+/* Admin Orders filters responsive layout */
+.orders-page .admin-tools { display:grid; gap:8px; margin-bottom:10px; }
+.orders-page .admin-filter-grid { display:grid; grid-template-columns: 1fr; gap:8px; }
+.orders-page .admin-tools-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+@media (min-width: 600px) {
+  .orders-page .admin-filter-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 900px) {
+  .orders-page .admin-filter-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+}

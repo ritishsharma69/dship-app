@@ -14,6 +14,15 @@ import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, 
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 
+
+// Inline fallback logo to avoid network delays if /mainlogo.png is slow/unavailable
+const FALLBACK_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='72'>" +
+  "<rect width='100%' height='100%' fill='#0b0b0b'/>" +
+  "<text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle' fill='#fff' font-family='system-ui,Arial' font-size='22' font-weight='700'>Khushiyan Store</text>" +
+  "</svg>"
+)
+
 export default function TopBar() {
   const { count } = useCart()
   const { navigate, path } = useRouter()
@@ -45,7 +54,16 @@ export default function TopBar() {
           </IconButton>
         )}
         <IconButton color="inherit" onClick={() => go('/')} aria-label="Home" disableRipple sx={{ mr: 1, ml: { xs: 1, md: 6 }, '&:hover': { backgroundColor: 'transparent' } }}>
-          <Box component="img" src="/mainlogo.png" alt="Main Logo" onError={(e: any) => { e.currentTarget.src = '/khushiyanstorelogo.png' }} sx={{ height: 160, mt: '10px', width: 'auto', mr: 2.5, filter:'drop-shadow(0 8px 22px rgba(168,85,247,0.28))' }} />
+          <Box
+            component="img"
+            src="/mainlogo.png"
+            alt="Main Logo"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            onError={(e: any) => { e.currentTarget.src = FALLBACK_LOGO }}
+            sx={{ height: 160, mt: '10px', width: 'auto', mr: 2.5, filter:'drop-shadow(0 8px 22px rgba(168,85,247,0.28))' }}
+          />
         </IconButton>
 
         {/* Desktop actions: right side, icon on top + label below */}

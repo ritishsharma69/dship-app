@@ -12,6 +12,7 @@ declare global { interface Window { __pinkLoaderCount?: number } }
 let root: Root | null = null
 let containerEl: HTMLDivElement | null = null
 let currentText = 'Loading...'
+let version = 0 // increment on mount; used to avoid racing unmounts
 
 function mount(text?: string) {
   if (!containerEl) {
@@ -22,14 +23,27 @@ function mount(text?: string) {
   }
   if (!root) root = createRoot(containerEl)
   currentText = text || currentText
+  version++
   root.render(<Overlay text={currentText} />)
 }
 
 function unmount() {
-  if (root) root.unmount()
-  if (containerEl?.parentElement) containerEl.parentElement.removeChild(containerEl)
-  root = null
-  containerEl = null
+  // Schedule unmount outside the current React commit to avoid
+  // "Attempted to synchronously unmount a root while React was already rendering".
+  const scheduledVersion = version
+  setTimeout(() => {
+    // If a new show() ran after we scheduled this unmount, skip.
+    if (scheduledVersion !== version) return
+    // Also ensure the ref-count is still 0.
+    if ((window.__pinkLoaderCount ?? 0) > 0) return
+    try {
+      if (root) root.unmount()
+      if (containerEl?.parentElement) containerEl.parentElement.removeChild(containerEl)
+    } finally {
+      root = null
+      containerEl = null
+    }
+  }, 0)
 }
 
 export function showPinkLoader(text?: string) {

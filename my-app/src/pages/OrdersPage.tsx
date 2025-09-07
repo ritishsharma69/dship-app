@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import OrdersCalendar from '../components/OrdersCalendar'
 
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any }
 
@@ -37,6 +38,8 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<AdminStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'cod' | 'razorpay'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_desc' | 'amount_asc'>('newest')
+  // Calendar single-day filter (YYYY-MM-DD)
+  const [selectedDate, setSelectedDate] = useState<string>('')
 
 
   // Keep user logged in across refresh and preload orders
@@ -68,6 +71,15 @@ export default function OrdersPage() {
         String(o.address?.state || '').toLowerCase().includes(t)
       )
     }
+    // Single-day filter
+    if (selectedDate) {
+      const fromTs = new Date(selectedDate + 'T00:00:00').getTime()
+      const toTs = new Date(selectedDate + 'T23:59:59.999').getTime()
+      arr = arr.filter(o => {
+        const ts = new Date(o.createdAt).getTime()
+        return ts >= fromTs && ts <= toTs
+      })
+    }
     if (statusFilter !== 'all') arr = arr.filter(o => o.status === statusFilter)
     if (paymentFilter !== 'all') arr = arr.filter(o => (o.paymentMethod || 'cod') === paymentFilter)
     switch (sortBy) {
@@ -81,7 +93,7 @@ export default function OrdersPage() {
         arr.sort((a,b)=> new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     }
     return arr
-  }, [list, q, statusFilter, paymentFilter, sortBy])
+  }, [list, q, statusFilter, paymentFilter, sortBy, selectedDate])
 
 
   async function requestOtp() {
@@ -210,14 +222,14 @@ export default function OrdersPage() {
         {!token ? (
           <Stack spacing={1.25}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-              <TextField fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="small" />
+              <TextField id="orders-email" name="email" autoComplete="email" fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="small" />
               {!otpSent ? (
                 <Button variant="contained" onClick={requestOtp} disabled={!validEmail || sendingOtp} sx={{ minWidth: 120, borderRadius: 1, py: 1, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
                   {sendingOtp ? 'Sending…' : 'Send OTP'}
                 </Button>
               ) : (
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <TextField value={code} onChange={e=>setCode(e.target.value)} placeholder="OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }} sx={{ width: 140 }} />
+                  <TextField id="orders-otp" name="otp" autoComplete="one-time-code" value={code} onChange={e=>setCode(e.target.value)} placeholder="OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }} sx={{ width: 140 }} />
                   <Button variant="contained" onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ minWidth: 100, borderRadius: 1, py: 0.9, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
 
                     {verifyingOtp ? 'Verifying…' : 'Verify'}
@@ -246,31 +258,36 @@ export default function OrdersPage() {
               </div>
             </div>
                 {isAdmin && (
-                  <div className="admin-tools" style={{ display:'grid', gap:8, marginBottom:10 }}>
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', gap:8 }}>
-                      <input className="input" placeholder="Search name, email, city, order id…" value={q} onChange={e=>setQ(e.target.value)} />
-                      <select className="input" value={statusFilter} onChange={e=>setStatusFilter(e.target.value as any)}>
+                  <div className="admin-tools">
+                    <div className="admin-filter-grid">
+                      <input id="orders-admin-search" name="adminSearch" className="input" placeholder="Search name, email, city, order id…" value={q} onChange={e=>setQ(e.target.value)} />
+                      <select id="orders-status" name="status" className="input" value={statusFilter} onChange={e=>setStatusFilter(e.target.value as any)}>
                         <option value="all">All statuses</option>
                         <option value="pending">Pending</option>
                         <option value="accepted">Accepted</option>
                         <option value="delivered">Delivered</option>
                       </select>
-                      <select className="input" value={paymentFilter} onChange={e=>setPaymentFilter(e.target.value as any)}>
+                      <select id="orders-payment" name="paymentMethod" className="input" value={paymentFilter} onChange={e=>setPaymentFilter(e.target.value as any)}>
                         <option value="all">All payments</option>
                         <option value="cod">COD</option>
                         <option value="razorpay">Online</option>
                       </select>
-                      <select className="input" value={sortBy} onChange={e=>setSortBy(e.target.value as any)}>
+                      <select id="orders-sort" name="sort" className="input" value={sortBy} onChange={e=>setSortBy(e.target.value as any)}>
                         <option value="newest">Newest first</option>
                         <option value="oldest">Oldest first</option>
                         <option value="amount_desc">Amount high → low</option>
                         <option value="amount_asc">Amount low → high</option>
                       </select>
                     </div>
-                  <div style={{ display:'flex', gap:8, justifyContent:'flex-end' }}>
+                  <div className="admin-tools-actions">
                     <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), true)}>Expand All</button>
                     <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), false)}>Collapse All</button>
                   </div>
+                    <OrdersCalendar
+                      markedDates={list.map(o => new Date(o.createdAt)).map(d => d.toISOString().slice(0,10))}
+                      selected={selectedDate || undefined}
+                      onSelect={(d) => setSelectedDate(d || '')}
+                    />
                   </div>
                 )}
             {list.length === 0 && !loading ? (

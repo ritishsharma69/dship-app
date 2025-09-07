@@ -7,6 +7,7 @@ import PageLoader from './components/PageLoader'
 
 
 const MainPage = lazy(() => import('./pages/MainPage'))
+const SimpleHomePage = lazy(() => import('./pages/SimpleHomePage'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const SuccessPage = lazy(() => import('./pages/SuccessPage')) // legacy
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
@@ -27,9 +28,9 @@ export default function App() {
       <TopBar />
       <Suspense fallback={<PageLoader />}> {/* show full-screen loader until page resolves */}
         <Switch>
-          {/* Start directly on the product page */}
+          {/* Home: show all products (SimpleHomePage) */}
           <Route path="/">
-            <MainPage />
+            <SimpleHomePage />
           </Route>
 
           {/* Product details (slugged) */}

@@ -28,8 +28,7 @@ export default function CancellationRefundPage() {
 
         <Typography variant="h6" sx={{ mt: 1 }}>Refund timeline</Typography>
         <Stack spacing={1} sx={{ color: 'var(--color-text)' }}>
-          <div>• Once the return is approved and picked up, refund is initiated within 2–5 working days.</div>
-          <div>• Refund will be credited to the original payment method.</div>
+          <div>• Once the return is approved and picked up, refund is credited to the original payment method within 2–5 working days.</div>
         </Stack>
 
         <Typography variant="h6" sx={{ mt: 1 }}>How to request</Typography>

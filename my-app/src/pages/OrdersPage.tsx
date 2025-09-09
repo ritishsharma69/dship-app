@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
+import Link from '@mui/material/Link'
 import OrdersCalendar from '../components/OrdersCalendar'
 
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any }
@@ -29,6 +30,8 @@ export default function OrdersPage() {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [open, setOpen] = useState<Record<string, boolean>>({})
+  // resend countdown (seconds)
+  const [resendIn, setResendIn] = useState<number>(0)
 
   const { push } = useToast()
   const { navigate } = useRouter()
@@ -53,8 +56,18 @@ export default function OrdersPage() {
         loadOrders(tok)
       }
     } catch {}
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Count down to enable "Resend OTP"
+  useEffect(() => {
+    if (!otpSent) return
+    if (resendIn <= 0) return
+    const t = window.setTimeout(() => setResendIn(s => (s > 0 ? s - 1 : 0)), 1000)
+    return () => window.clearTimeout(t)
+  }, [otpSent, resendIn])
+
 
   const validEmail = /^\S+@\S+\.\S+$/.test(email.trim())
   // const fmtINR = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })
@@ -62,6 +75,8 @@ export default function OrdersPage() {
     let arr = list.slice()
     // Text search in id, name, email, city, state
     const t = q.trim().toLowerCase()
+
+
     if (t) {
       arr = arr.filter(o =>
         o.id.toLowerCase().includes(t) ||
@@ -103,10 +118,17 @@ export default function OrdersPage() {
     try {
       await apiPostJson('/api/auth/request-otp', { email: email.trim() }, { loaderText: 'Sending OTP…', timeoutMs: 25000 })
       setOtpSent(true)
+      setResendIn(60)
       setInfo(`OTP has been sent to ${email.trim()}`)
       push(`OTP sent to ${email.trim()}`)
     } catch (e: any) {
       const msg = e?.message || 'Failed to send OTP'
+      // restart countdown on resend
+      setResendIn(60)
+      // Note: keep OTP UI visible for resending
+      setOtpSent(true)
+
+
       setError(msg); push(msg)
     } finally {
       setSendingOtp(false)
@@ -136,6 +158,8 @@ export default function OrdersPage() {
     } catch (e: any) {
       const msg = 'Network error while verifying OTP'
       setError(msg); push(msg)
+
+
     } finally {
 
 
@@ -146,12 +170,15 @@ export default function OrdersPage() {
     setError(null); setLoading(true); setList([])
     try {
       const data = await apiGetJson<any>('/api/orders/me', tok ? { authToken: tok } : undefined)
+
       setIsAdmin(!!data.isAdmin)
       setList(data.orders || [])
     } catch (e: any) {
       setError(e?.message || 'Failed to fetch orders')
     } finally {
       setLoading(false)
+
+
     }
   }
 
@@ -228,12 +255,16 @@ export default function OrdersPage() {
                   {sendingOtp ? 'Sending…' : 'Send OTP'}
                 </Button>
               ) : (
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                   <TextField id="orders-otp" name="otp" autoComplete="one-time-code" value={code} onChange={e=>setCode(e.target.value)} placeholder="OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }} sx={{ width: 140 }} />
                   <Button variant="contained" onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ minWidth: 100, borderRadius: 1, py: 0.9, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
-
                     {verifyingOtp ? 'Verifying…' : 'Verify'}
                   </Button>
+                  {resendIn > 0 ? (
+                    <Typography component="div" sx={{ fontSize: 12, color: '#6b7280', lineHeight: 1, alignSelf: 'center', whiteSpace: 'nowrap' }}>Reset OTP in {resendIn}s</Typography>
+                  ) : (
+                    <Link component="button" underline="hover" onClick={requestOtp} sx={{ fontSize: 12, alignSelf: 'center', whiteSpace: 'nowrap', p: 0 }}>Reset OTP</Link>
+                  )}
                 </Stack>
               )}
             </Stack>

@@ -4,7 +4,7 @@ import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { events } from '../analytics'
-import { apiPostJson } from '../lib/api'
+import { apiGetJson, apiPostJson } from '../lib/api'
 import DiscountModal from '../components/DiscountModal'
 
 async function loadRazorpayScript() {
@@ -61,10 +61,28 @@ export default function CheckoutPage() {
     return () => { document.head.removeChild(mRobots); document.head.removeChild(link) }
   }, [])
 
+  // Warm the server (reduce cold-start latency)
+  useEffect(() => {
+    apiGetJson('/api/ping', { timeoutMs: 4000 }).catch(() => {})
+  }, [])
+
+
+
+
   const subtotal = items.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
   const shipping = subtotal > 0 ? 0 : 0
   const tax = 0
   const total = subtotal + shipping + tax
+
+
+  // Idempotent request id for safe retries
+  const reqIdRef = useRef<string>('')
+  function ensureReqId() {
+    if (!reqIdRef.current) {
+      reqIdRef.current = `${Date.now()}_${Math.random().toString(36).slice(2,10)}`
+    }
+    return reqIdRef.current
+  }
 
   async function placeOrder(e: React.FormEvent) {
     e.preventDefault()
@@ -74,6 +92,8 @@ export default function CheckoutPage() {
 
     // Gather form data
     const form = e.target as HTMLFormElement
+
+
     const fd = new FormData(form)
     const paymentMethod = String(fd.get('payment') || 'cod')
 
@@ -134,10 +154,30 @@ export default function CheckoutPage() {
         return
       } else {
         // COD
-        const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing COD order…\nPlease don\'t press Back; stay on this screen', timeoutMs: 30000 })
-        clear(); push('Order placed!')
-        const oid = data.id || data._id || ''
-        navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+        payload.requestId = ensureReqId()
+        try {
+          const data = await apiPostJson<any>(`/api/orders`, payload, {
+            loaderText: 'Placing COD order…\nPlease don\'t press Back; stay on this screen',
+            timeoutMs: 45000,
+          })
+          clear(); push('Order placed!')
+          const oid = data.id || data._id || ''
+          navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+        } catch (e: any) {
+          const msg = String(e?.message || '').toLowerCase()
+          if (msg.includes('timed out')) {
+            await new Promise(r => setTimeout(r, 2000))
+            const data = await apiPostJson<any>(`/api/orders`, payload, {
+              loaderText: 'Retrying…\nPlease don\'t press Back; stay on this screen',
+              timeoutMs: 45000,
+            })
+            clear(); push('Order placed!')
+            const oid = data.id || data._id || ''
+            navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+          } else {
+            throw e
+          }
+        }
       }
     } catch (err: any) {
       push(err?.message || 'Payment failed. Try again.')

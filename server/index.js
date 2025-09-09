@@ -27,6 +27,10 @@ app.use(cors({
 
 app.use(express.json({ limit: '5mb' }))
 
+// Lightweight ping to keep server warm and for client health-check
+app.get('/api/ping', (req, res) => res.json({ ok: true, t: Date.now() }))
+
+
 let client
 let db
 
@@ -34,7 +38,13 @@ async function getDb() {
   if (db) return db
   const uri = process.env.MONGODB_URI
   if (!uri) throw new Error('Missing MONGODB_URI')
-  client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 })
+  client = new MongoClient(uri, {
+    // Faster and more resilient connection settings
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 30000,
+    maxPoolSize: 20,
+    minPoolSize: 1,
+  })
   await client.connect()
   db = client.db('dship')
   return db
@@ -398,7 +408,7 @@ app.get('/api/products', async (req, res) => {
 })
 
 
-// POST /api/orders – insert order into dship.orders
+// POST /api/orders – insert order into dship.orders (idempotent via optional requestId)
 app.post('/api/orders', async (req, res) => {
   try {
     const body = req.body || {}
@@ -444,6 +454,8 @@ app.post('/api/orders', async (req, res) => {
     const payment = body?.payment && typeof body.payment === 'object' ? body.payment : null
     const status = payment?.captured ? 'paid' : 'pending'
 
+    const requestId = String(body?.requestId || '').trim()
+
     const doc = {
       customer: { name, email, phone },
       address,
@@ -457,14 +469,43 @@ app.post('/api/orders', async (req, res) => {
     }
 
     const database = await getDb()
-    const { insertedId } = await database.collection('orders').insertOne(doc)
+    const coll = database.collection('orders')
 
-    // Fire-and-forget emails (do not block response)
-    const orderId = String(insertedId)
-    const customerEmail = email
-    const ownerEmail = process.env.ORDERS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
-    sendOrderPlacedEmail({ to: customerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
-    sendOrderReceivedEmailToOwner({ to: ownerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
+    let orderId = null
+    let newlyCreated = false
+
+    if (requestId) {
+      const result = await coll.updateOne(
+        { requestId },
+        { $setOnInsert: { ...doc, requestId } },
+        { upsert: true }
+      )
+      if (result.upsertedId) {
+        newlyCreated = true
+        orderId = String(result.upsertedId._id ?? result.upsertedId)
+      } else {
+        const existing = await coll.findOne({ requestId }, { projection: { _id: 1 } })
+        if (existing) orderId = String(existing._id)
+      }
+      if (!orderId) {
+        // Fallback: create once if somehow neither upsert nor find returned
+        const ins = await coll.insertOne({ ...doc, requestId })
+        newlyCreated = true
+        orderId = String(ins.insertedId)
+      }
+    } else {
+      const ins = await coll.insertOne(doc)
+      newlyCreated = true
+      orderId = String(ins.insertedId)
+    }
+
+    // Fire-and-forget emails (do not block response). Only on first creation.
+    if (newlyCreated && orderId) {
+      const customerEmail = email
+      const ownerEmail = process.env.ORDERS_EMAIL || process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+      sendOrderPlacedEmail({ to: customerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
+      sendOrderReceivedEmailToOwner({ to: ownerEmail, orderId, customer: doc.customer, items: doc.items, totals: doc.totals }).catch(()=>{})
+    }
 
     res.json({ id: orderId })
   } catch (err) {
@@ -571,6 +612,13 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[server] listening on http://localhost:${PORT}`)
+    // Warm DB connection and keep alive to avoid cold-start delays
+    getDb().then(() => console.log('[db] connected (warmed)')).catch(console.error)
+    setInterval(() => {
+      getDb()
+        .then(db => db.command({ ping: 1 }))
+        .catch(() => {})
+    }, 240000) // every 4 minutes
   })
 }
 

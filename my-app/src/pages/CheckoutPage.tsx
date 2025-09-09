@@ -134,7 +134,7 @@ export default function CheckoutPage() {
         return
       } else {
         // COD
-        const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing COD order…', timeoutMs: 30000 })
+        const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing COD order…\nPlease don\'t press Back; stay on this screen', timeoutMs: 30000 })
         clear(); push('Order placed!')
         const oid = data.id || data._id || ''
         navigate(`/success?orderId=${encodeURIComponent(oid)}`)

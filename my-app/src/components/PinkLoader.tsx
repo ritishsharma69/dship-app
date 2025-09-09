@@ -94,7 +94,17 @@ function Overlay({ text }: { text: string }) {
             <BagIcon pink={PINK} gold={GOLD} />
           </div>
         </div>
-        <div style={{ fontWeight: 800, color: '#4C1D95', letterSpacing: 0.3 }}>{text || 'Loading...'}</div>
+        {(() => {
+          const lines = String(text || 'Loading...').split('\n').map(s => s.trim()).filter(Boolean)
+          return (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontWeight: 800, color: '#4C1D95', letterSpacing: 0.3 }}>{lines[0]}</div>
+              {lines.slice(1).map((l, i) => (
+                <div key={i} style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{l}</div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
     </Box>
   )

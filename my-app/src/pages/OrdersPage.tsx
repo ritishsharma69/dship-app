@@ -60,6 +60,12 @@ export default function OrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Warm the server to avoid cold-start delay affecting OTP
+  useEffect(() => {
+    apiGetJson('/api/ping', { timeoutMs: 4000 }).catch(()=>{})
+  }, [])
+
+
   // Count down to enable "Resend OTP"
   useEffect(() => {
     if (!otpSent) return
@@ -116,11 +122,23 @@ export default function OrdersPage() {
     if (!validEmail) { setError('Enter a valid email'); return }
     setSendingOtp(true)
     try {
-      await apiPostJson('/api/auth/request-otp', { email: email.trim() }, { loaderText: 'Sending OTP…', timeoutMs: 25000 })
+      const addr = email.trim()
+      try {
+        await apiPostJson('/api/auth/request-otp', { email: addr }, { loaderText: 'Sending OTP…', timeoutMs: 45000 })
+      } catch (err: any) {
+        const em = String(err?.message || '').toLowerCase()
+        if (em.includes('timed out')) {
+          await apiGetJson('/api/ping', { timeoutMs: 4000 }).catch(()=>{})
+          await new Promise(r => setTimeout(r, 1500))
+          await apiPostJson('/api/auth/request-otp', { email: addr }, { loaderText: 'Retrying…', timeoutMs: 45000 })
+        } else {
+          throw err
+        }
+      }
       setOtpSent(true)
       setResendIn(60)
-      setInfo(`OTP has been sent to ${email.trim()}`)
-      push(`OTP sent to ${email.trim()}`)
+      setInfo(`OTP has been sent to ${addr}`)
+      push(`OTP sent to ${addr}`)
     } catch (e: any) {
       const msg = e?.message || 'Failed to send OTP'
       // restart countdown on resend
@@ -142,7 +160,19 @@ export default function OrdersPage() {
       const trimmedCode = code.trim()
       if (!trimmedEmail || !trimmedCode) { setError('Enter email and OTP'); return }
 
-      const payload = await apiPostJson<any>('/api/auth/verify-otp', { email: trimmedEmail, code: trimmedCode })
+      let payload: any
+      try {
+        payload = await apiPostJson<any>('/api/auth/verify-otp', { email: trimmedEmail, code: trimmedCode }, { timeoutMs: 45000 })
+      } catch (err: any) {
+        const em = String(err?.message || '').toLowerCase()
+        if (em.includes('timed out')) {
+          await apiGetJson('/api/ping', { timeoutMs: 4000 }).catch(()=>{})
+          await new Promise(r => setTimeout(r, 1500))
+          payload = await apiPostJson<any>('/api/auth/verify-otp', { email: trimmedEmail, code: trimmedCode }, { timeoutMs: 45000 })
+        } else {
+          throw err
+        }
+      }
 
       const tok = payload?.token
       if (tok) {

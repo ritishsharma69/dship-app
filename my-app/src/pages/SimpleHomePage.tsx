@@ -19,18 +19,20 @@ const product = {
 }
 
 // Slides for the hero (auto-rotate)
-const heroSlides = Object.entries(productsBySlug).map(([slug, p]) => ({
-  id: slug,
-  title: p.title,
-  price: p.price,
-  compareAt: p.compareAtPrice,
-  image: p.images?.[1] || p.images?.[0],
-  slug: '/p/' + slug,
-}))
+const heroSlides = Object.entries(productsBySlug)
+  .filter(([slug]) => slug !== 'kitchen-weighing-scale')
+  .map(([slug, p]) => ({
+    id: slug,
+    title: p.title,
+    price: p.price,
+    compareAt: p.compareAtPrice,
+    image: p.images?.[1] || p.images?.[0],
+    slug: '/p/' + slug,
+  }))
 
 
 const placeholders = Object.entries(productsBySlug)
-  .filter(([slug]) => slug !== 'head-massager')
+  .filter(([slug]) => slug !== 'head-massager' && slug !== 'kitchen-weighing-scale')
   .map(([slug, p]) => ({
     id: slug,
     title: p.title,

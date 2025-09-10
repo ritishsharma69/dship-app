@@ -53,6 +53,10 @@ export default function TermsConditionsPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
           Last updated: {new Date().toLocaleDateString()}
         </Typography>
+        <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
+          All rights reserved  Khushiyan Store  Owner: Ritish Sharma
+        </Typography>
+
       </Paper>
     </Container>
   )

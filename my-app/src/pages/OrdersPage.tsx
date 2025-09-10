@@ -157,7 +157,7 @@ export default function OrdersPage() {
     setError(null); setVerifyingOtp(true)
     try {
       const trimmedEmail = email.trim()
-      const trimmedCode = code.trim()
+      const trimmedCode = code.trim().replace(/[^0-9]/g, '')
       if (!trimmedEmail || !trimmedCode) { setError('Enter email and OTP'); return }
 
       let payload: any
@@ -186,13 +186,9 @@ export default function OrdersPage() {
         setError('Verification succeeded but no token received')
       }
     } catch (e: any) {
-      const msg = 'Network error while verifying OTP'
+      const msg = e?.message || 'Failed to verify OTP'
       setError(msg); push(msg)
-
-
     } finally {
-
-
       setVerifyingOtp(false)
     }
   }

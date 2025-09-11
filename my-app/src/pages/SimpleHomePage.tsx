@@ -20,7 +20,6 @@ const product = {
 
 // Slides for the hero (auto-rotate)
 const heroSlides = Object.entries(productsBySlug)
-  .filter(([slug]) => slug !== 'kitchen-weighing-scale')
   .map(([slug, p]) => ({
     id: slug,
     title: p.title,
@@ -32,7 +31,7 @@ const heroSlides = Object.entries(productsBySlug)
 
 
 const placeholders = Object.entries(productsBySlug)
-  .filter(([slug]) => slug !== 'head-massager' && slug !== 'kitchen-weighing-scale')
+  .filter(([slug]) => slug !== 'head-massager')
   .map(([slug, p]) => ({
     id: slug,
     title: p.title,

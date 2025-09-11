@@ -214,7 +214,7 @@ export const kitchenWeighingScale: Product = {
   id: 'prod_kitchen_weighing_scale_1',
   title: 'Kitchen Weighing Scale',
   brand: 'Khushiyan',
-  price: 699,
+  price: 2,
   compareAtPrice: 1199,
   images: [
     '/products/kitchen-weighing-scale/ws1.jpg',

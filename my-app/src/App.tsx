@@ -22,6 +22,8 @@ const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
 
+const PaymentPhonePeReturnPage = lazy(() => import('./pages/PaymentPhonePeReturnPage'))
+
 export default function App() {
   return (
     <>
@@ -65,6 +67,9 @@ export default function App() {
           </Route>
           <Route path="/checkout">
             <CheckoutPage />
+          </Route>
+          <Route path="/payment/phonepe/return">
+            <PaymentPhonePeReturnPage />
           </Route>
           <Route path="/success">
             <SuccessPage />

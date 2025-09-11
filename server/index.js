@@ -2,6 +2,8 @@ require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const { MongoClient, ObjectId } = require('mongodb')
+const { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest, RefundRequest } = require('pg-sdk-node')
+
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -24,6 +26,27 @@ app.use(cors({
 // Respond to CORS preflight requests for all routes
 // Note: app.use(cors({...})) above will handle OPTIONS requests automatically.
 
+
+// PhonePe webhook: must capture raw body string BEFORE express.json() middleware
+app.post('/api/webhooks/phonepe', express.text({ type: '*/*', limit: '1mb' }), (req, res) => {
+  try {
+    const client = getPhonePeClient()
+    const auth = req.get('authorization') || ''
+    const username = process.env.PHONEPE_WEBHOOK_USER || ''
+    const password = process.env.PHONEPE_WEBHOOK_PASS || ''
+    const cb = client.validateCallback(
+      username,
+      password,
+      auth,
+      req.body || ''
+    )
+    // TODO: persist event (cb.type, cb.payload) and update order/refund status as needed
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/webhooks/phonepe error', err)
+    res.status(400).json({ error: 'invalid_callback' })
+  }
+})
 
 app.use(express.json({ limit: '5mb' }))
 
@@ -49,6 +72,102 @@ async function getDb() {
   db = client.db('dship')
   return db
 }
+// ----- PhonePe (Standard Checkout) -----
+let phonePeClient = null
+function getPhonePeClient() {
+  if (phonePeClient) return phonePeClient
+  const { PHONEPE_CLIENT_ID, PHONEPE_CLIENT_SECRET, PHONEPE_CLIENT_VERSION, PHONEPE_ENV } = process.env
+  const id = String(PHONEPE_CLIENT_ID || '').trim().replace(/^['"]|['"]$/g, '')
+  const secret = String(PHONEPE_CLIENT_SECRET || '').trim().replace(/^['"]|['"]$/g, '')
+  const version = Number((PHONEPE_CLIENT_VERSION ?? 1)) || 1
+  if (!id || !secret) {
+    throw new Error('PhonePe not configured (set PHONEPE_CLIENT_ID and PHONEPE_CLIENT_SECRET)')
+  }
+  const env = String(PHONEPE_ENV || 'SANDBOX').toUpperCase() === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX
+  phonePeClient = StandardCheckoutClient.getInstance(
+    id,
+    secret,
+    version,
+    env
+  )
+  return phonePeClient
+}
+
+// Create a checkout session and get redirect URL
+app.post('/api/payments/phonepe/checkout', async (req, res) => {
+  try {
+    const client = getPhonePeClient()
+    const amount = Math.max(100, Number(req.body?.amount || 0) | 0) // amount in paisa
+    const redirectUrl = String(
+      req.body?.redirectUrl || process.env.PHONEPE_REDIRECT_URL || 'http://localhost:5173/payment/phonepe/return'
+    )
+    const merchantOrderId = (require('crypto').randomUUID?.() || require('crypto').randomBytes(16).toString('hex'))
+
+    const metaBuilder = MetaInfo?.builder ? MetaInfo.builder().udf1('web') : null
+    let builder = StandardCheckoutPayRequest.builder()
+      .merchantOrderId(merchantOrderId)
+      .amount(amount)
+      .redirectUrl(redirectUrl)
+    if (metaBuilder) builder = builder.metaInfo(metaBuilder.build())
+
+    const request = builder.build()
+    const response = await client.pay(request)
+
+    res.json({
+      merchantOrderId,
+      state: response?.state,
+      redirectUrl: response?.redirectUrl,
+      orderId: response?.orderId,
+      expireAt: response?.expireAt
+    })
+  } catch (err) {
+    const details = { code: err?.code || err?.httpStatusCode, httpStatusCode: err?.httpStatusCode, data: err?.data }
+    console.error('POST /api/payments/phonepe/checkout error', { message: err?.message, ...details })
+    res.status(500).json({ error: 'phonepe_checkout_failed', message: err?.message || 'Error', ...details })
+  }
+})
+
+// Check order status
+app.get('/api/payments/phonepe/status', async (req, res) => {
+  try {
+    const client = getPhonePeClient()
+    const merchantOrderId = String(req.query?.merchantOrderId || '')
+    if (!merchantOrderId) return res.status(400).json({ error: 'merchantOrderId required' })
+    const response = await client.getOrderStatus(merchantOrderId)
+    res.json(response)
+  } catch (err) {
+    const details = { code: err?.code || err?.httpStatusCode, httpStatusCode: err?.httpStatusCode, data: err?.data }
+    console.error('GET /api/payments/phonepe/status error', { message: err?.message, ...details })
+    res.status(500).json({ error: 'phonepe_status_failed', message: err?.message || 'Error', ...details })
+  }
+})
+
+// Initiate refund
+app.post('/api/payments/phonepe/refund', async (req, res) => {
+  try {
+    const client = getPhonePeClient()
+    const originalMerchantOrderId = String(req.body?.originalMerchantOrderId || '')
+    const amount = Math.max(1, Number(req.body?.amount || 0) | 0)
+    const merchantRefundId = String(
+      req.body?.merchantRefundId || (require('crypto').randomUUID?.() || require('crypto').randomBytes(16).toString('hex'))
+    )
+    if (!originalMerchantOrderId) return res.status(400).json({ error: 'originalMerchantOrderId required' })
+
+    const request = RefundRequest.builder()
+      .amount(amount)
+      .merchantRefundId(merchantRefundId)
+      .originalMerchantOrderId(originalMerchantOrderId)
+      .build()
+
+    const response = await client.refund(request)
+    res.json(response)
+  } catch (err) {
+    const details = { code: err?.code || err?.httpStatusCode, httpStatusCode: err?.httpStatusCode, data: err?.data }
+    console.error('POST /api/payments/phonepe/refund error', { message: err?.message, ...details })
+    res.status(500).json({ error: 'phonepe_refund_failed', message: err?.message || 'Error', ...details })
+  }
+})
+
 
 // ----- Razorpay (optional online payments) -----
 const https = require('https')
@@ -290,6 +409,18 @@ app.get('/api/orders/me', async (req, res) => {
     console.error('GET /api/orders/me error', err)
     res.status(500).json({ error: 'Internal error' })
   }
+})
+
+app.get('/api/debug/phonepe', (req, res) => {
+  const { PHONEPE_CLIENT_ID, PHONEPE_CLIENT_VERSION, PHONEPE_ENV, PHONEPE_REDIRECT_URL } = process.env
+  res.json({
+    env: PHONEPE_ENV || null,
+    version: Number(PHONEPE_CLIENT_VERSION || '0') || 0,
+    clientIdTail: (PHONEPE_CLIENT_ID || '').slice(-6),
+    hasClientId: !!PHONEPE_CLIENT_ID,
+    hasSecret: !!process.env.PHONEPE_CLIENT_SECRET,
+    redirectUrl: PHONEPE_REDIRECT_URL || null
+  })
 })
 
 app.get('/api/health', (req, res) => {

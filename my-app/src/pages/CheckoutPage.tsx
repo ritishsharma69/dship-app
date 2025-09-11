@@ -24,7 +24,8 @@ export default function CheckoutPage() {
   const { navigate } = useRouter()
   const { push } = useToast()
   const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
-  const [paymentMethod, setPaymentMethod] = useState<string>(hasPaymentKey ? 'razorpay' : 'cod')
+  const hasPhonePe = true
+  const [paymentMethod, setPaymentMethod] = useState<string>(hasPhonePe ? 'phonepe' : (hasPaymentKey ? 'razorpay' : 'cod'))
 
   // Discount modal state
   const [showDiscount, setShowDiscount] = useState(false)
@@ -113,7 +114,17 @@ export default function CheckoutPage() {
 
 
     try {
-      if (paymentMethod === 'razorpay') {
+      if (paymentMethod === 'phonepe') {
+        // PhonePe Standard Checkout
+        const resp = await apiPostJson<any>(`/api/payments/phonepe/checkout`, {
+          amount: Math.round(total * 100), // paisa
+          redirectUrl: `${location.origin}/payment/phonepe/return`
+        }, { loaderText: 'Redirecting to PhonePe…' })
+        if (!resp?.redirectUrl) throw new Error('Failed to create PhonePe checkout')
+        localStorage.setItem('pp_last_order', String(resp.merchantOrderId || ''))
+        window.location.href = resp.redirectUrl
+        return
+      } else if (paymentMethod === 'razorpay') {
         if (!hasPaymentKey) { push('Payment key not configured'); return }
         // Online payment via Razorpay
         const ok = await loadRazorpayScript()
@@ -218,29 +229,37 @@ export default function CheckoutPage() {
 
                 <div style={{ fontWeight: 800, marginTop: 6 }}>Payment</div>
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
-                  <input type="radio" name="payment" value="razorpay" defaultChecked={hasPaymentKey} disabled={!hasPaymentKey}
+                  <input type="radio" name="payment" value="phonepe" defaultChecked={true}
+                    onChange={() => setPaymentMethod('phonepe')} />
+                  <div>
+                    <div style={{ fontWeight: 600 }}>PhonePe (UPI, Cards, NetBanking)</div>
+                    <div className="small-muted" style={{ marginTop: 4 }}>You’ll be redirected to PhonePe to complete payment</div>
+                  </div>
+                </label>
+                <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
+                  <input type="radio" name="payment" value="razorpay" disabled={!hasPaymentKey}
                     onChange={() => setPaymentMethod('razorpay')} />
                   <div>
-                    <div style={{ fontWeight: 600 }}>Pay Online</div>
+                    <div style={{ fontWeight: 600 }}>Pay Online (Razorpay)</div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4, color: '#111' }}>
                       {['UPI','Cards','NetBanking'].map((t, i) => (
                         <span key={i} className="pill" style={{ opacity: hasPaymentKey ? 1 : 0.55 }}>{t}</span>
                       ))}
                     </div>
                     {!hasPaymentKey && (
-                      <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Configure payment key to enable</div>
+                      <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Configure key to enable</div>
                     )}
                   </div>
                 </label>
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
-                  <input type="radio" name="payment" value="cod" defaultChecked={!hasPaymentKey}
+                  <input type="radio" name="payment" value="cod"
                     onChange={() => setPaymentMethod('cod')} />
                   <div>
                     <div style={{ fontWeight: 600 }}>Cash on Delivery (COD)</div>
                     <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
                   </div>
                 </label>
-                <button className="btn btn-buy order-btn" type="submit">{paymentMethod === 'razorpay' ? 'Pay & Order' : 'Place COD Order'}</button>
+                <button className="btn btn-buy order-btn" type="submit">{paymentMethod !== 'cod' ? 'Pay & Order' : 'Place COD Order'}</button>
               </form>
 
               <aside className="card order-summary-card">

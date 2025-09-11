@@ -39,7 +39,7 @@ export default function OrdersPage() {
   // Admin UI filters/sort/search
   const [q, setQ] = useState('')
   const [statusFilter, setStatusFilter] = useState<AdminStatus | 'all'>('all')
-  const [paymentFilter, setPaymentFilter] = useState<'all' | 'cod' | 'razorpay'>('all')
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'cod' | 'phonepe'>('all')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_desc' | 'amount_asc'>('newest')
   // Calendar single-day filter (YYYY-MM-DD)
   const [selectedDate, setSelectedDate] = useState<string>('')
@@ -327,7 +327,7 @@ export default function OrdersPage() {
                       <select id="orders-payment" name="paymentMethod" className="input" value={paymentFilter} onChange={e=>setPaymentFilter(e.target.value as any)}>
                         <option value="all">All payments</option>
                         <option value="cod">COD</option>
-                        <option value="razorpay">Online</option>
+                        <option value="phonepe">PhonePe</option>
                       </select>
                       <select id="orders-sort" name="sort" className="input" value={sortBy} onChange={e=>setSortBy(e.target.value as any)}>
                         <option value="newest">Newest first</option>

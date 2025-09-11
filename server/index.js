@@ -173,48 +173,6 @@ app.post('/api/payments/phonepe/refund', async (req, res) => {
 })
 
 
-// ----- Razorpay (optional online payments) -----
-const https = require('https')
-const crypto = require('crypto')
-
-function razorpayRequest(path, method, data) {
-  return new Promise((resolve, reject) => {
-    const keyId = process.env.RAZORPAY_KEY_ID
-    const keySecret = process.env.RAZORPAY_KEY_SECRET
-    if (!keyId || !keySecret) return reject(new Error('Razorpay not configured'))
-
-    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64')
-    const body = data ? JSON.stringify(data) : ''
-
-    const req = https.request({
-      hostname: 'api.razorpay.com',
-      port: 443,
-      path,
-      method,
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(body)
-      }
-    }, (r) => {
-      let buf = ''
-      r.on('data', (d) => (buf += d))
-      r.on('end', () => {
-        try {
-          const json = JSON.parse(buf || '{}')
-          if (r.statusCode >= 200 && r.statusCode < 300) return resolve(json)
-          const msg = json?.error?.description || `Razorpay API error (${r.statusCode})`
-          return reject(new Error(msg))
-        } catch (e) {
-          return reject(new Error(`Razorpay parse error: ${buf}`))
-        }
-      })
-    })
-    req.on('error', reject)
-    if (body) req.write(body)
-    req.end()
-  })
-}
 
 // ----- Email (optional) -----
 // Configure via .env: SMTP_HOST, SMTP_PORT=587, SMTP_USER, SMTP_PASS, FROM_EMAIL, STORE_NAME
@@ -438,21 +396,6 @@ app.get('/', (req, res) => {
 
 
 
-// Online payments temporarily disabled — return friendly message
-app.post('/api/payments/razorpay/order', (req, res) => {
-  return res.status(503).json({
-    error: 'payment_disabled',
-    message: 'Online payments are temporarily disabled. Please choose Cash on Delivery (COD).'
-  })
-})
-
-// Online payments temporarily disabled — verification not available
-app.post('/api/payments/razorpay/verify', (req, res) => {
-  return res.status(503).json({
-    error: 'payment_disabled',
-    message: 'Online payments are temporarily disabled. Please use COD.'
-  })
-})
 
 // Submit return request – emails store owner and sends confirmation to customer
 app.post('/api/returns', async (req, res) => {
@@ -585,9 +528,16 @@ app.post('/api/orders', async (req, res) => {
     const tax = Number(clientTotals.tax ?? 0) || 0
     const total = subtotal + shipping + tax
 
-    const paymentMethod = String(body?.paymentMethod || 'cod').toLowerCase() === 'razorpay' ? 'razorpay' : 'cod'
+    const pm = String(body?.paymentMethod || 'cod').toLowerCase()
+    const paymentMethod = ['phonepe','razorpay','paytm'].includes(pm) ? pm : 'cod'
     const payment = body?.payment && typeof body.payment === 'object' ? body.payment : null
-    const status = payment?.captured ? 'paid' : 'pending'
+    const stateUpper = String(payment?.state || '').toUpperCase()
+    const isPaid = paymentMethod !== 'cod' && (
+      payment?.captured ||
+      (payment?.provider === 'phonepe' && stateUpper === 'COMPLETED') ||
+      (payment?.provider === 'paytm' && (stateUpper === 'TXN_SUCCESS' || stateUpper === 'SUCCESS'))
+    )
+    const status = isPaid ? 'paid' : 'pending'
 
     const requestId = String(body?.requestId || '').trim()
 

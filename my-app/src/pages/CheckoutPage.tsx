@@ -7,25 +7,12 @@ import { events } from '../analytics'
 import { apiGetJson, apiPostJson } from '../lib/api'
 import DiscountModal from '../components/DiscountModal'
 
-async function loadRazorpayScript() {
-  if (document.getElementById('razorpay-js')) return true
-  return new Promise<boolean>((resolve) => {
-    const s = document.createElement('script')
-    s.src = 'https://checkout.razorpay.com/v1/checkout.js'
-    s.id = 'razorpay-js'
-    s.onload = () => resolve(true)
-    s.onerror = () => resolve(false)
-    document.body.appendChild(s)
-  })
-}
 
 export default function CheckoutPage() {
   const { items, clear, update } = useCart()
   const { navigate } = useRouter()
   const { push } = useToast()
-  const hasPaymentKey = !!import.meta.env.VITE_RAZORPAY_KEY_ID
-  const hasPhonePe = true
-  const [paymentMethod, setPaymentMethod] = useState<string>(hasPhonePe ? 'phonepe' : (hasPaymentKey ? 'razorpay' : 'cod'))
+  const [paymentMethod, setPaymentMethod] = useState<string>('phonepe')
 
   // Discount modal state
   const [showDiscount, setShowDiscount] = useState(false)
@@ -116,52 +103,16 @@ export default function CheckoutPage() {
     try {
       if (paymentMethod === 'phonepe') {
         // PhonePe Standard Checkout
+        // Persist the order payload for completing after redirect
+        payload.requestId = ensureReqId()
         const resp = await apiPostJson<any>(`/api/payments/phonepe/checkout`, {
           amount: Math.round(total * 100), // paisa
           redirectUrl: `${location.origin}/payment/phonepe/return`
         }, { loaderText: 'Redirecting to PhonePe…' })
         if (!resp?.redirectUrl) throw new Error('Failed to create PhonePe checkout')
         localStorage.setItem('pp_last_order', String(resp.merchantOrderId || ''))
+        localStorage.setItem('pp_pending_order', JSON.stringify(payload))
         window.location.href = resp.redirectUrl
-        return
-      } else if (paymentMethod === 'razorpay') {
-        if (!hasPaymentKey) { push('Payment key not configured'); return }
-        // Online payment via Razorpay
-        const ok = await loadRazorpayScript()
-        if (!ok) throw new Error('Failed to load Razorpay')
-        const key = import.meta.env.VITE_RAZORPAY_KEY_ID
-
-        // 1) Create Razorpay order on server
-        const { order } = await apiPostJson<any>(`/api/payments/razorpay/order`, { amount: total, receipt: `rcpt_${Date.now()}` })
-
-        // 2) Open Razorpay Checkout
-        const rzp = new (window as any).Razorpay({
-          key,
-          amount: order.amount,
-          currency: order.currency,
-          order_id: order.id,
-          name: 'Order Payment',
-          description: 'Pay securely',
-          prefill: { name: String(fd.get('name')||''), email: String(fd.get('email')||''), contact: String(fd.get('phone')||'') },
-          notes: { source: 'dship' },
-          theme: { color: '#ff2a6d' },
-          handler: async (resp: any) => {
-            // 3) Verify signature
-            const verify = await apiPostJson<any>(`/api/payments/razorpay/verify`, resp)
-            if (!verify.valid) { push('Payment verification failed'); return }
-
-            // 4) Place order in DB as paid
-            payload.payment = { provider: 'razorpay', orderId: resp.razorpay_order_id, paymentId: resp.razorpay_payment_id, signature: resp.razorpay_signature, captured: true }
-            const data = await apiPostJson<any>(`/api/orders`, payload, { loaderText: 'Placing order…', timeoutMs: 30000 })
-            clear(); push('Payment successful!')
-            const oid = data.id || data._id || ''
-            navigate(`/success?orderId=${encodeURIComponent(oid)}`)
-          },
-          modal: {
-            ondismiss: () => { push('Payment cancelled') }
-          }
-        })
-        rzp.open()
         return
       } else {
         // COD
@@ -234,21 +185,6 @@ export default function CheckoutPage() {
                   <div>
                     <div style={{ fontWeight: 600 }}>PhonePe (UPI, Cards, NetBanking)</div>
                     <div className="small-muted" style={{ marginTop: 4 }}>You’ll be redirected to PhonePe to complete payment</div>
-                  </div>
-                </label>
-                <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
-                  <input type="radio" name="payment" value="razorpay" disabled={!hasPaymentKey}
-                    onChange={() => setPaymentMethod('razorpay')} />
-                  <div>
-                    <div style={{ fontWeight: 600 }}>Pay Online (Razorpay)</div>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4, color: '#111' }}>
-                      {['UPI','Cards','NetBanking'].map((t, i) => (
-                        <span key={i} className="pill" style={{ opacity: hasPaymentKey ? 1 : 0.55 }}>{t}</span>
-                      ))}
-                    </div>
-                    {!hasPaymentKey && (
-                      <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Configure key to enable</div>
-                    )}
                   </div>
                 </label>
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>

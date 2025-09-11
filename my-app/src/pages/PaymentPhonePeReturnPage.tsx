@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { apiGetJson } from '../lib/api'
+import { apiGetJson, apiPostJson } from '../lib/api'
 import { useRouter } from '../lib/router'
 
 export default function PaymentPhonePeReturnPage() {
@@ -13,11 +13,26 @@ export default function PaymentPhonePeReturnPage() {
     if (!last) { setStatus('error'); setMessage('Missing order reference'); return }
     setStatus('loading')
     apiGetJson<any>(`/api/payments/phonepe/status?merchantOrderId=${encodeURIComponent(last)}`)
-      .then((res) => {
+      .then(async (res) => {
         const st = String(res?.state || '').toUpperCase()
         if (st === 'COMPLETED') {
-          setStatus('completed')
-          setMessage('Payment successful. You can close this page.')
+          try {
+            setMessage('Payment successful. Placing your order…')
+            const raw = localStorage.getItem('pp_pending_order') || ''
+            const payload = raw ? JSON.parse(raw) : null
+            if (!payload) { setStatus('error'); setMessage('Payment succeeded, but order details are missing.'); return }
+            payload.paymentMethod = 'phonepe'
+            payload.payment = { provider: 'phonepe', merchantOrderId: last, state: 'COMPLETED', captured: true }
+            const data = await apiPostJson<any>('/api/orders', payload)
+            const oid = data?.id || data?._id || ''
+            localStorage.removeItem('pp_pending_order')
+            localStorage.removeItem('pp_last_order')
+            try { localStorage.removeItem('cart:v1') } catch {}
+            setStatus('completed')
+            navigate(`/success?orderId=${encodeURIComponent(oid)}`)
+          } catch (e) {
+            setStatus('error'); setMessage('Payment succeeded, but order placement failed. Please contact support with your payment reference.')
+          }
         } else if (st === 'FAILED') {
           setStatus('failed'); setMessage('Payment failed. Please try again.')
         } else {

@@ -9,22 +9,27 @@ const app = express()
 const PORT = process.env.PORT || 5000
 
 // CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
+const defaultAllowed = ['https://www.khushiyan.store', 'https://khushiyan.store']
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+const allowedList = Array.from(new Set([...defaultAllowed, ...allowedFromEnv]))
 const allowAll = allowedFromEnv.includes('*')
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true)
     const ok =
       allowAll ||
-      allowedFromEnv.includes(origin) ||
+      allowedList.includes(origin) ||
       origin.startsWith('http://localhost:') || origin.startsWith('https://localhost:') ||
       origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://127.0.0.1:')
     cb(null, !!ok)
   },
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  optionsSuccessStatus: 204,
   credentials: false
 }))
 // Respond to CORS preflight requests for all routes
-// Note: app.use(cors({...})) above will handle OPTIONS requests automatically.
+app.options('*', cors())
 
 
 // PhonePe webhook: must capture raw body string BEFORE express.json() middleware

@@ -28,8 +28,7 @@ app.use(cors({
   optionsSuccessStatus: 204,
   credentials: false
 }))
-// Respond to CORS preflight requests for all routes
-app.options('*', cors())
+// Preflight is handled by the cors() middleware above
 
 
 // PhonePe webhook: must capture raw body string BEFORE express.json() middleware

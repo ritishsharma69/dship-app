@@ -438,7 +438,9 @@ export default function OrdersPage() {
                               {o.hasReturn ? (
                                 <span className="badge" style={{ background:'#f3f4f6', border:'1px solid var(--color-border)' }}>Return requested</span>
                               ) : (
-                                <button className="btn" onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)}>Return/Cancel</button>
+                                (Date.now() - new Date(o.createdAt).getTime() <= 3*24*60*60*1000)
+                                  ? (<button className="btn" onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)}>Return/Cancel</button>)
+                                  : null
                               )}
                             </td>
                           </tr>

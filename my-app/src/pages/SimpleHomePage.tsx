@@ -152,7 +152,7 @@ export default function SimpleHomePage() {
 
       {/* Footer note */}
       <Box className="fade-up" sx={{ mt: 5, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">Need help choosing? Ping us on WhatsApp.</Typography>
+        <Typography variant="body2" color="text.secondary">Any queries? Email us at khushiyanstore@gmail.com.</Typography>
       </Box>
     </Container>
   )

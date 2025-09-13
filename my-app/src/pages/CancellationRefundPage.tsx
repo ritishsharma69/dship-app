@@ -16,7 +16,6 @@ export default function CancellationRefundPage() {
         <Typography variant="h6" sx={{ mt: 1 }}>Order cancellation</Typography>
         <Stack spacing={1} sx={{ color: 'var(--color-text)' }}>
           <div>• You can cancel your order before dispatch for a full refund.</div>
-          <div>• If the order has been shipped, please refuse delivery or raise a return request after delivery.</div>
         </Stack>
 
         <Typography variant="h6" sx={{ mt: 1 }}>Returns eligibility</Typography>

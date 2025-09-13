@@ -9,9 +9,7 @@ export default function ContactPage() {
     <Container sx={{ py: 3 }}>
       <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 820, mx: 'auto', p: 3, borderRadius: 0, borderColor: 'rgba(0,0,0,0.18)' }}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Contact Us</Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          For returns/cancellations, tap the Return/Cancel button from Your Orders section.
-        </Typography>
+
 
         <Stack spacing={1.5}>
           <div className="list-row"><span>Email</span><a href={`mailto:${support}?subject=Return/Cancellation%20request`}>{support}</a></div>

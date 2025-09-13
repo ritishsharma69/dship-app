@@ -72,7 +72,7 @@ export const footMassager: Product = {
   id: 'prod_foot_massager_mat_1',
   title: 'Electric Foot Massager Mat',
   brand: 'Khushiyan',
-  price: 699,
+  price: 499,
   compareAtPrice: 1799,
   images: [
     '/products/foot-massager/fm1.jpg',

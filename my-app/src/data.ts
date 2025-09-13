@@ -36,7 +36,7 @@ export const postureCorrector: Product = {
   id: 'prod_posture_corrector_1',
   title: 'Posture Corrector Back Brace',
   brand: 'Khushiyan',
-  price: 699,
+  price: 409,
   compareAtPrice: 1499,
   images: [
     '/products/posture-corrector/p1.jpg',
@@ -141,46 +141,14 @@ export const electricHeatingPad: Product = {
   inventoryStatus: 'IN_STOCK',
 };
 
-// Fifth product: Mimo Mini Vibration Full Body Massager
-export const mimoMiniMassager: Product = {
-  id: 'prod_mimo_mini_massager_1',
-  title: 'Mimo Mini Vibration Full Body Massager',
-  brand: 'Khushiyan',
-  price: 599,
-  compareAtPrice: 999,
-  images: [
-    '/products/mimi-mini-body-massager/mb1.jpg',
-    '/products/mimi-mini-body-massager/mb2.jpg',
-    '/products/mimi-mini-body-massager/mb3.jpg',
-    '/products/mimi-mini-body-massager/mb4.jpg',
-  ],
-  youtubeUrl: 'https://www.youtube.com/watch?v=2_jfuBmbzqk&t=1s',
-  bullets: [
-    'Compact 3‑point design — head, neck, shoulder, back & legs',
-    'Deep vibration helps relax stiff muscles and reduces fatigue',
-    'One‑button operation — easy for all ages',
-    'USB powered — use with power bank, laptop or adapter',
-    'Lightweight and portable — carry to office or travel',
-    'Low noise motor for a calm, soothing experience',
-  ],
-  descriptionHeading: 'Anytime refresh. Pocket‑size relief.',
-  descriptionPoints: [
-    'Targets pressure points with powerful micro‑vibrations',
-    'Ergonomic shape fits naturally in the palm for better control',
-    'Use on neck, shoulders, back, arms and calves after long hours',
-    'Durable ABS body with soft‑touch legs for stable grip',
-    'Perfect quick massage while studying, gaming or office breaks',
-  ],
-  sku: 'MIMO-MINI-MASSAGER',
-  inventoryStatus: 'IN_STOCK',
-};
+
 
 // Sixth product: Mini Butterfly Massager
 export const miniButterflyMassager: Product = {
   id: 'prod_mini_butterfly_massager_1',
   title: 'Mini Butterfly Massager',
   brand: 'Khushiyan',
-  price: 549,
+  price: 399,
   compareAtPrice: 999,
   images: [
     '/products/mini-butterfly-massager/bm1.jpg',
@@ -214,7 +182,7 @@ export const kitchenWeighingScale: Product = {
   id: 'prod_kitchen_weighing_scale_1',
   title: 'Kitchen Weighing Scale',
   brand: 'Khushiyan',
-  price: 699,
+  price: 419,
   compareAtPrice: 1199,
   images: [
     '/products/kitchen-weighing-scale/ws1.jpg',
@@ -255,7 +223,7 @@ export const productsBySlug: Record<string, Product> = {
   'foot-massager': footMassager,
   'mini-butterfly-massager': miniButterflyMassager,
   'electric-heating-pad': electricHeatingPad,
-  'mimo-mini-massager': mimoMiniMassager,
+
   'kitchen-weighing-scale': kitchenWeighingScale,
 };
 
@@ -318,63 +286,7 @@ export const reviewsFoot: ReviewsSummary = {
   ]
 };
 
-// Reviews: Mimo Mini Massager
-export const reviewsMimo: ReviewsSummary = {
-  ratingAvg: 5,
-  ratingCount: 50,
-  testimonials: [
-    { author: 'Vishal R.', quote: 'Chota sa device par vibration powerful hai. Office desk pe daily use karta hoon.', rating: 5 },
-    { author: 'Ananya P.', quote: 'Neck aur shoulder stiffness ke liye quick relief. USB se chal jata hai—very handy!', rating: 5 },
-    { author: 'Deep', quote: 'Travel friendly. Noise kam hai, TV dekhte hue use kar sakte ho.', rating: 4 },
-    { author: 'Meera K.', quote: 'Palm me achha grip, teen legs pressure points pe sahi lagte hain.', rating: 4 },
-    { author: 'Kartik', quote: 'Gift kiya tha, sabko pasand aaya. Price ke hisab se badiya performance.', rating: 5 },
-    { author: 'Riya S.', quote: 'Study breaks me 5 min use karti hoon — head aur neck relax.', rating: 5 },
-    { author: 'Harshit P.', quote: 'USB power bank se bhi chal gaya. Portable and handy.', rating: 4 },
-    { author: 'Sneha G.', quote: 'Palm fit design, fingers thakte nahi. Daily routine ban gaya.', rating: 5 },
-    { author: 'Karan V.', quote: 'Gaming ke baad wrist aur forearm ka tension nikal jata hai.', rating: 4 },
-    { author: 'Pooja L.', quote: 'Mom ko knees me bhi mild massage ke liye use karwa diya — kaafi relief.', rating: 5 },
-    { author: 'Zubair H.', quote: 'Noise low, call pe bhi use kar sakte ho. Good for office.', rating: 5 },
-    { author: 'Ira T.', quote: 'Build quality solid, grip rubberized lagti hai.', rating: 4 },
-    { author: 'Dhruv N.', quote: 'One button control — simple and effective.', rating: 5 },
-    { author: 'Mahesh K.', quote: 'Battery backup decent, 3-4 sessions easily.', rating: 4 },
-    { author: 'Tanya M.', quote: 'Gifted to dad, neck stiffness me kaafi aaram.', rating: 5 },
-    { author: 'Gaurav B.', quote: 'Compact size — travel pouch me easily aa jata hai.', rating: 5 },
-    { author: 'Roshni P.', quote: 'Head massage se headache kam feel hota hai.', rating: 4 },
-    { author: 'Ankit S.', quote: 'Price ke hisab se value — daily use ke liye sahi.', rating: 5 },
-    { author: 'Payal D.', quote: 'Teen legs ke points sahi jagah hit karte hain.', rating: 4 },
-    { author: 'Raghav J.', quote: 'WFH me shoulders tight ho jate the — ab relax feel hota hai.', rating: 5 },
-    { author: 'Ishita K.', quote: 'Charging fast, USB se plug-and-play.', rating: 4 },
-    { author: 'Sandeep R.', quote: 'Motor powerful par gentle — ache points me relief.', rating: 5 },
-    { author: 'Mehul C.', quote: 'Gaming breaks me quick refresh. Good buy.', rating: 5 },
-    { author: 'Palak S.', quote: 'Compact aur sturdy — gir bhi gaya toh kuch nahi hua.', rating: 4 },
-    { author: 'Vivek T.', quote: 'Back aur calves pe bhi kaam karta hai — multipurpose.', rating: 5 },
-    { author: 'Kritika V.', quote: 'Design cute aur functional. Friends ne bhi poocha.', rating: 5 },
-    { author: 'Yash A.', quote: 'Office commute me bhi carry — lightweight hai.', rating: 4 },
-    { author: 'Monu P.', quote: 'One-click se mode change easy hota hai.', rating: 4 },
-    { author: 'Aisha Z.', quote: 'Night study ke baad temples pe relax milta hai.', rating: 5 },
-    { author: 'Kabir U.', quote: 'USB cord ka length theek, laptop se hi chala leta hoon.', rating: 4 },
-    { author: 'Simran G.', quote: 'Stop-start responsive — koi lag nahi.', rating: 5 },
-    { author: 'Ritika N.', quote: 'Palm pe vibration soothing — stress kam hota hai.', rating: 5 },
-    { author: 'Aman J.', quote: 'Easy to clean, wipe se saaf ho jata.', rating: 4 },
-    { author: 'Divyansh R.', quote: 'Daily 10 min neck area — stiffness gayab.', rating: 5 },
-    { author: 'Himani D.', quote: 'Noise low — TV dekhte hue bhi distub nahi karta.', rating: 5 },
-    { author: 'Tarun K.', quote: 'Ergonomic shape palm me perfect baithta hai.', rating: 4 },
-    { author: 'Jenny S.', quote: 'Travel case me rakh liya. Perfect for flights.', rating: 5 },
-    { author: 'Nikhil O.', quote: 'Value purchase — gifting ke liye bhi best.', rating: 5 },
-    { author: 'Aarav M.', quote: 'Shoulder ke trigger points pe kaam karta hai.', rating: 4 },
-    { author: 'Esha L.', quote: 'Teen legs soft-touch — skin pe comfortable.', rating: 5 },
-    { author: 'Prachi K.', quote: 'Long meetings ke baad Sir dard me relief.', rating: 5 },
-    { author: 'Utkarsh S.', quote: 'Charging indicator helpful hai.', rating: 4 },
-    { author: 'Rehan I.', quote: 'Backpack pocket me fit, on-the-go.', rating: 5 },
-    { author: 'Natasha P.', quote: 'Maa ko diya — unhe bhi pasand aa gaya.', rating: 5 },
-    { author: 'Ojas V.', quote: 'Buttons tactile, feel good.', rating: 4 },
-    { author: 'Tanvi R.', quote: 'Stressful day ke baad quick unwind.', rating: 5 },
-    { author: 'Yuvraj K.', quote: 'Price aur performance balanced.', rating: 4 },
-    { author: 'Anushka D.', quote: 'Compact + powerful — daily essential.', rating: 5 },
-    { author: 'Dev P.', quote: 'Warranty info clear tha, delivery fast.', rating: 4 },
-    { author: 'Naina Q.', quote: 'Bright color cute lagta hai. Good vibes!', rating: 5 }
-  ]
-};
+
 
 
 // Reviews: Head Massager
@@ -548,7 +460,7 @@ export const reviewsScale: ReviewsSummary = {
   ]
 };
 
-// Reviews: Mini Butterfly Massager (same scale as Mimo)
+// Reviews: Mini Butterfly Massager
 export const reviewsButterfly: ReviewsSummary = {
   ratingAvg: 5,
   ratingCount: 50,
@@ -674,7 +586,7 @@ export const reviewsBySlug: Record<string, ReviewsSummary> = {
   'posture-corrector': reviewsPosture,
   'foot-massager': reviewsFoot,
   'electric-heating-pad': reviewsHeatingPad,
-  'mimo-mini-massager': reviewsMimo,
+
   'mini-butterfly-massager': reviewsButterfly,
   'kitchen-weighing-scale': reviewsScale,
 };

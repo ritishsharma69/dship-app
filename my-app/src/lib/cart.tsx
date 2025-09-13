@@ -31,7 +31,7 @@ function normalizeCartItems(input: CartItem[]): CartItem[] {
   try {
     const byId: Record<string, Product> = {}
     Object.values(productsBySlug).forEach((p) => { byId[p.id] = p })
-    return input.map((i) => (byId[i.product.id] ? { ...i, product: byId[i.product.id] } : i))
+    return input.filter((i) => !!byId[i.product.id]).map((i) => ({ ...i, product: byId[i.product.id] }))
   } catch { return input }
 }
 

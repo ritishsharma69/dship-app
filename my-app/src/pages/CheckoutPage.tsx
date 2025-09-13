@@ -6,6 +6,12 @@ import { useToast } from '../lib/toast'
 import { events } from '../analytics'
 import { apiGetJson, apiPostJson } from '../lib/api'
 import DiscountModal from '../components/DiscountModal'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+
 
 
 export default function CheckoutPage() {
@@ -15,10 +21,26 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>('phonepe')
 
   // Discount modal state
+  // COD confirmation modal
+  const [showConfirmCOD, setShowConfirmCOD] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+
   const [showDiscount, setShowDiscount] = useState(false)
   const [pendingProductId, setPendingProductId] = useState<string | null>(null)
   // Do NOT auto-apply coupon; only apply when user explicitly claims it
   const [couponApplied, setCouponApplied] = useState<boolean>(false)
+  // Input filters
+  const allowLetters = (e: any) => {
+    const el = e.currentTarget as HTMLInputElement
+    el.value = el.value.replace(/[^a-zA-Z\s]/g, '').replace(/\s{2,}/g, ' ')
+  }
+  const digitsOnly = (max: number) => (e: any) => {
+    const el = e.currentTarget as HTMLInputElement
+    el.value = el.value.replace(/[^0-9]/g, '').slice(0, max)
+  }
+  const onDigits10 = digitsOnly(10)
+  const onDigits6 = digitsOnly(6)
+
   const exitedOnceRef = useRef(false)
 
   // Show discount only when user navigates away from Checkout the first time
@@ -160,21 +182,21 @@ export default function CheckoutPage() {
               <h1 style={{ margin: 0, fontSize: 24, letterSpacing: 0.2 }}>Checkout</h1>
             </header>
             <div className="checkout-grid">
-              <form className="card checkout-form" onSubmit={placeOrder}>
+              <form className="card checkout-form" onSubmit={placeOrder} ref={formRef}>
                 <div style={{ fontWeight: 800 }}>Contact</div>
                 <div className="form-grid">
-                  <input className="input" name="email" placeholder="Email" required type="email" />
-                  <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" />
-                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} />
+                  <input className="input" name="email" placeholder="Email" required type="email" inputMode="email" />
+                  <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" inputMode="numeric" maxLength={10} onInput={onDigits10} title="Enter 10-digit mobile number" />
+                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} maxLength={50} minLength={2} pattern="[A-Za-z\\s]{2,50}" onInput={allowLetters} title="Letters and spaces only" />
                 </div>
 
                 <div style={{ fontWeight: 800, marginTop: 6 }}>Shipping</div>
                 <div className="form-grid">
-                  <input className="input" name="line1" placeholder="Address line 1" required style={{ gridColumn: '1 / -1' }} />
-                  <input className="input" name="line2" placeholder="Address line 2 (optional)" style={{ gridColumn: '1 / -1' }} />
-                  <input className="input" name="city" placeholder="City" required />
-                  <input className="input" name="state" placeholder="State" required />
-                  <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" />
+                  <input className="input" name="line1" placeholder="Address line 1" required style={{ gridColumn: '1 / -1' }} minLength={5} maxLength={120} />
+                  <input className="input" name="line2" placeholder="Address line 2 (optional)" style={{ gridColumn: '1 / -1' }} maxLength={120} />
+                  <input className="input" name="city" placeholder="City" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" />
+                  <input className="input" name="state" placeholder="State" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" />
+                  <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" inputMode="numeric" maxLength={6} onInput={onDigits6} title="Enter 6-digit PIN code" />
                 </div>
                 <input type="hidden" name="country" value="India" />
 
@@ -195,7 +217,11 @@ export default function CheckoutPage() {
                     <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
                   </div>
                 </label>
-                <button className="btn btn-buy order-btn" type="submit">{paymentMethod !== 'cod' ? 'Pay & Order' : 'Place COD Order'}</button>
+                {paymentMethod !== 'cod' ? (
+                  <button className="btn btn-buy order-btn" type="submit">Pay & Order</button>
+                ) : (
+                  <button className="btn btn-buy order-btn" type="button" onClick={() => setShowConfirmCOD(true)}>Place COD Order</button>
+                )}
               </form>
 
               <aside className="card order-summary-card">
@@ -251,6 +277,27 @@ export default function CheckoutPage() {
           </div>
         )}
       </div>
+
+      {/* COD confirmation modal */}
+      <Dialog open={showConfirmCOD} onClose={() => setShowConfirmCOD(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800 }}>Confirm COD Order</DialogTitle>
+        <DialogContent>
+          <div style={{ color: '#6B7280', fontSize: 14, marginBottom: 8 }}>
+            Are you sure you want to place this order with Cash on Delivery?
+          </div>
+          <div className="small-muted">Items: {items.length} • Total: ₹{Math.max(0, total - (couponApplied ? 50 : 0))}</div>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button variant="outlined" onClick={() => setShowConfirmCOD(false)}>No</Button>
+          <Button
+            variant="contained"
+            onClick={() => { setShowConfirmCOD(false); formRef.current?.requestSubmit(); }}
+            sx={{ background: 'linear-gradient(135deg, #FF3F6C 0%, #E73962 100%)' }}
+          >
+            Yes, Place Order
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Discount modal */}
       <DiscountModal

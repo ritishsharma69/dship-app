@@ -38,9 +38,9 @@ const slides: Slide[] = [
 
 const items: CardItem[] = [
   { id: 'head-massager', title: 'Electric Head & Body Massager', price: 999, compareAt: 1899, image: '/products/head-massager/1.jpg' },
-  { id: 'posture-corrector', title: 'Posture Corrector Back Brace', price: 699, compareAt: 1499, image: '/products/posture-corrector/p1.jpg' },
-  { id: 'foot-massager', title: 'Electric Foot Massager Mat', price: 999, compareAt: 1799, image: '/products/foot-massager/fm1.jpg' },
-  { id: 'kitchen-weighing-scale', title: 'Kitchen Weighing Scale', price: 1, compareAt: 1199, image: '/products/kitchen-weighing-scale/ws1.jpg' },
+  { id: 'posture-corrector', title: 'Posture Corrector Back Brace', price: 409, compareAt: 1499, image: '/products/posture-corrector/p1.jpg' },
+  { id: 'foot-massager', title: 'Electric Foot Massager Mat', price: 499, compareAt: 1799, image: '/products/foot-massager/fm1.jpg' },
+  { id: 'kitchen-weighing-scale', title: 'Kitchen Weighing Scale', price: 419, compareAt: 1199, image: '/products/kitchen-weighing-scale/ws1.jpg' },
   { id: 'p4', title: 'Product 4', comingSoon: true },
   { id: 'p5', title: 'Product 5', comingSoon: true },
   { id: 'p6', title: 'Product 6', comingSoon: true },

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import type { Product } from '../types'
+import { productsBySlug } from '../data'
 
 export interface CartItem { product: Product, quantity: number }
 interface CartCtx {
@@ -26,8 +27,16 @@ function writeStorage(items: CartItem[]) {
   try { localStorage.setItem(KEY, JSON.stringify(items)) } catch {}
 }
 
+function normalizeCartItems(input: CartItem[]): CartItem[] {
+  try {
+    const byId: Record<string, Product> = {}
+    Object.values(productsBySlug).forEach((p) => { byId[p.id] = p })
+    return input.map((i) => (byId[i.product.id] ? { ...i, product: byId[i.product.id] } : i))
+  } catch { return input }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(readStorage())
+  const [items, setItems] = useState<CartItem[]>(normalizeCartItems(readStorage()))
 
   const add = (item: CartItem) => {
     setItems(prev => {

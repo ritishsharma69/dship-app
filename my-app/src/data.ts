@@ -214,7 +214,7 @@ export const kitchenWeighingScale: Product = {
   id: 'prod_kitchen_weighing_scale_1',
   title: 'Kitchen Weighing Scale',
   brand: 'Khushiyan',
-  price: 1,
+  price: 699,
   compareAtPrice: 1199,
   images: [
     '/products/kitchen-weighing-scale/ws1.jpg',
@@ -253,9 +253,9 @@ export const productsBySlug: Record<string, Product> = {
   'head-massager': product,
   'posture-corrector': postureCorrector,
   'foot-massager': footMassager,
+  'mini-butterfly-massager': miniButterflyMassager,
   'electric-heating-pad': electricHeatingPad,
   'mimo-mini-massager': mimoMiniMassager,
-  'mini-butterfly-massager': miniButterflyMassager,
   'kitchen-weighing-scale': kitchenWeighingScale,
 };
 

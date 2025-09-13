@@ -21,6 +21,8 @@ const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'))
 
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
+const AdminReturnsPage = lazy(() => import('./pages/AdminReturnsPage'))
+
 
 const PaymentPhonePeReturnPage = lazy(() => import('./pages/PaymentPhonePeReturnPage'))
 
@@ -64,6 +66,9 @@ export default function App() {
           </Route>
           <Route path="/order/return">
             <ReturnRequestPage />
+          </Route>
+          <Route path="/admin/returns">
+            <AdminReturnsPage />
           </Route>
           <Route path="/checkout">
             <CheckoutPage />

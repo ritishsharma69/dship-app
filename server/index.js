@@ -349,7 +349,7 @@ function parseDemoToken(authHeader) {
   try { return Buffer.from(raw, 'base64').toString('utf8').split('|')[0] } catch { return null }
 }
 
-// Unified orders endpoint: if email is admin, return all; else return own
+// Unified orders endpoint: if email is admin, return all; else return own (+hasReturn)
 app.get('/api/orders/me', async (req, res) => {
   try {
     const email = parseDemoToken(req.headers.authorization)
@@ -360,11 +360,20 @@ app.get('/api/orders/me', async (req, res) => {
     const q = isAdmin ? {} : { 'customer.email': email }
 
     const docs = await database.collection('orders').find(q).sort({ createdAt: -1 }).limit(1000).toArray()
+
+    // For customers, mark orders that already have a return request
+    let returnedSet = new Set()
+    if (!isAdmin) {
+      const rets = await database.collection('returns').find({ email }).project({ orderId: 1 }).toArray()
+      returnedSet = new Set(rets.map(r => String(r.orderId)))
+    }
+
     const out = docs.map(d => ({
       id: String(d._id), createdAt: d.createdAt, status: d.status,
       customer: d.customer, address: d.address, paymentMethod: d.paymentMethod,
       totals: d.totals, total: d.totals?.total, items: d.items || [],
-      itemsCount: (d.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)
+      itemsCount: (d.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0),
+      hasReturn: !isAdmin && returnedSet.has(String(d._id)),
     }))
     res.json({ email, isAdmin, orders: out })
   } catch (err) {
@@ -397,7 +406,7 @@ app.get('/', (req, res) => {
 
 
 
-// Submit return request – emails store owner and sends confirmation to customer
+// Submit return request – persist in DB, email store owner, and send confirmation to customer
 app.post('/api/returns', async (req, res) => {
   try {
     const body = req.body || {}
@@ -408,6 +417,14 @@ app.post('/api/returns', async (req, res) => {
     const images = Array.isArray(body.images) ? body.images.slice(0, 5) : []
 
     if (!orderId || !email) return res.status(400).json({ error: 'orderId and email required' })
+
+    // Upsert return in DB (idempotent per orderId+email)
+    const database = await getDb()
+    await database.collection('returns').updateOne(
+      { orderId, email },
+      { $setOnInsert: { orderId, email, reasons, customReason: custom, images, status: 'open', createdAt: new Date() } },
+      { upsert: true }
+    )
 
     const transporter = getMailer()
     const from = process.env.FROM_EMAIL || process.env.SMTP_USER
@@ -428,12 +445,12 @@ app.post('/api/returns', async (req, res) => {
       const ext = (mime.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi,'')
       const cid = `return-photo-${Date.now()}-${i}`
       attachments.push({ filename: `photo-${i+1}.${ext}`, content: Buffer.from(b64, 'base64'), contentType: mime, cid })
-      cidImgs.push(`<img src="cid:${cid}" alt="photo" style="max-width:420px; display:block; margin:6px 0; border-radius:8px; border:1px solid #e5e7eb"/>`)
+      cidImgs.push(`<img src=\"cid:${cid}\" alt=\"photo\" style=\"max-width:420px; display:block; margin:6px 0; border-radius:8px; border:1px solid #e5e7eb\"/>`)
     }
 
     const ownerHtml = `
-      <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6">
-        <h2 style="margin:0 0 8px">${store}: New Return Request</h2>
+      <div style=\"font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height:1.6\">
+        <h2 style=\"margin:0 0 8px\">${store}: New Return Request</h2>
         <p><b>Order:</b> #${orderId}</p>
         <p><b>Customer:</b> ${email}</p>
         ${reasons.length ? `<div><b>Reasons:</b><ul>${reasonList}</ul></div>` : ''}
@@ -443,8 +460,8 @@ app.post('/api/returns', async (req, res) => {
     const ownerText = `Return request\nOrder: #${orderId}\nCustomer: ${email}\nReasons: ${reasons.join(', ')}\nDetails: ${custom}`
 
     if (!transporter) {
-      console.warn('[mail] transporter not configured. Return request:', { orderId, email, reasons, custom, images: images.length })
-      return res.json({ ok: true, simulated: true })
+      console.warn('[mail] transporter not configured. Return request saved to DB:', { orderId, email })
+      return res.json({ ok: true })
     }
 
     await transporter.sendMail({ from, to: owner, subject: `${store}: Return request (#${orderId})`, html: ownerHtml, text: ownerText, attachments })
@@ -456,6 +473,69 @@ app.post('/api/returns', async (req, res) => {
     res.status(500).json({ error: 'Internal error' })
   }
 })
+
+// Admin: list all return requests
+app.get('/api/returns/admin', async (req, res) => {
+  try {
+    const email = parseDemoToken(req.headers.authorization)
+    const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+    if (!email || email !== adminEmail) return res.status(403).json({ error: 'Forbidden' })
+
+    const database = await getDb()
+    const docs = await database.collection('returns').find({}).sort({ createdAt: -1 }).limit(1000).toArray()
+    const out = docs.map(d => ({
+      id: String(d._id),
+      orderId: String(d.orderId),
+      email: d.email,
+      reasons: d.reasons || [],
+      customReason: d.customReason || '',
+      images: Array.isArray(d.images) ? d.images.slice(0, 3) : [],
+      status: d.status || 'open',
+      createdAt: d.createdAt,
+    }))
+    res.json({ returns: out })
+  } catch (err) {
+    console.error('GET /api/returns/admin error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin: mark a return as resolved
+app.post('/api/returns/:id/resolve', async (req, res) => {
+  try {
+    const email = parseDemoToken(req.headers.authorization)
+    const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+    if (!email || email !== adminEmail) return res.status(403).json({ error: 'Forbidden' })
+
+    const database = await getDb()
+    const id = String(req.params.id || '')
+    if (!id) return res.status(400).json({ error: 'missing_id' })
+    await database.collection('returns').updateOne({ _id: new ObjectId(id) }, { $set: { status: 'resolved', resolvedAt: new Date() } })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/returns/:id/resolve error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin: reopen a resolved return
+app.post('/api/returns/:id/reopen', async (req, res) => {
+  try {
+    const email = parseDemoToken(req.headers.authorization)
+    const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+    if (!email || email !== adminEmail) return res.status(403).json({ error: 'Forbidden' })
+
+    const database = await getDb()
+    const id = String(req.params.id || '')
+    if (!id) return res.status(400).json({ error: 'missing_id' })
+    await database.collection('returns').updateOne({ _id: new ObjectId(id) }, { $set: { status: 'open' }, $unset: { resolvedAt: '' } })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/returns/:id/reopen error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
 
 // GET /api/products – read products from dship.products
 app.get('/api/products', async (req, res) => {

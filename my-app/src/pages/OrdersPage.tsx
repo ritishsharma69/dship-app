@@ -13,7 +13,7 @@ import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import OrdersCalendar from '../components/OrdersCalendar'
 
-interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any }
+interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any; hasReturn?: boolean }
 
 type AdminStatus = 'pending' | 'accepted' | 'delivered'
 
@@ -339,6 +339,7 @@ export default function OrdersPage() {
                   <div className="admin-tools-actions">
                     <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), true)}>Expand All</button>
                     <button className="btn" onClick={()=>expandAll(filteredSorted.map(o=>o.id), false)}>Collapse All</button>
+                    <button className="btn" onClick={()=>navigate('/admin/returns')}>Return Requests</button>
                   </div>
                     <OrdersCalendar
                       markedDates={list.map(o => new Date(o.createdAt)).map(d => d.toISOString().slice(0,10))}
@@ -362,7 +363,7 @@ export default function OrdersPage() {
                           </div>
                           <div className="order-meta" style={{ display:'flex', gap:10, alignItems:'center', color:'#6b7280' }}>
                             <span className="badge order-status" style={{ textTransform: 'capitalize', background: o.status==='pending' ? '#fff7ed' : o.status==='accepted' ? '#ecfeff' : '#ecfdf5', border: '1px solid var(--color-border)' }}>{o.status}</span>
-                            <span className="order-id-time" style={{ display:'none' }}>#{o.id.slice(-8)} • {new Date(o.createdAt).toLocaleString()}</span>
+                            <span className="order-id-time" style={{ fontFamily:'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace', fontSize:12, color:'#6b7280' }}>#{o.id.slice(-8)} • {new Date(o.createdAt).toLocaleString()}</span>
                             <span className={`fa-solid fa-chevron-${open[o.id] ? 'up' : 'down'}`} />
                           </div>
                         </button>
@@ -434,7 +435,11 @@ export default function OrdersPage() {
                             <td style={{ padding: 8 }}>{o.itemsCount ?? '-'}</td>
                             <td style={{ padding: 8 }}>₹{o.total ?? '-'}</td>
                             <td style={{ padding: 8 }}>
-                              <button className="btn" onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)}>Return/Cancel</button>
+                              {o.hasReturn ? (
+                                <span className="badge" style={{ background:'#f3f4f6', border:'1px solid var(--color-border)' }}>Return requested</span>
+                              ) : (
+                                <button className="btn" onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)}>Return/Cancel</button>
+                              )}
                             </td>
                           </tr>
                         ))}

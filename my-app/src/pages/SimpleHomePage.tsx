@@ -157,13 +157,14 @@ export default function SimpleHomePage() {
       {/* Footer */}
       <Box component="footer" sx={{ mt: 6, color: '#fff', backgroundColor: '#0b0b0b', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         <Container sx={{ py: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2fr 1fr 1fr' }, gap: 3, alignItems: 'start' }}>
-          <Box sx={{ position: 'relative', minHeight: 120, pl: { xs: 14, md: 18 } }}>
+          <Box sx={{ position: 'relative', minHeight: 150 }}>
             <Box component="img" src="/mainlogo.png" alt="Khushiyan Store"
-              sx={{ height: 32, width: 'auto', position: 'absolute', left: 0, top: 8, transform: 'scale(3.5)', transformOrigin: 'left top' }} />
-            <Typography variant="h6" sx={{ fontWeight: 900, mt: 1.5, mb: 0.5 }}>Khushiyan Store</Typography>
-            <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.25 }}>
-              Wellness gadgets delivered with care. Fast shipping, easy returns, secure payments.
-            </Typography>
+              sx={{ height: 185, width: 'auto', position: 'absolute', left: 0, top: 0 }} />
+            <Box sx={{ position: 'absolute', left: { xs: 16, md: 18 }, bottom: 0, right: 0 }}>
+              <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                Wellness gadgets delivered with care. Fast shipping, easy returns, secure payments.
+              </Typography>
+            </Box>
           </Box>
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Quick Links</Typography>

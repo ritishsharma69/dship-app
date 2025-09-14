@@ -79,8 +79,9 @@ export default function SimpleHomePage() {
   const curr = heroSlides[slideIdx]
 
   return (
-    <Container sx={{ py: { xs: 3, md: 6 } }} ref={rootRef}>
-      {/* Hero */}
+    <>
+      <Container sx={{ py: { xs: 3, md: 6 } }} ref={rootRef}>
+        {/* Hero */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'center', gap: { xs: 2, md: 4 }, mb: { xs: 4, md: 6 } }}>
         <Box className="fade-up hero-text" sx={{ pr: { md: 4 } }}>
           <Typography variant="h3" sx={{ fontWeight: 900, lineHeight: 1.05, mb: 1 }}>Feel Better. Live Lighter.</Typography>
@@ -150,11 +151,44 @@ export default function SimpleHomePage() {
         ))}
       </Box>
 
-      {/* Footer note */}
-      <Box className="fade-up" sx={{ mt: 5, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">Any queries? Email us at khushiyanstore@gmail.com.</Typography>
-      </Box>
+
     </Container>
+
+      {/* Footer */}
+      <Box component="footer" sx={{ mt: 6, color: '#fff', backgroundColor: '#0b0b0b', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <Container sx={{ py: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2fr 1fr 1fr' }, gap: 3, alignItems: 'start' }}>
+          <Box sx={{ position: 'relative', minHeight: 120, pl: { xs: 14, md: 18 } }}>
+            <Box component="img" src="/mainlogo.png" alt="Khushiyan Store"
+              sx={{ height: 32, width: 'auto', position: 'absolute', left: 0, top: 8, transform: 'scale(3.5)', transformOrigin: 'left top' }} />
+            <Typography variant="h6" sx={{ fontWeight: 900, mt: 1.5, mb: 0.5 }}>Khushiyan Store</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.25 }}>
+              Wellness gadgets delivered with care. Fast shipping, easy returns, secure payments.
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Quick Links</Typography>
+            <Box sx={{ display: 'grid', gap: 0.5 }}>
+              <Button onClick={() => navigate('/orders')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Your Orders</Button>
+              <Button onClick={() => navigate('/contact')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Contact Us</Button>
+              <Button onClick={() => navigate('/privacy')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Privacy Policy</Button>
+              <Button onClick={() => navigate('/shipping')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Shipping & Returns</Button>
+              <Button onClick={() => navigate('/terms-conditions')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Terms & Conditions</Button>
+            </Box>
+          </Box>
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Contact</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>Email: khushiyanstore@gmail.com</Typography>
+            <Typography variant="body2" sx={{ opacity: 0.9 }}>Mon–Sat, 10 AM – 6 PM</Typography>
+          </Box>
+        </Container>
+        <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+          <Container sx={{ py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>© {new Date().getFullYear()} Khushiyan Store. All rights reserved.</Typography>
+            <Typography variant="caption" sx={{ opacity: 0.8 }}>Made with ❤ in India</Typography>
+          </Container>
+        </Box>
+      </Box>
+    </>
   )
 }
 

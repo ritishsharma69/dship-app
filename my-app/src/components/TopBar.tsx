@@ -36,12 +36,12 @@ export default function TopBar() {
   return (
     <AppBar position="sticky" color="transparent" sx={{ ml: 'calc(50% - 50vw)', mr: 'calc(50% - 50vw)', borderRadius: 0,
       background: `
-        radial-gradient(1500px 280px at 85% -80px, rgba(168,85,247,0.34), transparent 64%),
-        radial-gradient(1800px 420px at 55% -140px, rgba(168,85,247,0.10), transparent 72%),
-        linear-gradient(180deg, #0b0b0b 0%, #121212 100%)
+        radial-gradient(1500px 280px at 85% -80px, rgba(88,28,135,0.32), transparent 64%),
+        radial-gradient(1800px 420px at 55% -140px, rgba(76,29,149,0.12), transparent 72%),
+        linear-gradient(180deg, #0a0a0a 0%, #111111 100%)
       `,
-      borderBottom: '1px solid rgba(168,85,247,0.22)',
-      boxShadow: '0 10px 32px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 -1px 0 rgba(168,85,247,0.12), inset 0 -2px 0 rgba(168,85,247,0.16)',
+      borderBottom: '1px solid rgba(88,28,135,0.28)',
+      boxShadow: '0 10px 32px rgba(0,0,0,0.28), inset 0 0 0 1px rgba(255,255,255,0.04), inset 0 -1px 0 rgba(88,28,135,0.14), inset 0 -2px 0 rgba(88,28,135,0.20)',
       color: '#FFFFFF',
       backdropFilter: 'saturate(120%) blur(6px)',
       overflow: 'visible'
@@ -62,7 +62,7 @@ export default function TopBar() {
             decoding="async"
             fetchPriority="high"
             onError={(e: any) => { e.currentTarget.src = FALLBACK_LOGO }}
-            sx={{ height: 160, mt: '10px', width: 'auto', mr: 2.5, filter:'drop-shadow(0 8px 22px rgba(168,85,247,0.28))' }}
+            sx={{ height: 160, mt: '10px', width: 'auto', mr: 2.5, filter:'drop-shadow(0 8px 22px rgba(88,28,135,0.28))' }}
           />
         </IconButton>
 

@@ -105,44 +105,6 @@ export const footMassager: Product = {
   inventoryStatus: 'IN_STOCK'
 };
 
-// Fourth product: Electric Gel Bottle Pouch Massager (Heating Pad)
-export const electricHeatingPad: Product = {
-  id: 'prod_electric_heating_pad_1',
-  title: 'Electric Gel Bottle Pouch Massager',
-  brand: 'Khushiyan',
-  price: 359,
-  compareAtPrice: 1299,
-  images: [
-    '/products/electric-heating-pad/hp1.jpg',
-    '/products/electric-heating-pad/hp3.jpg',
-    '/products/electric-heating-pad/hp4.jpg',
-    '/products/electric-heating-pad/hp5.jpg',
-  ],
-  // YouTube video will appear as 2nd item in gallery
-  youtubeUrl: 'https://www.youtube.com/watch?v=3ZSCr3N4Pds',
-  bullets: [
-    'Quick heat therapy for back, neck, shoulder, and cramps',
-    'Soft gel pouch retains heat longer for deeper relief',
-    'Dual heating levels with auto cut‑off safety',
-    'Reusable — just plug in, heat, and enjoy warm comfort',
-    'Comfortable fabric cover; gentle on skin',
-    'Portable and lightweight — perfect for home or office',
-  ],
-  descriptionHeading: 'Instant warm comfort. Anywhere.',
-  descriptionPoints: [
-    'Targets everyday aches — muscle strain, period cramps, and stiffness',
-    'Fast heating element warms gel evenly in minutes',
-    'Leak‑proof build with reinforced sealing for safety',
-    'Ergonomic pouch shape fits back and abdomen comfortably',
-    'Energy‑efficient with auto shut‑off to prevent overheating',
-    'Easy maintenance — wipe clean after use',
-  ],
-  sku: 'ELECTRIC-HEATING-PAD',
-  inventoryStatus: 'IN_STOCK',
-};
-
-
-
 // Sixth product: Mini Butterfly Massager
 export const miniButterflyMassager: Product = {
   id: 'prod_mini_butterfly_massager_1',
@@ -222,8 +184,6 @@ export const productsBySlug: Record<string, Product> = {
   'posture-corrector': postureCorrector,
   'foot-massager': footMassager,
   'mini-butterfly-massager': miniButterflyMassager,
-  'electric-heating-pad': electricHeatingPad,
-
   'kitchen-weighing-scale': kitchenWeighingScale,
 };
 
@@ -346,60 +306,6 @@ export const reviewsHead: ReviewsSummary = {
   ]
 };
 
-// Reviews: Electric Heating Pad
-export const reviewsHeatingPad: ReviewsSummary = {
-  ratingAvg: 5,
-  ratingCount: 50,
-  testimonials: [
-    { author: 'Nisha K.', quote: 'Period cramps me 10–15 min use se garam comfort milta hai. Fabric soft hai.', rating: 5 },
-    { author: 'Rahul S.', quote: 'Lower back pain ke liye daily sham ko lagata hoon. Heat jaldi aa jati hai.', rating: 5 },
-    { author: 'Pritam', quote: 'Auto cut‑off safety accha laga. Pouch size perfect aur leak proof.', rating: 4 },
-    { author: 'Mona D.', quote: 'Office se aane ke baad neck pe rakh leti hoon. Relax feel hota hai.', rating: 5 },
-    { author: 'Jagdish V.', quote: 'Heating level medium par bhi kaafi hot. Value for money.', rating: 4 },
-    { author: 'Snehal P.', quote: 'Period cramps me warm relief — 10 min me sukoon.', rating: 5 },
-    { author: 'Ishan R.', quote: 'Back spasm ke time pe kaafi madad karta hai.', rating: 4 },
-    { author: 'Payal S.', quote: 'Fabric soft, skin pe gentle — rash nahi hota.', rating: 5 },
-    { author: 'Zeeshan K.', quote: 'Heat evenly spread hoti — koi hot spot nahi.', rating: 5 },
-    { author: 'Garv M.', quote: 'Charging/plug-in easy, cord length theek.', rating: 4 },
-    { author: 'Ritika J.', quote: 'Office chair me lumbar area pe daily lagati hoon.', rating: 5 },
-    { author: 'Usha D.', quote: 'Knee pain me bhi soothing garamahat milti hai.', rating: 5 },
-    { author: 'Harsh V.', quote: 'Muscle strain me recovery fast feel hoti.', rating: 4 },
-    { author: 'Kanika L.', quote: 'Leak-proof pouch — tension free heating.', rating: 5 },
-    { author: 'Dhruv T.', quote: 'Auto shut-off safety kaafi useful hai.', rating: 4 },
-    { author: 'Meena R.', quote: 'Neck stiffness me 15 min — relief.', rating: 5 },
-    { author: 'Anil P.', quote: 'Fabric cover washable — maintain karna easy.', rating: 4 },
-    { author: 'Jaya S.', quote: 'Lower abdomen cramps me perfect comforting heat.', rating: 5 },
-    { author: 'Varun B.', quote: 'Back support ke saath use kiya — acha lagta hai.', rating: 5 },
-    { author: 'Naina T.', quote: 'Lightweight, carry karna simple.', rating: 4 },
-    { author: 'Kritika H.', quote: 'Warmth gentle par effective — 7/10 pain relief.', rating: 5 },
-    { author: 'Om D.', quote: 'Switches intuitive — mode change easy.', rating: 4 },
-    { author: 'Pooja V.', quote: 'Period me saviour — roz 10 min.', rating: 5 },
-    { author: 'Raman K.', quote: 'Heat jaldi build hoti — wait nahi karna padta.', rating: 4 },
-    { author: 'Esha P.', quote: 'Shoulder knots me bhi kaam karta.', rating: 5 },
-    { author: 'Faizan M.', quote: 'Pouch size back aur tummy dono pe fit.', rating: 4 },
-    { author: 'Gauri N.', quote: 'Cover soft — skin irritation zero.', rating: 5 },
-    { author: 'Yogita C.', quote: 'Bedtime pe lagati hoon — relax milta hai.', rating: 5 },
-    { author: 'Tarun R.', quote: 'Heat 2 min me ready — quick use.', rating: 4 },
-    { author: 'Aakriti L.', quote: 'Travel pe bhi carry — lightweight.', rating: 5 },
-    { author: 'Samar J.', quote: 'Old age knee pain me helpful.', rating: 5 },
-    { author: 'Bhavna D.', quote: 'Period day 1 pe best — pain manageable.', rating: 5 },
-    { author: 'Nakul I.', quote: 'Auto cut-off pe trust hai — safe feel.', rating: 4 },
-    { author: 'Simar P.', quote: 'Neck pillow ke saath pair karke use karti.', rating: 5 },
-    { author: 'Vikas H.', quote: 'Spine stiffness me warm comfort milta.', rating: 4 },
-    { author: 'Ira K.', quote: 'Fabric sweat nahi karta — breathable.', rating: 5 },
-    { author: 'Reyhan O.', quote: 'Timer accurate — overheat nahi hota.', rating: 4 },
-    { author: 'Tina Q.', quote: 'Backache long day ke baad gayab.', rating: 5 },
-    { author: 'Utkarsh E.', quote: 'Cord detachable — store karna easy.', rating: 4 },
-    { author: 'Zara H.', quote: 'Gift diya — mom ko bahut pasand.', rating: 5 },
-    { author: 'Manish G.', quote: 'Heat level low/medium sufficient.', rating: 4 },
-    { author: 'Hiral S.', quote: 'Cramps me relief quick milta.', rating: 5 },
-    { author: 'Ojas P.', quote: 'Lower back pe perfect fit.', rating: 5 },
-    { author: 'Nisha V.', quote: 'Warmth steady rehti — no fluctuation.', rating: 5 },
-    { author: 'Prashant U.', quote: 'Budget friendly and effective.', rating: 4 },
-    { author: 'Kajal D.', quote: 'Long wire — extension ki zarurat nahi.', rating: 5 },
-    { author: 'Yuvika A.', quote: 'Daily routine me add kar liya.', rating: 5 }
-  ]
-};
 
 // Reviews: Kitchen Weighing Scale
 export const reviewsScale: ReviewsSummary = {
@@ -585,8 +491,6 @@ export const reviewsBySlug: Record<string, ReviewsSummary> = {
   'head-massager': reviewsHead,
   'posture-corrector': reviewsPosture,
   'foot-massager': reviewsFoot,
-  'electric-heating-pad': reviewsHeatingPad,
-
   'mini-butterfly-massager': reviewsButterfly,
   'kitchen-weighing-scale': reviewsScale,
 };

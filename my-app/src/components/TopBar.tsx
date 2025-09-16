@@ -12,7 +12,6 @@ import Badge from '@mui/material/Badge'
 import Box from '@mui/material/Box'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-import Divider from '@mui/material/Divider'
 
 import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping, MoreHoriz } from '@mui/icons-material'
 import { useCart } from '../lib/cart'

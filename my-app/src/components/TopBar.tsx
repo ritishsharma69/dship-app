@@ -10,7 +10,11 @@ import ListItemText from '@mui/material/ListItemText'
 import Button from '@mui/material/Button'
 import Badge from '@mui/material/Badge'
 import Box from '@mui/material/Box'
-import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping } from '@mui/icons-material'
+import Menu from '@mui/material/Menu'
+import MenuItem from '@mui/material/MenuItem'
+import Divider from '@mui/material/Divider'
+
+import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping, MoreHoriz } from '@mui/icons-material'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 
@@ -31,6 +35,10 @@ export default function TopBar() {
   const showBack = path !== '/' && !path.startsWith('/p/')
   const back = () => { if (window.history.length > 1) window.history.back(); else navigate('/') }
   const active = (to: string) => path === to
+  const [moreEl, setMoreEl] = useState<null | HTMLElement>(null)
+  const openMore = (e: any) => setMoreEl(e.currentTarget)
+  const closeMore = () => setMoreEl(null)
+
 
 
   return (
@@ -66,37 +74,44 @@ export default function TopBar() {
           />
         </IconButton>
 
-        {/* Desktop actions: right side, icon on top + label below */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'flex-end', gap: 2, ml: 'auto', mr: 6 }}>
-          <Button color="inherit" onClick={() => go('/orders')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+        {/* Desktop actions compact: show key items + overflow menu */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'flex-end', gap: 1.5, ml: 'auto', mr: 6 }}>
+          <Button color="inherit" onClick={() => go('/orders')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
             <AssignmentOutlined fontSize="medium" sx={{ color: active('/orders') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/orders') ? '#F59E0B' : 'inherit' }}>Your Orders</Box>
+            <Box component="span" sx={{ fontSize: 12.5, color: active('/orders') ? '#F59E0B' : 'inherit' }}>Your Orders</Box>
           </Button>
-          <Button color="inherit" onClick={() => go('/contact')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
+          <Button color="inherit" onClick={() => go('/contact')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
             <MailOutline fontSize="medium" sx={{ color: active('/contact') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact Us</Box>
+            <Box component="span" sx={{ fontSize: 12.5, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact</Box>
           </Button>
-          <Button color="inherit" onClick={() => go('/privacy')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <Lock fontSize="medium" sx={{ color: active('/privacy') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/privacy') ? '#F59E0B' : 'inherit' }}>Privacy</Box>
+          <Button color="inherit" onClick={(e) => openMore(e)} sx={{ minWidth: 64, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-controls={moreEl ? 'more-menu' : undefined} aria-haspopup="true" aria-expanded={Boolean(moreEl) ? 'true' : undefined}>
+            <MoreHoriz fontSize="medium" />
+            <Box component="span" sx={{ fontSize: 12.5 }}>More</Box>
           </Button>
-          <Button color="inherit" onClick={() => go('/shipping')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <LocalShipping fontSize="medium" sx={{ color: active('/shipping') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/shipping') ? '#F59E0B' : 'inherit' }}>Shipping</Box>
-          </Button>
-          <Button color="inherit" onClick={() => go('/cancellation-refund')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <AssignmentOutlined fontSize="medium" sx={{ color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }}>Cancellation & Refund</Box>
-          </Button>
-          <Button color="inherit" onClick={() => go('/terms-conditions')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <Lock fontSize="medium" sx={{ color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 13, color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }}>Terms & Conditions</Box>
-          </Button>
-          <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 80, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
+          {/* Overflow menu */}
+          <Menu id="more-menu" anchorEl={moreEl} open={Boolean(moreEl)} onClose={closeMore} keepMounted>
+            <MenuItem onClick={() => { closeMore(); go('/privacy') }}>
+              <ListItemIcon><Lock fontSize="small" /></ListItemIcon>
+              <ListItemText>Privacy</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { closeMore(); go('/shipping') }}>
+              <ListItemIcon><LocalShipping fontSize="small" /></ListItemIcon>
+              <ListItemText>Shipping</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { closeMore(); go('/cancellation-refund') }}>
+              <ListItemIcon><AssignmentOutlined fontSize="small" /></ListItemIcon>
+              <ListItemText>Cancellation & Refund</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { closeMore(); go('/terms-conditions') }}>
+              <ListItemIcon><Lock fontSize="small" /></ListItemIcon>
+              <ListItemText>Terms & Conditions</ListItemText>
+            </MenuItem>
+          </Menu>
+          <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
             <Badge badgeContent={count} color="error">
               <ShoppingCart fontSize="medium" sx={{ color: active('/checkout') ? '#F59E0B' : 'inherit' }} />
             </Badge>
-            <Box component="span" sx={{ fontSize: 13, color: active('/checkout') ? '#F59E0B' : 'inherit' }}>Your Cart</Box>
+            <Box component="span" sx={{ fontSize: 12.5, color: active('/checkout') ? '#F59E0B' : 'inherit' }}>Your Cart</Box>
           </Button>
         </Box>
 

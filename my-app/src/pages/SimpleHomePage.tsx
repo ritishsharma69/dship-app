@@ -160,11 +160,6 @@ export default function SimpleHomePage() {
           <Box sx={{ position: 'relative', minHeight: 150 }}>
             <Box component="img" src="/mainlogo.png" alt="Khushiyan Store"
               sx={{ height: 185, width: 'auto', position: 'absolute', left: 0, top: 0 }} />
-            <Box sx={{ position: 'absolute', left: { xs: 16, md: 18 }, bottom: 0, right: 0 }}>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                Wellness gadgets delivered with care. Fast shipping, easy returns, secure payments.
-              </Typography>
-            </Box>
           </Box>
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 1 }}>Quick Links</Typography>

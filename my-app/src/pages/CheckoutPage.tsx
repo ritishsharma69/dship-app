@@ -291,7 +291,15 @@ export default function CheckoutPage() {
           <Button variant="outlined" onClick={() => setShowConfirmCOD(false)}>No</Button>
           <Button
             variant="contained"
-            onClick={() => { setShowConfirmCOD(false); formRef.current?.requestSubmit(); }}
+            onClick={() => {
+              const f = formRef.current
+              if (!f) return
+              if (typeof (f as any).reportValidity === 'function' && !(f as any).reportValidity()) {
+                return
+              }
+              setShowConfirmCOD(false)
+              f.requestSubmit()
+            }}
             sx={{ background: 'linear-gradient(135deg, #FF3F6C 0%, #E73962 100%)' }}
           >
             Yes, Place Order

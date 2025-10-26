@@ -187,7 +187,7 @@ export default function CheckoutPage() {
                 <div className="form-grid">
                   <input className="input" name="email" placeholder="Email" required type="email" inputMode="email" />
                   <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" inputMode="numeric" maxLength={10} onInput={onDigits10} title="Enter 10-digit mobile number" />
-                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} maxLength={50} minLength={2} pattern="[A-Za-z\\s]{2,50}" onInput={allowLetters} title="Letters and spaces only" />
+                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} maxLength={50} minLength={2} onInput={allowLetters} />
                 </div>
 
                 <div style={{ fontWeight: 800, marginTop: 6 }}>Shipping</div>
@@ -209,6 +209,7 @@ export default function CheckoutPage() {
                     <div className="small-muted" style={{ marginTop: 4 }}>You’ll be redirected to PhonePe to complete payment</div>
                   </div>
                 </label>
+                {/*
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
                   <input type="radio" name="payment" value="cod"
                     onChange={() => setPaymentMethod('cod')} />
@@ -217,6 +218,7 @@ export default function CheckoutPage() {
                     <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
                   </div>
                 </label>
+                */}
                 {paymentMethod !== 'cod' ? (
                   <button className="btn btn-buy order-btn" type="submit">Pay & Order</button>
                 ) : (

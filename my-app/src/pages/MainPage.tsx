@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
-import { productsBySlug, product as localProduct, reviewsBySlug, liveNames, liveCities } from '../data'
+import { reviewsBySlug, liveNames, liveCities } from '../data'
+import { useProducts } from '../lib/products'
 import { events } from '../analytics'
 import type { Product } from '../types'
 import MediaGallery from '../components/MediaGallery'
@@ -32,13 +33,15 @@ export default function MainPage() {
   const [loading, setLoading] = useState(true)
   const [error] = useState<string | null>(null)
 
+  const { productsBySlug, loading: productsLoading } = useProducts()
+
   useEffect(() => {
-    // Pick by slug from the URL: /p/:slug; default to mini-butterfly-massager for single-product site
-    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager'
-    const chosen = productsBySlug[slug] ?? localProduct
+    // Pick by slug from the URL: /p/:slug; default to first product
+    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || ''
+    const chosen = productsBySlug[slug] ?? Object.values(productsBySlug)[0] ?? null
     setP(chosen)
-    setLoading(false)
-  }, [])
+    setLoading(productsLoading && !chosen)
+  }, [productsBySlug, productsLoading])
 
   const out = p?.inventoryStatus === 'OUT_OF_STOCK'
 
@@ -57,12 +60,12 @@ export default function MainPage() {
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
     const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager'
-    const rev = reviewsBySlug[slug]
+    const rev = reviewsBySlug[slug] ?? { ratingAvg: 4.5, ratingCount: 0 }
     return {
       '@context': 'https://schema.org', '@type': 'Product', name: p.title, sku: p.sku,
       brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
       image: p.images,
-      aggregateRating: { '@type': 'AggregateRating', ratingValue: rev.ratingAvg.toFixed(1), reviewCount: rev.ratingCount },
+      aggregateRating: rev.ratingCount > 0 ? { '@type': 'AggregateRating', ratingValue: rev.ratingAvg.toFixed(1), reviewCount: rev.ratingCount } : undefined,
       offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: p.price,
         availability: out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
@@ -311,9 +314,24 @@ export default function MainPage() {
               </Box>
             </Paper>
 
-	            {/* Marketing Banner below Payment Offer */}
-	            <Box sx={{ mt: 2 }}>
-	              <img src="/banner.jpeg" alt="Offer banner" style={{ width: '100%', borderRadius: 12, display: 'block' }} />
+	            {/* Marketing banner (no hardcoded image) */}
+	            <Box
+	              sx={{
+	                mt: 2,
+	                borderRadius: 2,
+	                border: '1px solid rgba(0,0,0,0.08)',
+	                overflow: 'hidden',
+	                background: 'linear-gradient(135deg, #FBF7F1 0%, #F6F0E6 55%, rgba(248,243,206,0.7) 100%)',
+	              }}
+	            >
+	              <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+	                <Typography sx={{ fontWeight: 900, color: '#111827', fontSize: { xs: 14, sm: 16 } }}>
+	                  Limited-time offers
+	                </Typography>
+	                <Typography sx={{ color: '#374151', fontSize: { xs: 13, sm: 14 }, mt: 0.5 }}>
+	                  Checkout with online payment for extra savings.
+	                </Typography>
+	              </Box>
 	            </Box>
 
 

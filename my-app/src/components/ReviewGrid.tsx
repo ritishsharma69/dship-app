@@ -4,7 +4,7 @@ import { reviewsBySlug } from '../data'
 function ReviewGridInner() {
   const slug = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean)[1]) : 'mini-butterfly-massager') || 'mini-butterfly-massager'
   const reviews = reviewsBySlug[slug]
-  const items = useMemo(() => reviews.testimonials.slice(0, 20), [reviews])
+  const items = useMemo(() => (reviews?.testimonials ?? []).slice(0, 20), [reviews])
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
       {items.map((t, i) => (

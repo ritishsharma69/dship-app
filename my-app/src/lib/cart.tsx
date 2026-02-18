@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react'
 import type { Product } from '../types'
-import { productsBySlug } from '../data'
 
 export interface CartItem { product: Product, quantity: number }
 interface CartCtx {
@@ -28,10 +27,9 @@ function writeStorage(items: CartItem[]) {
 }
 
 function normalizeCartItems(input: CartItem[]): CartItem[] {
+  // Just validate structure — product data comes from the cart item itself now
   try {
-    const byId: Record<string, Product> = {}
-    Object.values(productsBySlug).forEach((p) => { byId[p.id] = p })
-    return input.filter((i) => !!byId[i.product.id]).map((i) => ({ ...i, product: byId[i.product.id] }))
+    return input.filter((i) => i.product && i.product.id && i.product.title)
   } catch { return input }
 }
 

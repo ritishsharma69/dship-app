@@ -1,11 +1,15 @@
 import { createTheme } from '@mui/material/styles'
 
+// Khushiyan Store brand colors
+const BRAND_PINK = '#FF3F6C'
+const BRAND_PURPLE = '#4C1D95'
+
 // Neutral palette from user image: #57564F, #7A7A73, #DDDAD0, #F8F3CE
 const theme = createTheme({
   palette: {
     mode: 'light',
-    primary: { main: '#57564F', contrastText: '#FFFFFF' },
-    secondary: { main: '#7A7A73' },
+    primary: { main: BRAND_PINK, contrastText: '#FFFFFF' },
+    secondary: { main: BRAND_PURPLE },
     background: {
       default: '#FFFFFF',
       paper: '#FFFFFF',
@@ -28,9 +32,12 @@ const theme = createTheme({
     MuiPaper: { styleOverrides: { root: { boxShadow: '0 1px 3px rgba(0,0,0,0.06)' } } },
     MuiButton: {
       defaultProps: { disableElevation: true },
-      styleOverrides: { root: { borderRadius: 0 } }
+      styleOverrides: {
+        root: { borderRadius: 0 },
+        contained: { backgroundColor: BRAND_PINK, '&:hover': { backgroundColor: '#E73962' } },
+      }
     },
-    MuiAppBar: { styleOverrides: { root: { backgroundImage: 'none', backgroundColor: '#57564F', color: '#FFFFFF' } } },
+    MuiAppBar: { styleOverrides: { root: { backgroundImage: 'none', backgroundColor: BRAND_PURPLE, color: '#FFFFFF' } } },
     MuiContainer: {
       defaultProps: { maxWidth: false }, // Remove max-width constraint
       styleOverrides: {

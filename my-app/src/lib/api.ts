@@ -96,3 +96,7 @@ export function apiPatchJson<T = any>(path: string, json?: unknown, opts?: ApiOp
   return apiJson<T>(path, { method: 'PATCH', json }, opts)
 }
 
+export function apiDeleteJson<T = any>(path: string, json?: unknown, opts?: ApiOptions) {
+  return apiJson<T>(path, { method: 'DELETE', json }, opts)
+}
+

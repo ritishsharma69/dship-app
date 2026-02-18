@@ -1,12 +1,26 @@
-require('dotenv').config()
+// Always load env from server/.env regardless of where the process is started from.
+// (Existing process.env values from the host are not overridden by default.)
+require('dotenv').config({ path: __dirname + '/.env' })
 const express = require('express')
 const cors = require('cors')
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
 const { MongoClient, ObjectId } = require('mongodb')
 const { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest, RefundRequest } = require('pg-sdk-node')
 
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+// Local uploads (simple disk storage for dev / small deployments)
+const UPLOADS_DIR = path.join(__dirname, 'uploads')
+try {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true })
+} catch { /* ignore */ }
+
+// Serve uploaded files publicly
+app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d', etag: true }))
 
 // CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
 const defaultAllowed = ['https://www.khushiyan.store', 'https://khushiyan.store']
@@ -52,7 +66,100 @@ app.post('/api/webhooks/phonepe', express.text({ type: '*/*', limit: '1mb' }), (
   }
 })
 
+// Admin: upload product images (JSON data URLs -> saved file -> returned URL)
+// Note: this route is defined BEFORE the global express.json() so we can use a higher body limit.
+app.post('/api/uploads/images', express.json({ limit: '25mb' }), async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    const body = req.body || {}
+    const files = Array.isArray(body.files) ? body.files : []
+    if (!files.length) return res.status(400).json({ error: 'no_files' })
+
+    const maxFiles = 10
+    const maxBytes = 2_000_000 // ~2MB per image (after base64 decode)
+    const allowExtByMime = {
+      'image/jpeg': 'jpg',
+      'image/jpg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    }
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`
+    const outUrls = []
+
+    for (const f of files.slice(0, maxFiles)) {
+      const dataUrl = String(f?.dataUrl || '')
+      if (!dataUrl.startsWith('data:image/')) continue
+
+      const m = dataUrl.match(/^data:([^;]+);base64,(.*)$/)
+      if (!m) continue
+      const mime = String(m[1] || '').toLowerCase()
+      const ext = allowExtByMime[mime]
+      if (!ext) continue
+
+      const b64 = m[2] || ''
+      let buf
+      try {
+        buf = Buffer.from(b64, 'base64')
+      } catch {
+        continue
+      }
+      if (!buf?.length || buf.length > maxBytes) continue
+
+      const filename = `${Date.now()}-${crypto.randomBytes(12).toString('hex')}.${ext}`
+      const full = path.join(UPLOADS_DIR, filename)
+      await fs.promises.writeFile(full, buf)
+      outUrls.push(`${baseUrl}/uploads/${filename}`)
+    }
+
+    if (!outUrls.length) return res.status(400).json({ error: 'no_valid_images' })
+    res.json({ ok: true, urls: outUrls })
+  } catch (err) {
+    console.error('POST /api/uploads/images error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
 app.use(express.json({ limit: '5mb' }))
+
+// Cloudinary: signed upload support (frontend uploads directly to Cloudinary CDN)
+// The API secret never leaves the server; client asks for a signature + timestamp.
+function cloudinarySign(params, apiSecret) {
+  const toSign = Object.keys(params)
+    .filter((k) => params[k] != null && params[k] !== '')
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join('&')
+  return crypto.createHash('sha1').update(toSign + apiSecret).digest('hex')
+}
+
+// Admin-only: return signature for uploading product images to Cloudinary.
+// Frontend will POST the file directly to:
+//   https://api.cloudinary.com/v1_1/<cloudName>/image/upload
+app.post('/api/cloudinary/sign', async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+    const apiKey = process.env.CLOUDINARY_API_KEY
+    const apiSecret = process.env.CLOUDINARY_API_SECRET
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      return res.status(400).json({ error: 'cloudinary_not_configured' })
+    }
+
+    const folder = 'dship/products'
+    const timestamp = Math.floor(Date.now() / 1000)
+    const signature = cloudinarySign({ folder, timestamp }, apiSecret)
+
+    res.json({ ok: true, cloudName, apiKey, folder, timestamp, signature })
+  } catch (err) {
+    console.error('POST /api/cloudinary/sign error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
 
 // Lightweight ping to keep server warm and for client health-check
 app.get('/api/ping', (req, res) => res.json({ ok: true, t: Date.now() }))
@@ -304,10 +411,15 @@ function generateOtp() {
 }
 
 // Send OTP to email (store code in MongoDB with TTL)
+// Only allow OTP requests for the admin email
 app.post('/api/auth/request-otp', async (req, res) => {
   try {
     const email = String(req.body?.email || '').trim().toLowerCase()
+    const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+
     if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' })
+    if (email !== adminEmail) return res.status(403).json({ error: 'Only admin email can request OTP' })
+
     const code = generateOtp()
     const coll = await getOtpCollection()
     await coll.updateOne(
@@ -347,6 +459,16 @@ app.post('/api/auth/verify-otp', async (req, res) => {
 function parseDemoToken(authHeader) {
   const raw = (authHeader || '').replace(/^Bearer\s+/i, '')
   try { return Buffer.from(raw, 'base64').toString('utf8').split('|')[0] } catch { return null }
+}
+
+function requireAdmin(req, res) {
+  const email = parseDemoToken(req.headers.authorization)
+  const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+  if (!email || email !== adminEmail) {
+    res.status(403).json({ error: 'Forbidden' })
+    return null
+  }
+  return email
 }
 
 // Unified orders endpoint: if email is admin, return all; else return own (+hasReturn)
@@ -544,23 +666,220 @@ app.get('/api/products', async (req, res) => {
     const docs = await database.collection('products').find({}).limit(50).toArray()
     const out = docs.map(d => ({
       id: String(d._id),
-      title: d.title,
-      brand: d.brand,
-      price: d.price,
-      compareAtPrice: d.compareAtPrice,
-      images: d.images || [],
-      bullets: d.bullets || [],
-      description: d.description,
-      descriptionHeading: d.descriptionHeading,
-      descriptionPoints: d.descriptionPoints || [],
-      youtubeUrl: d.youtubeUrl,
-      video: d.video,
-      sku: d.sku,
-      inventoryStatus: d.inventoryStatus || 'IN_STOCK',
+      title: String(d.title || ''),
+      brand: d.brand == null ? '' : String(d.brand),
+      price: Number(d.price || 0) || 0,
+      compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
+      images: Array.isArray(d.images) ? d.images : [],
+      bullets: Array.isArray(d.bullets) ? d.bullets : [],
+      description: d.description == null ? '' : String(d.description),
+      descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
+      descriptionPoints: Array.isArray(d.descriptionPoints) ? d.descriptionPoints : [],
+      youtubeUrl: d.youtubeUrl == null ? '' : String(d.youtubeUrl),
+      video: d.video == null ? '' : String(d.video),
+      testimonials: Array.isArray(d.testimonials) ? d.testimonials : [],
+      sku: d.sku == null ? '' : String(d.sku),
+      slug: d.slug == null ? '' : String(d.slug),
+      inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
     }))
     res.json(out)
   } catch (err) {
     console.error('GET /api/products error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// ----- Admin products (CRUD) -----
+function sanitizeString(v, max = 5000) {
+  return String(v == null ? '' : v).trim().slice(0, max)
+}
+function sanitizeStringArray(arr, maxItems = 20, maxItemLen = 500) {
+  if (!Array.isArray(arr)) return []
+  return arr
+    .map(x => sanitizeString(x, maxItemLen))
+    .filter(Boolean)
+    .slice(0, maxItems)
+}
+function sanitizePrice(v) {
+  const n = Number(v)
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.round(n * 100) / 100)
+}
+function sanitizeTestimonials(arr) {
+  if (!Array.isArray(arr)) return []
+  return arr
+    .map(t => ({
+      author: sanitizeString(t?.author, 100),
+      quote: sanitizeString(t?.quote, 500),
+      rating: Math.min(5, Math.max(1, Number(t?.rating) || 5)),
+    }))
+    .filter(t => t.author && t.quote)
+    .slice(0, 50)
+}
+function coerceObjectId(idStr) {
+  try { return new ObjectId(String(idStr)) } catch { return String(idStr) }
+}
+
+// Admin: list products (supports ?q=, ?limit=, ?skip=)
+app.get('/api/products/admin', async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+    const database = await getDb()
+
+    const qRaw = sanitizeString(req.query?.q, 200)
+    const limit = Math.min(1000, Math.max(1, Number(req.query?.limit || 200) || 200))
+    const skip = Math.min(5000, Math.max(0, Number(req.query?.skip || 0) || 0))
+
+    const query = {}
+    if (qRaw) {
+      const re = new RegExp(qRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
+      query.$or = [{ title: re }, { sku: re }, { brand: re }]
+    }
+
+    const docs = await database
+      .collection('products')
+      .find(query)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray()
+
+    const out = docs.map(d => ({
+      id: String(d._id),
+      title: String(d.title || ''),
+      brand: d.brand == null ? '' : String(d.brand),
+      price: Number(d.price || 0) || 0,
+      compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
+      images: Array.isArray(d.images) ? d.images : [],
+      bullets: Array.isArray(d.bullets) ? d.bullets : [],
+      description: d.description == null ? '' : String(d.description),
+      descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
+      descriptionPoints: Array.isArray(d.descriptionPoints) ? d.descriptionPoints : [],
+      youtubeUrl: d.youtubeUrl == null ? '' : String(d.youtubeUrl),
+      video: d.video == null ? '' : String(d.video),
+      testimonials: Array.isArray(d.testimonials) ? d.testimonials : [],
+      sku: d.sku == null ? '' : String(d.sku),
+      slug: d.slug == null ? '' : String(d.slug),
+      inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
+      createdAt: d.createdAt || null,
+      updatedAt: d.updatedAt || null,
+    }))
+    res.json({ products: out })
+  } catch (err) {
+    console.error('GET /api/products/admin error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin: create product
+app.post('/api/products/admin', async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+    const body = req.body || {}
+
+    const title = sanitizeString(body.title, 200)
+    const sku = sanitizeString(body.sku, 80)
+    const price = sanitizePrice(body.price)
+    const compareAtPrice = body.compareAtPrice == null || body.compareAtPrice === '' ? null : sanitizePrice(body.compareAtPrice)
+
+    if (!title) return res.status(400).json({ error: 'title_required' })
+    if (!sku) return res.status(400).json({ error: 'sku_required' })
+
+    const doc = {
+      title,
+      slug: sanitizeString(body.slug, 200),
+      brand: sanitizeString(body.brand, 120),
+      price,
+      compareAtPrice,
+      images: sanitizeStringArray(body.images, 10, 2000),
+      bullets: sanitizeStringArray(body.bullets, 20, 200),
+      description: sanitizeString(body.description, 20000),
+      descriptionHeading: sanitizeString(body.descriptionHeading, 200),
+      descriptionPoints: sanitizeStringArray(body.descriptionPoints, 20, 200),
+      youtubeUrl: sanitizeString(body.youtubeUrl, 2000),
+      video: sanitizeString(body.video, 2000),
+      testimonials: sanitizeTestimonials(body.testimonials),
+      sku,
+      inventoryStatus: sanitizeString(body.inventoryStatus || 'IN_STOCK', 40) || 'IN_STOCK',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    const database = await getDb()
+    // best-effort SKU uniqueness guard
+    const existing = await database.collection('products').findOne({ sku }, { projection: { _id: 1 } })
+    if (existing) return res.status(409).json({ error: 'sku_exists' })
+
+    const ins = await database.collection('products').insertOne(doc)
+    res.json({ id: String(ins.insertedId) })
+  } catch (err) {
+    console.error('POST /api/products/admin error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin: update product (partial)
+app.patch('/api/products/admin/:id', async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+    const id = String(req.params.id || '')
+    if (!id) return res.status(400).json({ error: 'missing_id' })
+    const body = req.body || {}
+
+    const $set = { updatedAt: new Date() }
+    const has = (k) => Object.prototype.hasOwnProperty.call(body, k)
+
+    if (has('title')) $set.title = sanitizeString(body.title, 200)
+    if (has('slug')) $set.slug = sanitizeString(body.slug, 200)
+    if (has('brand')) $set.brand = sanitizeString(body.brand, 120)
+    if (has('price')) $set.price = sanitizePrice(body.price)
+    if (has('compareAtPrice')) $set.compareAtPrice = body.compareAtPrice == null || body.compareAtPrice === '' ? null : sanitizePrice(body.compareAtPrice)
+    if (has('images')) $set.images = sanitizeStringArray(body.images, 10, 2000)
+    if (has('bullets')) $set.bullets = sanitizeStringArray(body.bullets, 20, 200)
+    if (has('description')) $set.description = sanitizeString(body.description, 20000)
+    if (has('descriptionHeading')) $set.descriptionHeading = sanitizeString(body.descriptionHeading, 200)
+    if (has('descriptionPoints')) $set.descriptionPoints = sanitizeStringArray(body.descriptionPoints, 20, 200)
+    if (has('youtubeUrl')) $set.youtubeUrl = sanitizeString(body.youtubeUrl, 2000)
+    if (has('video')) $set.video = sanitizeString(body.video, 2000)
+    if (has('testimonials')) $set.testimonials = sanitizeTestimonials(body.testimonials)
+    if (has('sku')) $set.sku = sanitizeString(body.sku, 80)
+    if (has('inventoryStatus')) $set.inventoryStatus = sanitizeString(body.inventoryStatus, 40)
+
+    if ($set.title !== undefined && !$set.title) return res.status(400).json({ error: 'title_required' })
+    if ($set.sku !== undefined && !$set.sku) return res.status(400).json({ error: 'sku_required' })
+
+    const database = await getDb()
+    const filter = { _id: coerceObjectId(id) }
+
+    if ($set.sku) {
+      const dupe = await database.collection('products').findOne({ sku: $set.sku, _id: { $ne: filter._id } }, { projection: { _id: 1 } })
+      if (dupe) return res.status(409).json({ error: 'sku_exists' })
+    }
+
+    const upd = await database.collection('products').updateOne(filter, { $set })
+    if (!upd.matchedCount) return res.status(404).json({ error: 'Not found' })
+    const doc = await database.collection('products').findOne(filter)
+    if (!doc) return res.status(404).json({ error: 'Not found' })
+    res.json({ ok: true, product: { id: String(doc._id), ...doc } })
+  } catch (err) {
+    console.error('PATCH /api/products/admin/:id error', err)
+    res.status(500).json({ error: 'Internal error' })
+  }
+})
+
+// Admin: delete product
+app.delete('/api/products/admin/:id', async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+    const id = String(req.params.id || '')
+    if (!id) return res.status(400).json({ error: 'missing_id' })
+    const database = await getDb()
+    const filter = { _id: coerceObjectId(id) }
+    const del = await database.collection('products').deleteOne(filter)
+    if (!del.deletedCount) return res.status(404).json({ error: 'Not found' })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('DELETE /api/products/admin/:id error', err)
     res.status(500).json({ error: 'Internal error' })
   }
 })

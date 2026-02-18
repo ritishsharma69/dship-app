@@ -1,11 +1,32 @@
-import { useEffect, useRef, useState, useLayoutEffect, useMemo, useCallback } from 'react'
+import { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import type { Product } from '../types'
 
 export default function MediaGallery({ product }: { product: Product }) {
-  const [active, setActive] = useState(() => (product.youtubeUrl ? 1 : 0))
+  const images = product.images ?? []
+  const [active, setActive] = useState(() => (product.youtubeUrl && images.length > 0 ? 1 : 0))
   const [lightbox, setLightbox] = useState(false)
+  const [broken, setBroken] = useState<Record<number, true>>({})
   const mainRef = useRef<HTMLDivElement>(null)
+
+  // Build a media list that inserts YouTube video as the 2nd item if provided
+  const media: Array<{ type: 'image' | 'youtube'; src: string }> = useMemo(() => {
+    const arr: Array<{ type: 'image' | 'youtube'; src: string }> = (product.images ?? []).map((src) => ({ type: 'image', src }))
+    if (product.youtubeUrl) {
+      arr.splice(1, 0, { type: 'youtube', src: product.youtubeUrl })
+    }
+    return arr
+  }, [product.images, product.youtubeUrl])
+
+  const imageIndexes = useMemo(() => {
+    const idx: number[] = []
+    for (let i = 0; i < media.length; i++) if (media[i]?.type === 'image') idx.push(i)
+    return idx
+  }, [media])
+
+  const activeImagePos = useMemo(() => imageIndexes.indexOf(active), [imageIndexes, active])
+  const prevImageIndex = activeImagePos > 0 ? imageIndexes[activeImagePos - 1] : null
+  const nextImageIndex = activeImagePos >= 0 && activeImagePos < imageIndexes.length - 1 ? imageIndexes[activeImagePos + 1] : null
 
   // Swipe to change
   useEffect(() => {
@@ -19,7 +40,7 @@ export default function MediaGallery({ product }: { product: Product }) {
         setActive((prev) => {
           const next = dx < 0 ? prev + 1 : prev - 1
           if (next < 0) return 0
-          if (next >= product.images.length) return product.images.length - 1
+          if (next >= media.length) return Math.max(0, media.length - 1)
           return next
         })
       }
@@ -30,7 +51,7 @@ export default function MediaGallery({ product }: { product: Product }) {
       el.removeEventListener('touchstart', onTouchStart)
       el.removeEventListener('touchend', onTouchEnd)
     }
-  }, [product.images.length])
+  }, [media.length])
 
   // Keyboard navigation in lightbox + body class to hide sticky UI
   useEffect(() => {
@@ -42,7 +63,7 @@ export default function MediaGallery({ product }: { product: Product }) {
     document.body.classList.add('lightbox-open')
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLightbox(false)
-      if (e.key === 'ArrowRight') setActive((a) => Math.min(a + 1, product.images.length - 1))
+      if (e.key === 'ArrowRight') setActive((a) => Math.min(a + 1, media.length - 1))
       if (e.key === 'ArrowLeft') setActive((a) => Math.max(a - 1, 0))
     }
     document.addEventListener('keydown', onKey)
@@ -50,10 +71,7 @@ export default function MediaGallery({ product }: { product: Product }) {
       document.removeEventListener('keydown', onKey)
       document.body.classList.remove('lightbox-open')
     }
-  }, [lightbox, product.images.length])
-
-  const next = useCallback(() => setActive((a) => Math.min(a + 1, product.images.length - 1)), [product.images.length])
-  const prev = useCallback(() => setActive((a) => Math.max(a - 1, 0)), [])
+  }, [lightbox, media.length])
 
   // Animations
   useLayoutEffect(() => {
@@ -64,17 +82,6 @@ export default function MediaGallery({ product }: { product: Product }) {
     })
     return () => ctx.revert()
   }, [])
-
-  // Build a media list that inserts YouTube video as the 2nd item if provided
-  const media: Array<{ type: 'image' | 'youtube'; src: string; thumb?: string }> = (() => {
-    const arr: Array<{ type: 'image' | 'youtube'; src: string; thumb?: string }> = product.images.map(src => ({ type: 'image', src }))
-    if (product.youtubeUrl) {
-      const ytId = (product.youtubeUrl.match(/[?&]v=([^&]+)/) || product.youtubeUrl.match(/youtu\.be\/([^?]+)/))?.[1]
-      const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : undefined
-      arr.splice(1, 0, { type: 'youtube', src: product.youtubeUrl, thumb })
-    }
-    return arr
-  })()
 
   // Compute proper YouTube embed URL (handles t/start params) so autoplay works
   const embedSrc = useMemo(() => {
@@ -100,6 +107,23 @@ export default function MediaGallery({ product }: { product: Product }) {
     setActive((a) => Math.max(0, Math.min(a, media.length - 1)))
   }, [media.length])
 
+  const Placeholder = ({ label, height }: { label: string; height: number | string }) => (
+    <div
+      aria-label={label}
+      style={{
+        width: '100%',
+        height,
+        display: 'grid',
+        placeItems: 'center',
+        borderRadius: 10,
+        background: 'linear-gradient(135deg, rgba(251,247,241,1) 0%, rgba(246,240,230,1) 55%, rgba(248,243,206,0.65) 100%)',
+        border: '1px solid rgba(0,0,0,0.08)'
+      }}
+    >
+      <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.7 }}>{label}</div>
+    </div>
+  )
+
   return (
     <section>
       <div ref={mainRef} style={{ position: 'relative' }}>
@@ -122,13 +146,17 @@ export default function MediaGallery({ product }: { product: Product }) {
             aria-label="Open image"
             style={{ padding: 0, border: 'none', background: 'transparent', width: '100%', cursor: 'zoom-in' }}
           >
-            <img
-              src={media[active]?.src}
-              alt={product.title}
-              className="gallery-main"
-              loading="lazy"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/1200x1200?text=Image' }}
-            />
+	            {media[active]?.src && !broken[active] ? (
+	              <img
+	                src={media[active]?.src}
+	                alt={product.title}
+	                className="gallery-main"
+	                loading="lazy"
+	                onError={() => setBroken((b) => ({ ...b, [active]: true }))}
+	              />
+	            ) : (
+	              <Placeholder label="Image will appear when available" height={360} />
+	            )}
           </button>
         )}
       </div>
@@ -143,26 +171,27 @@ export default function MediaGallery({ product }: { product: Product }) {
             aria-label={`Show media ${i + 1}`}
           >
             {m.type === 'youtube' ? (
-              <div style={{ position: 'relative' }}>
-                <img src={m.thumb || 'https://placehold.co/200x200?text=Video'} alt="Video thumbnail" style={{ width: '100%', height: 80, objectFit: 'cover', background: '#000' }} />
-                <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-                  <div style={{ width: 20, height: 20, background: '#ff2a6d', clipPath: 'polygon(25% 20%, 25% 80%, 80% 50%)', borderRadius: 4, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }} />
-                </div>
-              </div>
+	              <div style={{ position: 'relative', width: '100%', height: 80, background: '#0b0b0b', display: 'grid', placeItems: 'center' }}>
+	                <div style={{ width: 20, height: 20, background: '#ff2a6d', clipPath: 'polygon(25% 20%, 25% 80%, 80% 50%)', borderRadius: 4, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }} />
+	              </div>
             ) : (
-              <img
-                src={m.src}
-                alt={`${product.title} ${i + 1}`}
-                style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
-                loading="lazy"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = 'https://placehold.co/200x200?text=Thumb' }}
-              />
+	              (m.src && !broken[i]) ? (
+	                <img
+	                  src={m.src}
+	                  alt={`${product.title} ${i + 1}`}
+	                  style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
+	                  loading="lazy"
+	                  onError={() => setBroken((b) => ({ ...b, [i]: true }))}
+	                />
+	              ) : (
+	                <Placeholder label="No image" height={80} />
+	              )
             )}
           </button>
         ))}
       </div>
 
-      {lightbox && (
+	      {lightbox && (
         <div
           role="dialog"
           aria-modal="true"
@@ -207,9 +236,9 @@ export default function MediaGallery({ product }: { product: Product }) {
             ✕
           </button>
 
-          {active > 0 && (
+	          {prevImageIndex != null && (
             <button
-              onClick={(e) => { e.stopPropagation(); prev() }}
+	              onClick={(e) => { e.stopPropagation(); setActive(prevImageIndex) }}
               aria-label="Previous image"
               style={{ position: 'absolute', left: 16, background: 'rgba(0,0,0,0.8)', color: '#fff', border: '2px solid rgba(255,255,255,0.8)', borderRadius: '50%', width: 44, height: 44, fontSize: 20, zIndex: 100001, boxShadow: '0 2px 10px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
@@ -217,25 +246,32 @@ export default function MediaGallery({ product }: { product: Product }) {
             </button>
           )}
 
-          <img
-            src={product.images[active]}
-            alt={product.title}
-            style={{
-              maxWidth: 'min(96vw,1200px)',
-              maxHeight: '90vh',
-              objectFit: 'contain',
-              borderRadius: 12,
-              background: '#fff',
-              zIndex: 100000,
-              boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
-              border: '2px solid rgba(255,255,255,0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
+	          {media[active]?.type === 'image' && media[active]?.src && !broken[active] ? (
+	            <img
+	              src={media[active]?.src}
+	              alt={product.title}
+	              style={{
+	                maxWidth: 'min(96vw,1200px)',
+	                maxHeight: '90vh',
+	                objectFit: 'contain',
+	                borderRadius: 12,
+	                background: '#fff',
+	                zIndex: 100000,
+	                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+	                border: '2px solid rgba(255,255,255,0.1)'
+	              }}
+	              onClick={(e) => e.stopPropagation()}
+	              onError={() => setBroken((b) => ({ ...b, [active]: true }))}
+	            />
+	          ) : (
+	            <div onClick={(e) => e.stopPropagation()} style={{ width: 'min(96vw,1200px)' }}>
+	              <Placeholder label="Image unavailable" height={420} />
+	            </div>
+	          )}
 
-          {active < product.images.length - 1 && (
+	          {nextImageIndex != null && (
             <button
-              onClick={(e) => { e.stopPropagation(); next() }}
+	              onClick={(e) => { e.stopPropagation(); setActive(nextImageIndex) }}
               aria-label="Next image"
               style={{ position: 'absolute', right: 16, background: 'rgba(0,0,0,0.8)', color: '#fff', border: '2px solid rgba(255,255,255,0.8)', borderRadius: '50%', width: 44, height: 44, fontSize: 20, zIndex: 100001, boxShadow: '0 2px 10px rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >

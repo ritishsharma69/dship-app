@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import AdminGuard from '../admin/AdminGuard'
+import AdminLayout from '../admin/AdminLayout'
+import { getAuthToken } from '../lib/auth'
 import { apiGetJson, apiPostJson } from '../lib/api'
 import { useRouter } from '../lib/router'
 
@@ -20,9 +23,7 @@ export default function AdminReturnsPage() {
   const [loading, setLoading] = useState(false)
   const [q, setQ] = useState('')
 
-  const token = useMemo(() => {
-    try { return localStorage.getItem('auth_token') || '' } catch { return '' }
-  }, [])
+  const token = useMemo(() => getAuthToken() || '', [])
 
   useEffect(() => {
     document.title = 'Return Requests'
@@ -66,35 +67,24 @@ export default function AdminReturnsPage() {
   }
 
 
-  if (!token) {
-    return (
-      <div className="container" style={{ padding: 24 }}>
-        <div className="card" style={{ maxWidth: 820, margin: '0 auto', padding: 24 }}>
-          <h2>Admin only</h2>
-          <p className="muted">Please login as admin via Your Orders page.</p>
-          <button className="btn" onClick={() => navigate('/orders')}>Go to Orders</button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="container" style={{ padding: 24 }}>
-      <div className="card" style={{ maxWidth: 1100, margin: '0 auto', padding: 16 }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <h2 style={{ margin: 0 }}>Return Requests</h2>
-          <button className="btn" onClick={() => navigate('/orders')}>Back to Orders</button>
-        <div style={{ marginTop: 8, display:'flex', gap:8, alignItems:'center' }}>
-          <input className="input" placeholder="Search email, order, details…" value={q} onChange={e=>setQ(e.target.value)} style={{ maxWidth: 320 }} />
+    <AdminGuard>
+      <AdminLayout
+        title="Returns"
+        actions={
+          <button className="btn" onClick={() => navigate('/admin/orders')}>Back to Orders</button>
+        }
+      >
+        <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+          <input className="input" placeholder="Search email, order, details…" value={q} onChange={e => setQ(e.target.value)} style={{ maxWidth: 320 }} />
           <span className="muted">Open: {openList.length} · Resolved: {resolvedList.length}</span>
         </div>
 
-        </div>
         {error && <div style={{ color: 'crimson', marginTop: 10 }}>{error}</div>}
         {loading ? (
           <div className="muted" style={{ marginTop: 12 }}>Loading…</div>
         ) : (
-          <div style={{ overflowX:'auto', marginTop: 12 }}>
+          <div style={{ overflowX: 'auto', marginTop: 12 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>
@@ -109,12 +99,10 @@ export default function AdminReturnsPage() {
                 {openList.map((r) => (
                   <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                     <td style={{ padding: 8 }}>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
-                    <td style={{ padding: 8 }}>
-                      <code>#{String(r.orderId).slice(-8)}</code>
-                    </td>
+                    <td style={{ padding: 8 }}><code>#{String(r.orderId).slice(-8)}</code></td>
                     <td style={{ padding: 8 }}>{r.email}</td>
                     <td style={{ padding: 8, maxWidth: 420 }}>
-                      <div style={{ whiteSpace:'pre-wrap' }}>{r.customReason || (r.reasons||[]).join(', ') || '-'}</div>
+                      <div style={{ whiteSpace: 'pre-wrap' }}>{r.customReason || (r.reasons || []).join(', ') || '-'}</div>
                     </td>
                     <td style={{ padding: 8 }}>
                       <button className="btn" onClick={() => markResolved(r.id)}>Mark Resolved</button>
@@ -123,11 +111,11 @@ export default function AdminReturnsPage() {
                 ))}
               </tbody>
             </table>
-            {openList.length === 0 && !loading && (
+            {openList.length === 0 && !loading ? (
               <div className="muted" style={{ marginTop: 12 }}>No open return requests.</div>
-            )}
+            ) : null}
 
-            <div style={{ overflowX:'auto', marginTop: 24 }}>
+            <div style={{ overflowX: 'auto', marginTop: 24 }}>
               <h3 style={{ margin: '0 0 8px' }}>Resolved</h3>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
@@ -146,7 +134,7 @@ export default function AdminReturnsPage() {
                       <td style={{ padding: 8 }}><code>#{String(r.orderId).slice(-8)}</code></td>
                       <td style={{ padding: 8 }}>{r.email}</td>
                       <td style={{ padding: 8, maxWidth: 420 }}>
-                        <div style={{ whiteSpace:'pre-wrap' }}>{r.customReason || (r.reasons||[]).join(', ') || '-'}</div>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{r.customReason || (r.reasons || []).join(', ') || '-'}</div>
                       </td>
                       <td style={{ padding: 8 }}>
                         <button className="btn" onClick={() => reopen(r.id)}>Reopen</button>
@@ -155,16 +143,14 @@ export default function AdminReturnsPage() {
                   ))}
                 </tbody>
               </table>
-              {resolvedList.length === 0 && !loading && (
+              {resolvedList.length === 0 && !loading ? (
                 <div className="muted" style={{ marginTop: 12 }}>No resolved returns yet.</div>
-              )}
+              ) : null}
             </div>
-
-
           </div>
         )}
-      </div>
-    </div>
+      </AdminLayout>
+    </AdminGuard>
   )
 }
 

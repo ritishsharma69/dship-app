@@ -10,21 +10,9 @@ import ListItemText from '@mui/material/ListItemText'
 import Button from '@mui/material/Button'
 import Badge from '@mui/material/Badge'
 import Box from '@mui/material/Box'
-import Menu from '@mui/material/Menu'
-import MenuItem from '@mui/material/MenuItem'
-
-import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping, MoreHoriz } from '@mui/icons-material'
+import { ShoppingCart, Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping, Description } from '@mui/icons-material'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
-
-
-// Inline fallback logo to avoid network delays if /mainlogo.png is slow/unavailable
-const FALLBACK_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  "<svg xmlns='http://www.w3.org/2000/svg' width='240' height='72'>" +
-  "<rect width='100%' height='100%' fill='#0b0b0b'/>" +
-  "<text x='50%' y='52%' dominant-baseline='middle' text-anchor='middle' fill='#fff' font-family='system-ui,Arial' font-size='22' font-weight='700'>Khushiyan Store</text>" +
-  "</svg>"
-)
 
 export default function TopBar() {
   const { count } = useCart()
@@ -34,9 +22,7 @@ export default function TopBar() {
   const showBack = path !== '/' && !path.startsWith('/p/')
   const back = () => { if (window.history.length > 1) window.history.back(); else navigate('/') }
   const active = (to: string) => path === to
-  const [moreEl, setMoreEl] = useState<null | HTMLElement>(null)
-  const openMore = (e: any) => setMoreEl(e.currentTarget)
-  const closeMore = () => setMoreEl(null)
+
 
 
 
@@ -53,64 +39,78 @@ export default function TopBar() {
       backdropFilter: 'saturate(120%) blur(6px)',
       overflow: 'visible'
     }}>
-      <Toolbar disableGutters sx={{ width: '100%', px: 0, height: 90, overflow: 'visible' }}>
+		      <Toolbar
+		        disableGutters
+		        sx={{
+		          width: '100%',
+		          px: 0,
+		          // Keep navbar height stable; logo must fit inside this.
+		          height: { xs: 72, sm: 82, md: 90 },
+		          overflow: 'hidden',
+		          alignItems: 'center',
+		        }}
+		      >
         {/* Left: Back (mobile) + Logo */}
         {showBack && (
           <IconButton color="inherit" onClick={back} aria-label="Back" sx={{ display: { xs: 'inline-flex', md: 'none' }, ml: 1, mr: 0.5 }}>
             <ArrowBackIosNew sx={{ fontSize: 20 }} />
           </IconButton>
         )}
-        <IconButton color="inherit" onClick={() => go('/')} aria-label="Home" disableRipple sx={{ mr: 1, ml: { xs: 1, md: 6 }, '&:hover': { backgroundColor: 'transparent' } }}>
-          <Box
-            component="img"
-            src="/mainlogo.png"
-            alt="Main Logo"
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-            onError={(e: any) => { e.currentTarget.src = FALLBACK_LOGO }}
-            sx={{ height: 160, mt: '10px', width: 'auto', mr: 2.5, filter:'drop-shadow(0 8px 22px rgba(88,28,135,0.28))' }}
-          />
-        </IconButton>
+	      	<IconButton
+	      	  color="inherit"
+	      	  onClick={() => go('/')}
+	      	  aria-label="Home"
+	      	  disableRipple
+	      	  sx={{
+	      	    mr: 1,
+		      	    ml: { xs: 1, md: 3 },
+		      	    p: 0,
+	      	    '&:hover': { backgroundColor: 'transparent' },
+	      	  }}
+	      	>
+				  <Box
+				    component="img"
+				    src="/logo.png"
+				    alt="Khushiyan Store"
+				    loading="eager"
+				    sx={{
+				      // Keep navbar height stable, but "zoom" logo to avoid transparent padding in asset.
+				      // Add top offset as requested (without making navbar taller).
+				      mt: '15px',
+				      height: { xs: 52, sm: 58, md: 70 },
+				      width: { xs: 220, sm: 280, md: 340 },
+				      maxWidth: { xs: '78vw', sm: '70vw', md: 420 },
+				      objectFit: 'cover',
+				      objectPosition: 'left center',
+				      display: 'block',
+				      borderRadius: 2,
+				      boxShadow: '0 10px 22px rgba(0,0,0,0.35)',
+				    }}
+				  />
+	      	</IconButton>
 
-        {/* Desktop actions compact: show key items + overflow menu */}
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'flex-end', gap: 1.5, ml: 'auto', mr: 6 }}>
-          <Button color="inherit" onClick={() => go('/orders')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <AssignmentOutlined fontSize="medium" sx={{ color: active('/orders') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 12.5, color: active('/orders') ? '#F59E0B' : 'inherit' }}>Your Orders</Box>
+        {/* Desktop actions: all links in a single row */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1, ml: 'auto', mr: 6 }}>
+          <Button color="inherit" onClick={() => go('/orders')} startIcon={<AssignmentOutlined sx={{ fontSize: '20px !important', color: active('/orders') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, color: active('/orders') ? '#F59E0B' : 'inherit' }}>
+            Orders
           </Button>
-          <Button color="inherit" onClick={() => go('/contact')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }}>
-            <MailOutline fontSize="medium" sx={{ color: active('/contact') ? '#F59E0B' : 'inherit' }} />
-            <Box component="span" sx={{ fontSize: 12.5, color: active('/contact') ? '#F59E0B' : 'inherit' }}>Contact</Box>
+          <Button color="inherit" onClick={() => go('/contact')} startIcon={<MailOutline sx={{ fontSize: '20px !important', color: active('/contact') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, color: active('/contact') ? '#F59E0B' : 'inherit' }}>
+            Contact
           </Button>
-          <Button color="inherit" onClick={(e) => openMore(e)} sx={{ minWidth: 64, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-controls={moreEl ? 'more-menu' : undefined} aria-haspopup="true" aria-expanded={Boolean(moreEl) ? 'true' : undefined}>
-            <MoreHoriz fontSize="medium" />
-            <Box component="span" sx={{ fontSize: 12.5 }}>More</Box>
+          <Button color="inherit" onClick={() => go('/privacy')} startIcon={<Lock sx={{ fontSize: '20px !important', color: active('/privacy') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, color: active('/privacy') ? '#F59E0B' : 'inherit' }}>
+            Privacy
           </Button>
-          {/* Overflow menu */}
-          <Menu id="more-menu" anchorEl={moreEl} open={Boolean(moreEl)} onClose={closeMore} keepMounted>
-            <MenuItem onClick={() => { closeMore(); go('/privacy') }}>
-              <ListItemIcon><Lock fontSize="small" /></ListItemIcon>
-              <ListItemText>Privacy</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { closeMore(); go('/shipping') }}>
-              <ListItemIcon><LocalShipping fontSize="small" /></ListItemIcon>
-              <ListItemText>Shipping</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { closeMore(); go('/cancellation-refund') }}>
-              <ListItemIcon><AssignmentOutlined fontSize="small" /></ListItemIcon>
-              <ListItemText>Cancellation & Refund</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={() => { closeMore(); go('/terms-conditions') }}>
-              <ListItemIcon><Lock fontSize="small" /></ListItemIcon>
-              <ListItemText>Terms & Conditions</ListItemText>
-            </MenuItem>
-          </Menu>
-          <Button color="inherit" onClick={() => go('/checkout')} sx={{ minWidth: 72, lineHeight: 1, display: 'grid', placeItems: 'center', gap: 0.25, textTransform: 'none', fontWeight: 700 }} aria-label="Cart">
-            <Badge badgeContent={count} color="error">
-              <ShoppingCart fontSize="medium" sx={{ color: active('/checkout') ? '#F59E0B' : 'inherit' }} />
-            </Badge>
-            <Box component="span" sx={{ fontSize: 12.5, color: active('/checkout') ? '#F59E0B' : 'inherit' }}>Your Cart</Box>
+          <Button color="inherit" onClick={() => go('/shipping')} startIcon={<LocalShipping sx={{ fontSize: '20px !important', color: active('/shipping') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, color: active('/shipping') ? '#F59E0B' : 'inherit' }}>
+            Shipping
+          </Button>
+          <Button color="inherit" onClick={() => go('/cancellation-refund')} startIcon={<Description sx={{ fontSize: '20px !important', color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', color: active('/cancellation-refund') ? '#F59E0B' : 'inherit' }}>
+            Cancellation
+          </Button>
+          <Button color="inherit" onClick={() => go('/terms-conditions')} startIcon={<Lock sx={{ fontSize: '20px !important', color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }} />} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, whiteSpace: 'nowrap', color: active('/terms-conditions') ? '#F59E0B' : 'inherit' }}>
+            Terms
+          </Button>
+          <Button color="inherit" onClick={() => go('/checkout')} startIcon={<Badge badgeContent={count} color="error"><ShoppingCart sx={{ fontSize: '20px !important', color: active('/checkout') ? '#F59E0B' : 'inherit' }} /></Badge>} sx={{ minWidth: 0, px: 1.5, py: 0.6, textTransform: 'none', fontWeight: 700, fontSize: 13.5, color: active('/checkout') ? '#F59E0B' : 'inherit' }} aria-label="Cart">
+            Cart
           </Button>
         </Box>
 

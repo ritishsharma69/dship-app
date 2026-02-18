@@ -3,6 +3,7 @@ export type InventoryStatus = 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 export interface Product {
   id: string;
   title: string;
+  slug?: string;
   description?: string;
   descriptionHeading?: string;
   descriptionPoints?: string[];
@@ -15,6 +16,7 @@ export interface Product {
   bullets: string[];
   sku: string;
   inventoryStatus: InventoryStatus;
+  testimonials?: Testimonial[]; // optional product testimonials
 }
 
 export interface Testimonial {

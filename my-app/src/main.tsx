@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { RouterProvider } from './lib/router'
 import { CartProvider } from './lib/cart'
 import { ToastProvider } from './lib/toast'
+import { ProductsProvider } from './lib/products'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import theme from './theme'
 
@@ -28,11 +29,13 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <RouterProvider>
-        <CartProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </CartProvider>
+        <ProductsProvider>
+          <CartProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </CartProvider>
+        </ProductsProvider>
       </RouterProvider>
     </ThemeProvider>
   </StrictMode>,

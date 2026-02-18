@@ -1,6 +1,6 @@
 import './App.css'
-import { lazy, Suspense } from 'react'
-import { Route, Switch } from './lib/router'
+import { lazy, Suspense, useEffect } from 'react'
+import { Route, Switch, useRouter } from './lib/router'
 import TopBar from './components/TopBar'
 
 import PageLoader from './components/PageLoader'
@@ -21,15 +21,38 @@ const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'))
 
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
+
+// Admin
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
+const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'))
+const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'))
 const AdminReturnsPage = lazy(() => import('./pages/AdminReturnsPage'))
 
 
 const PaymentPhonePeReturnPage = lazy(() => import('./pages/PaymentPhonePeReturnPage'))
 
+function AdminIndexRedirect() {
+  const { navigate } = useRouter()
+  // If a token exists, go to dashboard; else go to login.
+  // We avoid importing auth helpers here to keep this file very lightweight.
+  const hasToken = (() => {
+    try { return !!localStorage.getItem('auth_token') } catch { return false }
+  })()
+
+  useEffect(() => {
+    navigate(hasToken ? '/admin/dashboard' : '/admin/login', { replace: true })
+  }, [hasToken, navigate])
+  return null
+}
+
 export default function App() {
+  const { path } = useRouter()
+  const isAdminRoute = path === '/admin' || path.startsWith('/admin/')
+
   return (
     <>
-      <TopBar />
+      {!isAdminRoute ? <TopBar /> : null}
       <Suspense fallback={<PageLoader />}> {/* show full-screen loader until page resolves */}
         <Switch>
           {/* Home: show all products (SimpleHomePage) */}
@@ -69,6 +92,21 @@ export default function App() {
           </Route>
           <Route path="/admin/returns">
             <AdminReturnsPage />
+          </Route>
+          <Route path="/admin/login">
+            <AdminLoginPage />
+          </Route>
+          <Route path="/admin/dashboard">
+            <AdminDashboardPage />
+          </Route>
+          <Route path="/admin/products">
+            <AdminProductsPage />
+          </Route>
+          <Route path="/admin/orders">
+            <AdminOrdersPage />
+          </Route>
+          <Route path="/admin">
+            <AdminIndexRedirect />
           </Route>
           <Route path="/checkout">
             <CheckoutPage />

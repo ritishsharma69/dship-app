@@ -26,6 +26,9 @@ export default function TopBar() {
 
 
 
+  const primaryLogoSrc = `${import.meta.env.BASE_URL}logo.png`
+  const fallbackLogoSrc = `${import.meta.env.BASE_URL}mainlogo.png`
+
   return (
     <AppBar position="sticky" color="transparent" sx={{ ml: 'calc(50% - 50vw)', mr: 'calc(50% - 50vw)', borderRadius: 0,
       background: `
@@ -70,7 +73,15 @@ export default function TopBar() {
 	      	>
 				  <Box
 				    component="img"
-				    src="/logo.png"
+					    src={primaryLogoSrc}
+					    onError={(e) => {
+					      // In production the repo/deploy might not include /logo.png yet.
+					      // Fall back to /mainlogo.png so the brand always shows.
+					      const img = e.currentTarget as HTMLImageElement
+					      if (img.dataset.fallbackApplied) return
+					      img.dataset.fallbackApplied = '1'
+					      img.src = fallbackLogoSrc
+					    }}
 				    alt="Khushiyan Store"
 				    loading="eager"
 				    sx={{

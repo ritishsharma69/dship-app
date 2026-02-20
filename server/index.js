@@ -22,6 +22,12 @@ try {
 // Serve uploaded files publicly
 app.use('/uploads', express.static(UPLOADS_DIR, { maxAge: '7d', etag: true }))
 
+// Serve frontend static files (built by Vite)
+const FRONTEND_DIST = path.join(__dirname, '../my-app/dist')
+if (fs.existsSync(FRONTEND_DIST)) {
+  app.use(express.static(FRONTEND_DIST, { maxAge: '1h', etag: true }))
+}
+
 // CORS: allow local dev and any origins listed in ALLOWED_ORIGINS (comma-separated)
 const defaultAllowed = ['https://www.khushiyan.store', 'https://khushiyan.store']
 const allowedFromEnv = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
@@ -1091,6 +1097,13 @@ app.patch('/api/orders/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Internal error' })
   }
 })
+
+// Serve index.html for all non-API routes (client-side routing)
+if (fs.existsSync(FRONTEND_DIST)) {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(FRONTEND_DIST, 'index.html'))
+  })
+}
 
 // Export app for serverless adapters and start only when run directly
 if (require.main === module) {

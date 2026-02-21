@@ -529,6 +529,33 @@ try {
   console.error('[routes] Failed to register /api/auth/verify-otp:', err.message)
 }
 
+// Admin login with email and password
+try {
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const email = String(req.body?.email || '').trim().toLowerCase()
+      const password = String(req.body?.password || '').trim()
+      const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+      const adminPassword = process.env.ADMIN_PASSWORD || 'Qstn5ufy33@dship'
+
+      if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
+      if (email !== adminEmail) return res.status(403).json({ error: 'Invalid credentials' })
+      if (password !== adminPassword) return res.status(403).json({ error: 'Invalid credentials' })
+
+      // Generate token: base64(email|ts)
+      const token = Buffer.from(`${email}|${Date.now()}`).toString('base64')
+      console.log(`[auth] Admin login successful for ${email}`)
+      res.json({ token, email })
+    } catch (err) {
+      console.error('POST /api/auth/login error', err)
+      res.status(500).json({ error: 'Internal error' })
+    }
+  })
+  console.log('[routes] /api/auth/login registered')
+} catch (err) {
+  console.error('[routes] Failed to register /api/auth/login:', err.message)
+}
+
 function parseDemoToken(authHeader) {
   const raw = (authHeader || '').replace(/^Bearer\s+/i, '')
   try { return Buffer.from(raw, 'base64').toString('utf8').split('|')[0] } catch { return null }

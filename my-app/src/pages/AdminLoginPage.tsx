@@ -18,61 +18,50 @@ export default function AdminLoginPage() {
 
   const existing = useMemo(() => getAuthToken(), [])
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
+  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const validEmail = /^\S+@\S+\.\S+$/.test(email.trim())
+  const validPassword = password.length >= 6
 
-  async function requestOtp() {
+  async function handleLogin() {
     setError(null)
     if (!validEmail) { setError('Enter a valid email'); return }
+    if (!validPassword) { setError('Password must be at least 6 characters'); return }
+
     const addr = email.trim().toLowerCase()
     if (addr !== 'khushiyanstore@gmail.com') {
       setError('Only khushiyanstore@gmail.com can access admin panel')
       return
     }
+
     setBusy(true)
     try {
       try {
-        await apiPostJson('/api/auth/request-otp', { email: addr }, { loaderText: 'Sending OTP…', timeoutMs: 45000 })
+        const payload = await apiPostJson<any>('/api/auth/login', { email: addr, password }, { loaderText: 'Logging in…', timeoutMs: 45000 })
+        const tok = payload?.token
+        if (!tok) throw new Error('No token received')
+        setAuth(tok, addr)
+        push('Logged in')
+        navigate('/admin/dashboard', { replace: true })
       } catch (err: any) {
         // warm server + retry on cold start timeouts
         if (String(err?.message || '').toLowerCase().includes('timed out')) {
           await apiGetJson('/api/ping', { timeoutMs: 4000 }).catch(() => {})
           await new Promise(r => setTimeout(r, 1500))
-          await apiPostJson('/api/auth/request-otp', { email: addr }, { loaderText: 'Retrying…', timeoutMs: 45000 })
+          const payload = await apiPostJson<any>('/api/auth/login', { email: addr, password }, { loaderText: 'Retrying…', timeoutMs: 45000 })
+          const tok = payload?.token
+          if (!tok) throw new Error('No token received')
+          setAuth(tok, addr)
+          push('Logged in')
+          navigate('/admin/dashboard', { replace: true })
         } else {
           throw err
         }
       }
-      setOtpSent(true)
-      push('OTP sent')
     } catch (e: any) {
-      const msg = e?.message || 'Failed to send OTP'
-      setError(msg)
-      push(msg)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function verifyOtp() {
-    setError(null)
-    const trimmedEmail = email.trim().toLowerCase()
-    const trimmedCode = code.trim().replace(/[^0-9]/g, '')
-    if (!trimmedEmail || !trimmedCode) { setError('Enter email and OTP'); return }
-    setBusy(true)
-    try {
-      const payload = await apiPostJson<any>('/api/auth/verify-otp', { email: trimmedEmail, code: trimmedCode }, { loaderText: 'Verifying…', timeoutMs: 45000 })
-      const tok = payload?.token
-      if (!tok) throw new Error('No token received')
-      setAuth(tok, trimmedEmail)
-      push('Logged in')
-      navigate('/admin/dashboard', { replace: true })
-    } catch (e: any) {
-      const msg = e?.message || 'Failed to verify OTP'
+      const msg = e?.message || 'Failed to login'
       setError(msg)
       push(msg)
     } finally {
@@ -94,7 +83,7 @@ export default function AdminLoginPage() {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">
-              Use the same OTP login used in <b>Your Orders</b>. Token will be stored in this browser.
+              Enter your admin credentials to access the dashboard. Your session will be stored in this browser.
             </Typography>
 
             {existing ? (
@@ -115,9 +104,7 @@ export default function AdminLoginPage() {
 
             <Stack spacing={1.25} sx={{ mt: 1.5 }}>
               <TextField label="Admin Email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-              {otpSent && (
-                <TextField label="OTP" value={code} onChange={(e) => setCode(e.target.value)} inputMode="numeric" />
-              )}
+              <TextField label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
 
               {error ? (
                 <Typography variant="body2" sx={{ color: 'crimson', fontWeight: 700 }}>
@@ -125,15 +112,9 @@ export default function AdminLoginPage() {
                 </Typography>
               ) : null}
 
-              {!otpSent ? (
-                <Button size="large" variant="contained" disabled={!validEmail || busy} onClick={requestOtp} sx={{ background: 'linear-gradient(90deg, #FF3F6C 0%, #FF6B8A 100%)', '&:hover': { background: 'linear-gradient(90deg, #E73962 0%, #E75A7A 100%)' }, '&:disabled': { background: 'rgba(0,0,0,0.12)' } }}>
-                  {busy ? 'Sending…' : 'Send OTP'}
-                </Button>
-              ) : (
-                <Button size="large" variant="contained" disabled={busy} onClick={verifyOtp} sx={{ background: 'linear-gradient(90deg, #FF3F6C 0%, #FF6B8A 100%)', '&:hover': { background: 'linear-gradient(90deg, #E73962 0%, #E75A7A 100%)' }, '&:disabled': { background: 'rgba(0,0,0,0.12)' } }}>
-                  {busy ? 'Verifying…' : 'Verify & Login'}
-                </Button>
-              )}
+              <Button size="large" variant="contained" disabled={!validEmail || !validPassword || busy} onClick={handleLogin} sx={{ background: 'linear-gradient(90deg, #FF3F6C 0%, #FF6B8A 100%)', '&:hover': { background: 'linear-gradient(90deg, #E73962 0%, #E75A7A 100%)' }, '&:disabled': { background: 'rgba(0,0,0,0.12)' } }}>
+                {busy ? 'Logging in…' : 'Login'}
+              </Button>
 
               <Button variant="text" onClick={() => navigate('/', { replace: false })} sx={{ color: '#4C1D95', '&:hover': { background: 'rgba(76,29,149,0.08)' } }}>
                 Back to Store

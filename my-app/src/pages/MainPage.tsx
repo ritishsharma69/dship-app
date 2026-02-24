@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
+import { useEffect, useMemo, useState, useLayoutEffect, useRef, Suspense, lazy } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import { liveNames, liveCities } from '../data'
 import { useProducts } from '../lib/products'
 import { events } from '../analytics'
 import type { Product } from '../types'
-import MediaGallery from '../components/MediaGallery'
-import FeatureList from '../components/FeatureList'
-import ReviewGrid from '../components/ReviewGrid'
+const MediaGallery = lazy(() => import('../components/MediaGallery'))
+const FeatureList = lazy(() => import('../components/FeatureList'))
+const ReviewGrid = lazy(() => import('../components/ReviewGrid'))
 
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
@@ -20,7 +20,6 @@ import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
-import { Suspense, lazy } from 'react'
 const LiveSalesToast = lazy(() => import('../components/LiveSalesToast'))
 
 import { AddShoppingCart, ShoppingCartCheckout, FlashOn, Star, StarHalf, NotificationsNone, LocalOffer, Payments, CheckCircle } from '@mui/icons-material'
@@ -210,7 +209,9 @@ export default function MainPage() {
         <Box className="product-grid" sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'start' }}>
           {/* Left side - Product Images */}
           <Paper className="sticky-media" sx={{ p: 1 }}>
-            <MediaGallery product={p} />
+            <Suspense fallback={<div style={{ minHeight: 300 }} />}>
+              <MediaGallery product={p} />
+            </Suspense>
           </Paper>
 
           {/* Right side - Product Details */}
@@ -291,7 +292,9 @@ export default function MainPage() {
               <Paper sx={{ p: 2, mb: 1.5, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#000000', fontSize: 18 }}>{p.bullets[0]}</Typography>
               </Paper>
-              <FeatureList bullets={p.descriptionPoints && p.descriptionPoints.length > 0 ? p.descriptionPoints : p.bullets.slice(1)} />
+              <Suspense fallback={null}>
+                <FeatureList bullets={p.descriptionPoints && p.descriptionPoints.length > 0 ? p.descriptionPoints : p.bullets.slice(1)} />
+              </Suspense>
             </Box>
 
             {/* Description Section */}
@@ -364,7 +367,9 @@ export default function MainPage() {
       <Container sx={{ py: 2 }}>
         <Box className="reveal" sx={{ p: 2, display: 'grid', gap: 1.5, textAlign: 'center', boxShadow: 'none', border: 'none' }}>
           <Typography variant="h6" sx={{ color: '#000000', fontWeight: 'bold' }}>What customers say</Typography>
-          <ReviewGrid />
+          <Suspense fallback={null}>
+            <ReviewGrid />
+          </Suspense>
         </Box>
       </Container>
 

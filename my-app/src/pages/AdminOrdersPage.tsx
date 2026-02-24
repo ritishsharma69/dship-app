@@ -9,9 +9,7 @@ import { useToast } from '../lib/toast'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import LinearProgress from '@mui/material/LinearProgress'
-import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
-import Select from '@mui/material/Select'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
@@ -24,9 +22,12 @@ type OrderLite = {
   status?: string
   totalPrice?: number
   totals?: any
+  total?: number
   paymentMethod?: string
   customer?: any
   address?: any
+  items?: any[]
+  itemsCount?: number
 }
 
 export default function AdminOrdersPage() {
@@ -38,6 +39,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [q, setQ] = useState('')
+  const [open, setOpen] = useState<Record<string, boolean>>({})
 
   async function load() {
     setError(null)
@@ -101,37 +103,75 @@ export default function AdminOrdersPage() {
           </Stack>
         </Paper>
 
-        {filtered.map((o) => (
-          <Paper key={o.id} sx={{ p: 2, borderRadius: 3 }}>
-            <Stack spacing={1}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                <Typography fontWeight={900}>#{String(o.id).slice(-8)}</Typography>
-                <Box sx={{ flex: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {o.createdAt ? new Date(o.createdAt).toLocaleString() : ''}
-                </Typography>
-              </Stack>
-
-              <Typography variant="body2" color="text.secondary">
-                {o.customer?.name ? `${o.customer?.name} · ` : ''}{o.customer?.email || ''}{o.address?.city ? ` · ${o.address.city}` : ''}
-              </Typography>
-
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
-                <Typography variant="body2"><b>Total:</b> ₹{Math.round(Number(o.totalPrice ?? o.totals?.grandTotal ?? 0)).toLocaleString('en-IN')}</Typography>
-                <Typography variant="body2" color="text.secondary"><b>Pay:</b> {o.paymentMethod || '-'}</Typography>
-                <Box sx={{ flex: 1 }} />
-                <Select size="small" value={(o.status as any) || 'pending'} onChange={(e) => setOrderStatus(o.id, e.target.value as AdminStatus)}>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="accepted">Accepted</MenuItem>
-                  <MenuItem value="delivered">Delivered</MenuItem>
-                </Select>
-              </Stack>
-            </Stack>
-          </Paper>
-        ))}
+        <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+          {filtered.map((o) => {
+            const isOpen = !!open[o.id]
+            const statusColor = o.status === 'pending' ? '#f59e0b' : o.status === 'accepted' ? '#3b82f6' : '#10b981'
+            const statusBg = o.status === 'pending' ? '#fffbeb' : o.status === 'accepted' ? '#eff6ff' : '#ecfdf5'
+            return (
+              <div key={o.id} style={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', overflow: 'hidden' }}>
+                <button onClick={() => setOpen(prev => ({ ...prev, [o.id]: !prev[o.id] }))} style={{ all: 'unset', cursor: 'pointer', width: '100%', display: 'block', padding: 14, boxSizing: 'border-box' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>#{o.id.slice(-8)}</div>
+                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{o.customer?.name || '-'} · {o.customer?.email || ''}{o.address?.city ? ` · ${o.address.city}` : ''}</div>
+                      <div style={{ fontSize: 13, color: '#374151', marginTop: 6 }}><b>Total:</b> ₹{o.total ?? o.totals?.total ?? Math.round(Number(o.totalPrice ?? o.totals?.grandTotal ?? 0))}  <b>Pay:</b> {o.paymentMethod || 'cod'}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap' }}>{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}{o.createdAt ? ', ' : ''}{o.createdAt ? new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
+                      <div style={{ marginTop: 6, display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: statusColor, background: statusBg, border: `1px solid ${statusColor}22`, textTransform: 'capitalize' }}>{o.status || 'pending'}</div>
+                    </div>
+                  </div>
+                </button>
+                {isOpen && (
+                  <div style={{ padding: '0 14px 14px', display: 'grid', gap: 10, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <div style={{ paddingTop: 12, display: 'grid', gap: 6 }}>
+                      <div style={{ fontSize: 14 }}><b>📍 Address:</b> {o.address?.line1}{o.address?.city ? `, ${o.address.city}` : ''}{o.address?.state ? `, ${o.address.state}` : ''} {o.address?.zip || ''}</div>
+                      <div style={{ fontSize: 14 }}><b>📞 Phone:</b> {o.customer?.phone || o.address?.phone || '-'}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1f2937' }}>🛒 Items</div>
+                      <div style={{ borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', padding: 10 }}>
+                        {(o.items || []).map((item: any, idx: number) => (
+                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, borderBottom: idx < (o.items || []).length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
+                            <span>{item.title} × {item.quantity}</span>
+                            <span style={{ fontWeight: 600 }}>₹{item.unitPrice}</span>
+                          </div>
+                        ))}
+                        {(!o.items || o.items.length === 0) && <div style={{ color: '#9ca3af', fontSize: 13 }}>No items data</div>}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}>
+                      <span style={{ color: '#6b7280' }}>Items: {o.itemsCount ?? (o.items || []).reduce((a: number, i: any) => a + Number(i.quantity || 0), 0)}</span>
+                      <span style={{ fontWeight: 800, fontSize: 15, color: '#1f2937' }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
+                      <b>Status:</b>
+                      <select value={(o.status as any) || 'pending'} onChange={(e) => setOrderStatus(o.id, e.target.value as AdminStatus)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', fontSize: 13 }}>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="delivered">Delivered</option>
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {o.status !== 'accepted' && (
+                        <button onClick={() => setOrderStatus(o.id, 'accepted')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#eff6ff', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mark Accepted</button>
+                      )}
+                      {o.status !== 'delivered' && (
+                        <button onClick={() => setOrderStatus(o.id, 'delivered')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#ecfdf5', color: '#059669', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mark Delivered</button>
+                      )}
+                      <button onClick={() => { const a = o.address; navigator.clipboard.writeText(`${o.customer?.name || ''}\n${a?.line1 || ''}\n${a?.city || ''}, ${a?.state || ''} ${a?.zip || ''}\n${o.customer?.phone || a?.phone || ''}`); push('Address copied!') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📋 Copy Address</button>
+                      <button onClick={() => { const a = o.address; window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${a?.line1 || ''} ${a?.city || ''} ${a?.state || ''} ${a?.zip || ''}`)}`, '_blank') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📍 Open in Maps</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
         {!loading && filtered.length === 0 ? (
-          <Typography color="text.secondary">No orders.</Typography>
+          <Typography color="text.secondary" sx={{ mt: 2 }}>No orders.</Typography>
         ) : null}
       </AdminLayout>
     </AdminGuard>

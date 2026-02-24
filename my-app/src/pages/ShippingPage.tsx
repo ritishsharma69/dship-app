@@ -1,50 +1,44 @@
 import Container from '@mui/material/Container'
-import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+
+const Step = ({ icon, title, desc }: { icon: string; title: string; desc: string }) => (
+  <Box sx={{ p: 2.5, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+    <Box sx={{ fontSize: 28, lineHeight: 1, flexShrink: 0, mt: 0.3 }}>{icon}</Box>
+    <Box>
+      <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>{title}</Typography>
+      <Typography variant="body2" sx={{ color: '#4b5563', mt: 0.3, lineHeight: 1.6 }}>{desc}</Typography>
+    </Box>
+  </Box>
+)
 
 export default function ShippingPage() {
   const email = 'khushiyanstore@gmail.com'
   return (
-    <Container sx={{ py: 3 }}>
-      <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 980, mx: 'auto', p: 3, borderRadius: 0, textAlign: 'left', borderColor: 'rgba(0,0,0,0.18)' }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Shipping Policy</Typography>
-        <Typography color="text.secondary" sx={{ mb: 2 }}>
-          At Khushiyan Store, we are committed to delivering your orders in a safe, timely, and reliable manner.
-        </Typography>
-
-        <ol style={{ color: 'var(--color-text)', paddingLeft: 20 }}>
-          <li>
-            <b>Order Processing Time:</b> All orders are processed within 1–2 business days. Orders placed on weekends or public holidays will be processed on the next working day.
-          </li>
-          <li>
-            <b>Shipping Timeframe:</b> Once shipped, orders are typically delivered within 3–7 business days, depending on the delivery location.
-          </li>
-          <li>
-            <b>Shipping Charges:</b> Shipping charges (if applicable) will be displayed at checkout before you complete your purchase. We offer free shipping on orders above a certain value (as mentioned on the website or promotional offers).
-          </li>
-          <li>
-            <b>Delivery Locations:</b> We currently ship across India. Please ensure your full address and contact details are correct to avoid delivery delays.
-          </li>
-          <li>
-            <b>Tracking Information:</b> You will receive an email or SMS with the tracking details once your order has been dispatched.
-          </li>
-          <li>
-            <b>Delays or Issues:</b> While we aim to ensure timely delivery, delays can sometimes occur due to unforeseen circumstances (e.g., weather, courier delays). In such cases, we appreciate your patience and understanding.
-          </li>
-        </ol>
-
-        <Typography sx={{ mt: 1 }}>
-          For any shipping-related inquiries, please feel free to contact our support team at: <a href={`mailto:${email}?subject=Shipping%20support`}>{email}</a>
-        </Typography>
-
-        <Typography sx={{ mt: 1 }}>
-          Replacement/Exchange product will be delivered in 5–7 business days.
-        </Typography>
-
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-          Last updated: {new Date().toLocaleDateString()}
-        </Typography>
-      </Paper>
+    <Container sx={{ py: { xs: 4, md: 6 } }}>
+      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Box sx={{ fontSize: 48, mb: 1 }}>🚚</Box>
+          <Typography sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: 28, md: 36 }, fontWeight: 800, color: '#1f2937' }}>Shipping Policy</Typography>
+          <Typography color="text.secondary" sx={{ mt: 1, fontSize: 15 }}>
+            We deliver your orders safely, on time, and with care.
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'grid', gap: 2 }}>
+          <Step icon="📦" title="Processing Time" desc="All orders are processed within 1-2 business days. Weekend/holiday orders ship the next working day." />
+          <Step icon="🕐" title="Delivery Timeframe" desc="Once shipped, delivery takes 3-7 business days depending on your location." />
+          <Step icon="💰" title="Shipping Charges" desc="Charges (if any) are shown at checkout. Free shipping on qualifying orders as per active offers." />
+          <Step icon="📍" title="Delivery Locations" desc="We currently ship across India. Please ensure correct address and contact details." />
+          <Step icon="📲" title="Tracking" desc="You'll receive an email/SMS with tracking details once your order is dispatched." />
+          <Step icon="⏳" title="Delays" desc="Occasional delays due to weather or courier issues may occur. We appreciate your patience." />
+          <Step icon="🔄" title="Replacement/Exchange" desc="Replacement or exchange products are delivered in 5-7 business days." />
+        </Box>
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Questions? Write to <a href={`mailto:${email}?subject=Shipping%20query`} style={{ color: '#6D28D9', fontWeight: 600 }}>{email}</a>
+          </Typography>
+        </Box>
+      </Box>
     </Container>
   )
 }

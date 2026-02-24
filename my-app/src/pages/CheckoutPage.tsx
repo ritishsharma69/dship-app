@@ -1,11 +1,11 @@
 /** React */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Suspense, lazy } from 'react'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 import { events } from '../analytics'
 import { apiGetJson, apiPostJson } from '../lib/api'
-import DiscountModal from '../components/DiscountModal'
+const DiscountModal = lazy(() => import('../components/DiscountModal'))
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -172,9 +172,13 @@ export default function CheckoutPage() {
     <div className="container">
       <div className="page-surface checkout-surface">
         {!items.length ? (
-          <div className="card" style={{ padding: 24, textAlign: 'center' }}>
-            <h2 style={{ marginBottom: 8 }}>Your cart is empty</h2>
-            <button className="btn btn-primary" onClick={() => navigate('/')}>Continue Shopping</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center', gap: 16, padding: 32 }}>
+            <div style={{ fontSize: 64, lineHeight: 1 }}>🛒</div>
+            <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1f2937' }}>Your cart is empty</h2>
+            <p style={{ margin: 0, color: '#6b7280', fontSize: 14, maxWidth: 320 }}>Looks like you haven't added anything yet. Browse our collection and find something you love!</p>
+            <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 8, padding: '12px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700 }}>
+              Continue Shopping
+            </button>
           </div>
         ) : (
           <div>
@@ -209,7 +213,6 @@ export default function CheckoutPage() {
                     <div className="small-muted" style={{ marginTop: 4 }}>You’ll be redirected to PhonePe to complete payment</div>
                   </div>
                 </label>
-                {/*
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
                   <input type="radio" name="payment" value="cod"
                     onChange={() => setPaymentMethod('cod')} />
@@ -218,7 +221,6 @@ export default function CheckoutPage() {
                     <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
                   </div>
                 </label>
-                */}
                 {paymentMethod !== 'cod' ? (
                   <button className="btn btn-buy order-btn" type="submit">Pay & Order</button>
                 ) : (
@@ -310,25 +312,27 @@ export default function CheckoutPage() {
       </Dialog>
 
       {/* Discount modal */}
-      <DiscountModal
-        open={showDiscount}
-        onClose={() => {
-          // No Thanks: apply the pending 0-qty update if any
-          if (pendingProductId) {
-            update(pendingProductId, 0)
-            setPendingProductId(null)
-          }
-          setShowDiscount(false)
-        }}
-        onClaim={async () => {
-          try {
-            setCouponApplied(true)
-            push('₹50 OFF applied')
-            // Keep cart as-is; user claimed discount so we won't remove the item
+      <Suspense fallback={null}>
+        <DiscountModal
+          open={showDiscount}
+          onClose={() => {
+            // No Thanks: apply the pending 0-qty update if any
+            if (pendingProductId) {
+              update(pendingProductId, 0)
+              setPendingProductId(null)
+            }
             setShowDiscount(false)
-          } catch {}
-        }}
-      />
+          }}
+          onClaim={async () => {
+            try {
+              setCouponApplied(true)
+              push('₹50 OFF applied')
+              // Keep cart as-is; user claimed discount so we won't remove the item
+              setShowDiscount(false)
+            } catch {}
+          }}
+        />
+      </Suspense>
     </div>
   )
 }

@@ -149,7 +149,7 @@ export default function AdminLayout({ title, children, actions }: { title: strin
       </Box>
 
       {/* Content */}
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 3 }, width: '100%' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 3 }, minWidth: 0, maxWidth: { md: `calc(100% - ${drawerWidth}px)` }, overflow: 'hidden' }}>
         <Toolbar />
         <Stack spacing={2.25}>
           {children}

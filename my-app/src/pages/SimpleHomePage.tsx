@@ -152,7 +152,13 @@ export default function SimpleHomePage() {
     const base = products.length ? products : Object.values(productsBySlug)
     const picks = base.slice(0, 5)
 
-    const tones = ['#F4EEE6', '#F6F1E9', '#F2ECE2', '#F5EFE6', '#F3EDE4']
+    const toneGradients = [
+      'linear-gradient(135deg, #E8F5E9 0%, #FFF8E1 50%, #FFF 100%)',   // green-fruity (juicer vibes)
+      'linear-gradient(135deg, #F3E5F5 0%, #E8EAF6 50%, #FFF 100%)',   // pink-pastel (tumbler vibes)
+      'linear-gradient(135deg, #E0F7FA 0%, #F1F8E9 50%, #FFF 100%)',   // mint-fresh (scalp/wellness)
+      'linear-gradient(135deg, #FFF3E0 0%, #FBE9E7 50%, #FFF 100%)',   // warm-peach
+      'linear-gradient(135deg, #F3E5F5 0%, #FCE4EC 50%, #FFF 100%)',   // lavender-rose
+    ]
     const spans = [
       { md: 'span 7', row: 'span 2', big: true },
       { md: 'span 5', row: 'span 1', big: false },
@@ -169,7 +175,7 @@ export default function SimpleHomePage() {
         subtitle: p.bullets?.[0] || p.brand || 'Explore now',
         image: (p as any).heroImages?.[0] || p.images?.[0],
         href: '/p/' + slug,
-        tone: tones[i % tones.length],
+        tone: toneGradients[i % toneGradients.length],
         span: spans[i % spans.length],
         big: spans[i % spans.length].big,
       }
@@ -341,7 +347,7 @@ export default function SimpleHomePage() {
           <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mb: 1.5 }}>Explore</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gridAutoRows: { md: 190 }, gap: 2 }}>
             {bentoItems.map((c) => (
-              <Card key={c.key} elevation={0} sx={{ gridColumn: { md: c.span.md }, gridRow: { md: c.span.row }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: c.tone }}>
+              <Card key={c.key} elevation={0} sx={{ gridColumn: { md: c.span.md }, gridRow: { md: c.span.row }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', background: c.tone }}>
                 <CardActionArea onClick={() => navigate(c.href)} sx={{ height: '100%' }}>
                   <Box sx={{ height: '100%', display: 'grid', gridTemplateColumns: c.big ? { xs: '1fr', sm: '1fr 1fr' } : { xs: '1fr', sm: '1.3fr 0.7fr' }, alignItems: 'center', gap: c.big ? 2 : 1.5, p: c.big ? { xs: 2, md: 3 } : { xs: 1.5, md: 2 } }}>
                     <Box sx={{ overflow: 'hidden' }}>

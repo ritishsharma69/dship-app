@@ -57,7 +57,20 @@ export function Route({ path, children }: { path: string; children: React.ReactN
 }
 
 export function Switch({ children }: { children: React.ReactNode }) {
-  // naive switch: first matching Route wins
-  return <>{children}</>
+  const { path: current } = useRouter()
+  // Proper first-match-wins: iterate Route children, render only the first match
+  const arr = React.Children.toArray(children)
+  for (const child of arr) {
+    if (React.isValidElement<{ path?: string }>(child) && child.props.path !== undefined) {
+      if (matchPath(child.props.path, current)) return <>{child}</>
+    }
+  }
+  // No route matched — render fallback if present (child without path prop)
+  for (const child of arr) {
+    if (React.isValidElement<{ path?: string }>(child) && child.props.path === undefined) {
+      return <>{child}</>
+    }
+  }
+  return null
 }
 

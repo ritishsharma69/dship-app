@@ -2,6 +2,7 @@ import './App.css'
 import { lazy, Suspense, useEffect } from 'react'
 import { Route, Switch, useRouter } from './lib/router'
 import TopBar from './components/TopBar'
+import ErrorBoundary from './components/ErrorBoundary'
 
 import PageLoader from './components/PageLoader'
 
@@ -32,6 +33,20 @@ const AdminReturnsPage = lazy(() => import('./pages/AdminReturnsPage'))
 
 const PaymentPhonePeReturnPage = lazy(() => import('./pages/PaymentPhonePeReturnPage'))
 
+function NotFoundPage() {
+  const { navigate } = useRouter()
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:'60vh', textAlign:'center', gap:12, padding:32 }}>
+      <div style={{ fontSize: 56 }}>🔍</div>
+      <h2 style={{ margin: 0, fontSize: 22, color: '#1f2937' }}>Page not found</h2>
+      <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>The page you're looking for doesn't exist.</p>
+      <button onClick={() => navigate('/')} style={{ marginTop: 8, padding:'10px 28px', borderRadius:10, border:'none', background:'#6D28D9', color:'#fff', fontWeight:700, cursor:'pointer', fontSize:14 }}>
+        Go Home
+      </button>
+    </div>
+  )
+}
+
 function AdminIndexRedirect() {
   const { navigate } = useRouter()
   // If a token exists, go to dashboard; else go to login.
@@ -53,6 +68,7 @@ export default function App() {
   return (
     <>
       {!isAdminRoute ? <TopBar /> : null}
+      <ErrorBoundary>
       <Suspense fallback={<PageLoader />}> {/* show full-screen loader until page resolves */}
         <Switch>
           {/* Home: show all products (SimpleHomePage) */}
@@ -123,8 +139,12 @@ export default function App() {
           {/* <Route path="/order/track/:id">
             <OrderTrackPage />
           </Route> */}
+
+          {/* 404 fallback — no path prop, Switch renders this if nothing matches */}
+          <NotFoundPage />
         </Switch>
       </Suspense>
+      </ErrorBoundary>
     </>
   )
 }

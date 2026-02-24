@@ -464,25 +464,37 @@ function generateOtp() {
 }
 
 // Send OTP to email (store code in MongoDB with TTL)
-// Only allow OTP requests for the admin email
+// Allow any valid email to request OTP (customers + admin)
 try {
   app.post('/api/auth/request-otp', async (req, res) => {
     try {
       const email = String(req.body?.email || '').trim().toLowerCase()
-      const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
 
       if (!email || !email.includes('@')) return res.status(400).json({ error: 'valid email required' })
-      if (email !== adminEmail) return res.status(403).json({ error: 'Only admin email can request OTP' })
 
-      const code = generateOtp()
-      const coll = await getOtpCollection()
-      await coll.updateOne(
-        { email },
-        { $set: { email, code, expiresAt: new Date(Date.now() + 5 * 60 * 1000) } },
-        { upsert: true }
-      )
-
-      console.log(`[otp] Generated OTP for ${email}: ${code}`)
+	      // IMPORTANT: make OTP issuance idempotent during the TTL window.
+	      // The client may retry (e.g. due to timeout / cold start). If we generate a new
+	      // code on every request, users can receive OTP#1 in email while OTP#2 is stored,
+	      // causing "Invalid or expired code" even when they enter the received OTP.
+	      const coll = await getOtpCollection()
+	      const now = new Date()
+	      const existing = await coll.findOne({ email, expiresAt: { $gt: now } })
+	      let code
+	      let expiresAt
+	      if (existing?.code && existing?.expiresAt) {
+	        code = String(existing.code)
+	        expiresAt = existing.expiresAt
+	        console.log(`[otp] Reusing OTP for ${email}: ${code}`)
+	      } else {
+	        code = generateOtp()
+	        expiresAt = new Date(Date.now() + 5 * 60 * 1000)
+	        await coll.updateOne(
+	          { email },
+	          { $set: { email, code, expiresAt, createdAt: now } },
+	          { upsert: true }
+	        )
+	        console.log(`[otp] Generated OTP for ${email}: ${code}`)
+	      }
 
       // send OTP email in background (do not block response to avoid client timeouts)
       sendOtpEmail({ to: email, code }).then(sent => {
@@ -511,7 +523,8 @@ try {
   app.post('/api/auth/verify-otp', async (req, res) => {
     try {
       const email = String(req.body?.email || '').trim().toLowerCase()
-      const code = String(req.body?.code || '').trim()
+	      const code = String(req.body?.code || '').trim().replace(/[^0-9]/g, '')
+	      if (!code) return res.status(400).json({ error: 'OTP code required' })
       const coll = await getOtpCollection()
       const rec = await coll.findOne({ email, code, expiresAt: { $gt: new Date() } })
       if (!rec) return res.status(400).json({ error: 'Invalid or expired code' })

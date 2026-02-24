@@ -841,6 +841,8 @@ try {
         sku: d.sku == null ? '' : String(d.sku),
         slug: d.slug == null ? '' : String(d.slug),
         inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
+        ratingAvg: d.ratingAvg == null ? undefined : Number(d.ratingAvg),
+        ratingCount: d.ratingCount == null ? undefined : Number(d.ratingCount),
       }))
       res.json(out)
     } catch (err) {
@@ -926,6 +928,8 @@ try {
         sku: d.sku == null ? '' : String(d.sku),
         slug: d.slug == null ? '' : String(d.slug),
         inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
+        ratingAvg: d.ratingAvg == null ? undefined : Number(d.ratingAvg),
+        ratingCount: d.ratingCount == null ? undefined : Number(d.ratingCount),
         createdAt: d.createdAt || null,
         updatedAt: d.updatedAt || null,
       }))
@@ -969,6 +973,8 @@ try {
         youtubeUrl: sanitizeString(body.youtubeUrl, 2000),
         video: sanitizeString(body.video, 2000),
         testimonials: sanitizeTestimonials(body.testimonials),
+        ratingAvg: body.ratingAvg == null || body.ratingAvg === '' ? null : Math.min(5, Math.max(0, Number(body.ratingAvg) || 0)),
+        ratingCount: body.ratingCount == null || body.ratingCount === '' ? null : Math.max(0, Number(body.ratingCount) || 0),
         sku,
         inventoryStatus: sanitizeString(body.inventoryStatus || 'IN_STOCK', 40) || 'IN_STOCK',
         createdAt: new Date(),
@@ -1017,6 +1023,8 @@ try {
       if (has('youtubeUrl')) $set.youtubeUrl = sanitizeString(body.youtubeUrl, 2000)
       if (has('video')) $set.video = sanitizeString(body.video, 2000)
       if (has('testimonials')) $set.testimonials = sanitizeTestimonials(body.testimonials)
+      if (has('ratingAvg')) $set.ratingAvg = body.ratingAvg == null || body.ratingAvg === '' ? null : Math.min(5, Math.max(0, Number(body.ratingAvg) || 0))
+      if (has('ratingCount')) $set.ratingCount = body.ratingCount == null || body.ratingCount === '' ? null : Math.max(0, Number(body.ratingCount) || 0)
       if (has('sku')) $set.sku = sanitizeString(body.sku, 80)
       if (has('inventoryStatus')) $set.inventoryStatus = sanitizeString(body.inventoryStatus, 40)
 

@@ -30,11 +30,14 @@ import MenuItem from '@mui/material/MenuItem'
 import InputAdornment from '@mui/material/InputAdornment'
 import Tooltip from '@mui/material/Tooltip'
 
+import Box from '@mui/material/Box'
+
 import SearchIcon from '@mui/icons-material/Search'
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import RefreshIcon from '@mui/icons-material/Refresh'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 
 type AdminProduct = Product & { createdAt?: string | null; updatedAt?: string | null }
 
@@ -103,6 +106,8 @@ function ProductDialog({
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [video, setVideo] = useState('')
   const [testimonials, setTestimonials] = useState('')
+  const [ratingAvg, setRatingAvg] = useState('')
+  const [ratingCount, setRatingCount] = useState('')
 
   useEffect(() => {
     if (!open) return
@@ -123,6 +128,8 @@ function ProductDialog({
     setYoutubeUrl((p as any).youtubeUrl || '')
     setVideo((p as any).video || '')
     setTestimonials(testimonialsToLines((p as any).testimonials))
+    setRatingAvg((p as any).ratingAvg != null ? String((p as any).ratingAvg) : '')
+    setRatingCount((p as any).ratingCount != null ? String((p as any).ratingCount) : '')
   }, [open, initial])
 
   const valid = title.trim().length > 0 && sku.trim().length > 0
@@ -263,6 +270,8 @@ function ProductDialog({
       youtubeUrl: youtubeUrl.trim(),
       video: video.trim(),
       testimonials: parseTestimonials(testimonials),
+      ratingAvg: ratingAvg ? Number(ratingAvg) : null,
+      ratingCount: ratingCount ? Number(ratingCount) : null,
     }
 
     setBusy(true)
@@ -298,6 +307,10 @@ function ProductDialog({
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
 	            <TextField label="Brand" value={brand} onChange={(e) => setBrand(e.target.value)} fullWidth placeholder="e.g., Khushiyan" InputLabelProps={{ shrink: true }} />
 	            <TextField label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} fullWidth placeholder="e.g., premium-wellness-massager" helperText="Optional: /p/:slug" InputLabelProps={{ shrink: true }} />
+          </Stack>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+	            <TextField label="Rating (Average)" value={ratingAvg} onChange={(e) => setRatingAvg(e.target.value)} fullWidth type="number" inputProps={{ step: "0.1", min: "0", max: "5" }} placeholder="e.g., 4.5" InputLabelProps={{ shrink: true }} helperText="Out of 5" />
+	            <TextField label="Review Count" value={ratingCount} onChange={(e) => setRatingCount(e.target.value)} fullWidth type="number" inputProps={{ min: "0" }} placeholder="e.g., 122" InputLabelProps={{ shrink: true }} helperText="Number of reviews" />
           </Stack>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
 	            <TextField label="Price" value={price} onChange={(e) => setPrice(e.target.value)} fullWidth inputMode="decimal" placeholder="e.g., 2999" InputLabelProps={{ shrink: true }} />
@@ -339,6 +352,74 @@ function ProductDialog({
 		              Tip: max 10 files, ≤ 2MB each. Uploaded images will be added as URLs above.
 		            </Typography>
 		          </Stack>
+          {/* Image thumbnails preview */}
+          {(() => {
+            const urls = linesToArr(images)
+            if (!urls.length) return null
+            return (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2, mt: 0.5 }}>
+                {urls.map((url, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      position: 'relative',
+                      width: 80,
+                      height: 80,
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      bgcolor: '#f5f5f5',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={url}
+                      alt={`Image ${idx + 1}`}
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e: any) => { e.target.style.display = 'none' }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        const arr = linesToArr(images)
+                        arr.splice(idx, 1)
+                        setImages(arr.join('\n'))
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 2,
+                        bgcolor: 'rgba(0,0,0,0.55)',
+                        color: '#fff',
+                        width: 20,
+                        height: 20,
+                        '&:hover': { bgcolor: 'rgba(220,38,38,0.85)' },
+                      }}
+                    >
+                      <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        color: '#fff',
+                        fontSize: 9,
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        py: 0.15,
+                      }}
+                    >
+                      {idx + 1}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )
+          })()}
 	          <TextField
 	            label="Bullets (one per line)"
 	            value={bullets}
@@ -371,11 +452,11 @@ function ProductDialog({
             value={testimonials}
             onChange={(e) => setTestimonials(e.target.value)}
             multiline
-            minRows={4}
+            minRows={6}
             fullWidth
 	            placeholder={'Rajeev P.|Night shift ke baad pair bahut dukhte the — 15 min is mat pe and relief mil jata hai.|5\nMegha T.|Foldable aur lightweight. TV dekhte hue daily use karti hoon.|5\nSuresh V.|Walking ke baad thakawat utar jati hai.|4'}
 	            InputLabelProps={{ shrink: true }}
-            helperText="Format: Author Name|Customer quote here|5 (rating 1-5, optional)"
+            helperText="Format: Author Name|Customer quote here|Rating (1-5 stars). Example: Rajeev P.|Great product!|5"
           />
         </Stack>
       </DialogContent>

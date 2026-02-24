@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
-import { reviewsBySlug, liveNames, liveCities } from '../data'
+import { liveNames, liveCities } from '../data'
 import { useProducts } from '../lib/products'
 import { events } from '../analytics'
 import type { Product } from '../types'
@@ -59,13 +59,11 @@ export default function MainPage() {
   // JSON-LD
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
-    const slug = (window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager'
-    const rev = reviewsBySlug[slug] ?? { ratingAvg: 4.5, ratingCount: 0 }
     return {
       '@context': 'https://schema.org', '@type': 'Product', name: p.title, sku: p.sku,
       brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
       image: p.images,
-      aggregateRating: rev.ratingCount > 0 ? { '@type': 'AggregateRating', ratingValue: rev.ratingAvg.toFixed(1), reviewCount: rev.ratingCount } : undefined,
+      aggregateRating: (p.ratingCount ?? 0) > 0 ? { '@type': 'AggregateRating', ratingValue: (p.ratingAvg ?? 0).toFixed(1), reviewCount: p.ratingCount } : undefined,
       offers: {
         '@type': 'Offer', priceCurrency: 'INR', price: p.price,
         availability: out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
@@ -224,12 +222,19 @@ export default function MainPage() {
 
             {/* Rating */}
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-              <Star fontSize="small" sx={{ color: '#000000' }} />
-              <Star fontSize="small" sx={{ color: '#000000' }} />
-              <Star fontSize="small" sx={{ color: '#000000' }} />
-              <Star fontSize="small" sx={{ color: '#000000' }} />
-              <StarHalf fontSize="small" sx={{ color: '#000000' }} />
-              <Typography variant="body2" sx={{ color: '#000000' }}>({(reviewsBySlug[(window.location.pathname.split('/').filter(Boolean)[1]) || 'mini-butterfly-massager']?.ratingCount) ?? 0} reviews)</Typography>
+              {Array.from({ length: 5 }).map((_, i) => {
+                const rating = p.ratingAvg ?? 0
+                const isHalf = rating > i && rating < i + 1
+                const isFull = rating > i + 0.5
+                return isHalf ? (
+                  <StarHalf key={i} fontSize="small" sx={{ color: '#000000' }} />
+                ) : (
+                  <Star key={i} fontSize="small" sx={{ color: isFull ? '#000000' : '#ccc' }} />
+                )
+              })}
+              <Typography variant="body2" sx={{ color: '#000000' }}>
+                {p.ratingAvg ? `${p.ratingAvg.toFixed(1)}/5` : 'No rating'} ({(p.ratingCount) ?? 0} reviews)
+              </Typography>
             </Stack>
 
             {/* Price */}
@@ -286,11 +291,26 @@ export default function MainPage() {
               <Paper sx={{ p: 2, mb: 1.5, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#000000', fontSize: 18 }}>{p.bullets[0]}</Typography>
               </Paper>
-              <FeatureList bullets={p.bullets.slice(1)} />
+              <FeatureList bullets={p.descriptionPoints && p.descriptionPoints.length > 0 ? p.descriptionPoints : p.bullets.slice(1)} />
             </Box>
 
-
-
+            {/* Description Section */}
+            {(p.descriptionHeading || p.description) && (
+              <Box sx={{ mb: 3 }}>
+                {p.descriptionHeading && (
+                  <Typography variant="h6" sx={{ mb: 1.5, color: '#000000', fontWeight: 800 }}>
+                    {p.descriptionHeading}
+                  </Typography>
+                )}
+                {p.description && (
+                  <Paper sx={{ p: 2, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
+                    <Typography sx={{ color: '#000000', fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                      {p.description}
+                    </Typography>
+                  </Paper>
+                )}
+              </Box>
+            )}
 
             {/* Payment Offer */}
             <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: 0, border: '1px dashed var(--color-border)', borderRadius: 2 }}>

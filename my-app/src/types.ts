@@ -17,6 +17,8 @@ export interface Product {
   sku: string;
   inventoryStatus: InventoryStatus;
   testimonials?: Testimonial[]; // optional product testimonials
+  ratingAvg?: number; // average rating 0..5
+  ratingCount?: number; // number of reviews
 }
 
 export interface Testimonial {

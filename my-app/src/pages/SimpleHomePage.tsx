@@ -6,6 +6,13 @@ import GroupsRounded from '@mui/icons-material/GroupsRounded'
 import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined'
 import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined'
 import StarRounded from '@mui/icons-material/StarRounded'
+import StarHalfRounded from '@mui/icons-material/StarHalfRounded'
+import StarBorderRounded from '@mui/icons-material/StarBorderRounded'
+// ShoppingBagOutlined removed – using Explore button now
+import ArrowForwardRounded from '@mui/icons-material/ArrowForwardRounded'
+import ChevronLeftRounded from '@mui/icons-material/ChevronLeftRounded'
+import ChevronRightRounded from '@mui/icons-material/ChevronRightRounded'
+import LocationOnRounded from '@mui/icons-material/LocationOnRounded'
 import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
 import { useRouter } from '../lib/router'
 import { gsap } from '../lib/gsap'
@@ -20,6 +27,23 @@ export default function SimpleHomePage() {
   const [slideIdx, setSlideIdx] = useState(0)
   const [email, setEmail] = useState('')
   const [subToastOpen, setSubToastOpen] = useState(false)
+  const [featImgIdx, setFeatImgIdx] = useState<Record<string, number>>({})
+
+  const StarsRow = ({ value }: { value?: number }) => {
+    const v = Math.max(0, Math.min(5, Number.isFinite(value as number) ? (value as number) : 0))
+    const r = Math.round(v * 2) / 2
+    const full = Math.floor(r)
+    const half = r - full === 0.5
+    return (
+      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.2, color: '#111' }}>
+        {Array.from({ length: 5 }).map((_, i) => {
+          if (i < full) return <StarRounded key={i} sx={{ fontSize: 16, color: '#111' }} />
+          if (i === full && half) return <StarHalfRounded key={i} sx={{ fontSize: 16, color: '#111' }} />
+          return <StarBorderRounded key={i} sx={{ fontSize: 16, color: 'rgba(17,17,17,0.55)' }} />
+        })}
+      </Box>
+    )
+  }
 
   const Media = ({ src, alt }: { src?: string; alt: string }) => {
     if (src) {
@@ -62,11 +86,24 @@ export default function SimpleHomePage() {
     const base = products.length ? products : Object.values(productsBySlug)
     return base.slice(0, 10).map((p) => {
       const slug = productSlug(p)
-      return { id: slug, title: p.title, image: p.images?.[0], price: p.price, compareAt: p.compareAtPrice, slug: '/p/' + slug }
+			const tags = (p.bullets || []).slice(1, 4).filter(Boolean)
+      return {
+        id: slug,
+        title: p.title,
+        subtitle: p.bullets?.[0] || p.brand || 'Bestseller pick',
+				tags: tags.length ? tags : (p.brand ? [p.brand] : []),
+        images: p.images || [],
+        youtubeUrl: p.youtubeUrl,
+        price: p.price,
+        compareAt: p.compareAtPrice,
+				ratingAvg: (p as any).ratingAvg,
+				ratingCount: (p as any).ratingCount,
+        slug: '/p/' + slug,
+      }
     })
   }, [products, productsBySlug])
 
-  const popular = useMemo(() => featured.slice(0, 6), [featured])
+  const popular = useMemo(() => featured.slice(0, 10), [featured])
 
   // Scroll reveals
   useEffect(() => {
@@ -162,13 +199,7 @@ export default function SimpleHomePage() {
                 </Button>
                 <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>Need help?</Button>
               </Box>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1.2, mt: 1.2 }}>
-                {['Free fast delivery', 'Easy returns', 'COD available', 'SSL secure'].map((t) => (
-                  <Box key={t} sx={{ border: '1px solid rgba(0,0,0,0.06)', borderRadius: 3, px: 1.2, py: 1, bgcolor: 'rgba(255,255,255,0.75)' }}>
-                    <Typography sx={{ fontWeight: 850, fontSize: 13 }}>{t}</Typography>
-                  </Box>
-                ))}
-              </Box>
+              <Box component="img" src="/home-banner.png" alt="Free delivery, Easy returns, COD, SSL secure" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} />
             </Box>
           </Card>
 
@@ -181,30 +212,127 @@ export default function SimpleHomePage() {
 
         {/* Featured strip */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 2 }}>
             <Box>
               <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Featured</Typography>
-              <Typography variant="body2" color="text.secondary">Handpicked bestsellers (scroll)</Typography>
+              <Typography variant="body2" color="text.secondary">Handpicked bestsellers</Typography>
             </Box>
             <Button variant="text" onClick={() => navigate('/')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
           </Box>
-          <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
-            {featured.map((p) => (
-              <Card key={p.id} elevation={0} sx={{ minWidth: 240, scrollSnapAlign: 'start', borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff' }}>
-                <CardActionArea onClick={() => navigate(p.slug)}>
-                  <Box sx={{ height: 180, bgcolor: '#fff', display: 'grid', placeItems: 'center' }}>
-				      <Media src={p.image} alt={p.title} />
-                  </Box>
-                  <CardContent sx={{ p: 1.5 }}>
-                    <Typography sx={{ fontWeight: 900, fontSize: 14, mb: 0.5 }} noWrap>{p.title}</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                      <Typography sx={{ fontWeight: 950 }}>{money(p.price)}</Typography>
-                      {p.compareAt ? <Typography variant="caption" sx={{ color: 'text.secondary', textDecoration: 'line-through' }}>{money(p.compareAt)}</Typography> : null}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+            {featured.slice(0, 6).map((p) => {
+              const price = Number(p.price || 0)
+              const compareAt = Number(p.compareAt || 0)
+              const pct = compareAt > price && compareAt > 0 ? Math.round(((compareAt - price) / compareAt) * 100) : 0
+              return (
+                <Card
+                  key={p.id}
+                  elevation={0}
+                  sx={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    bgcolor: '#fff',
+                    transition: 'all 0.35s ease',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 40px rgba(0,0,0,0.10)' },
+                    '&:hover .feat-img': { transform: 'scale(1.06)' },
+                  }}
+                >
+                  <CardActionArea onClick={() => navigate(p.slug)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                    {/* Image area */}
+                    <Box sx={{ position: 'relative', height: { xs: 200, sm: 220, md: 240 }, overflow: 'hidden', bgcolor: '#fafafa' }}>
+                      {(() => {
+                        const imgs = p.images.length ? p.images : []
+                        const idx = featImgIdx[p.id] || 0
+                        const cur = imgs[idx] || imgs[0]
+                        return cur ? (
+                          <Box component="img" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease', p: 2 }} />
+                        ) : (
+                          <Media src={undefined} alt={p.title} />
+                        )
+                      })()}
+                      {/* Left / Right arrows */}
+                      {p.images.length > 1 && (
+                        <>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); setFeatImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] || 0) - 1 + p.images.length) % p.images.length })) }}
+                            sx={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', zIndex: 3, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', '&:hover': { bgcolor: '#fff' }, width: 28, height: 28 }}
+                          >
+                            <ChevronLeftRounded sx={{ fontSize: 18 }} />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); setFeatImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] || 0) + 1) % p.images.length })) }}
+                            sx={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', zIndex: 3, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', '&:hover': { bgcolor: '#fff' }, width: 28, height: 28 }}
+                          >
+                            <ChevronRightRounded sx={{ fontSize: 18 }} />
+                          </IconButton>
+                          {/* Dot indicators */}
+                          <Box sx={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: 0.5 }}>
+                            {p.images.map((_, di) => (
+                              <Box key={di} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: di === (featImgIdx[p.id] || 0) ? '#111' : 'rgba(0,0,0,0.2)', transition: 'background 0.2s' }} />
+                            ))}
+                          </Box>
+                        </>
+                      )}
+                      {/* Discount badge */}
+                      {pct > 0 && (
+                        <Box sx={{ position: 'absolute', top: 10, left: 10, zIndex: 2, background: 'linear-gradient(135deg, #ef4444, #dc2626)', px: 1.2, py: 0.35, borderRadius: 999, fontSize: 11, fontWeight: 800, color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.35)' }}>
+                          {pct}% OFF
+                        </Box>
+                      )}
                     </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            ))}
+
+                    {/* Content */}
+                    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      {/* Tags */}
+                      {(p as any).tags?.length > 0 && (
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
+                          {((p as any).tags as string[]).slice(0, 2).map((tag, ti) => (
+                            <Chip key={ti} label={tag} size="small" sx={{ height: 20, fontSize: 10, fontWeight: 700, bgcolor: 'rgba(0,0,0,0.05)', color: '#555' }} />
+                          ))}
+                        </Box>
+                      )}
+
+                      <Typography sx={{ fontWeight: 800, fontSize: { xs: 14, md: 15 }, lineHeight: 1.3, mb: 0.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {p.title}
+                      </Typography>
+
+                      <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {p.subtitle}
+                      </Typography>
+
+                      {/* Rating */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 1 }}>
+                        <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <StarRounded key={i} sx={{ fontSize: 14, color: i < Math.round(Number((p as any).ratingAvg || 4.5)) ? '#f59e0b' : '#e5e7eb' }} />
+                          ))}
+                        </Box>
+                        <Typography sx={{ fontSize: 11, color: '#333', fontWeight: 700 }}>
+                          {Number((p as any).ratingAvg || 0) ? Number((p as any).ratingAvg).toFixed(1) : '4.5'}
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
+                          / {Number((p as any).ratingCount || 0) || 0}
+                        </Typography>
+                      </Box>
+
+                      {/* Price row */}
+                      <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.8 }}>
+                          <Typography sx={{ fontWeight: 900, fontSize: 18, letterSpacing: -0.3 }}>{money(p.price)}</Typography>
+                          {p.compareAt ? <Typography sx={{ fontSize: 13, color: '#9ca3af', textDecoration: 'line-through', fontWeight: 500 }}>{money(p.compareAt)}</Typography> : null}
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, color: '#111', fontSize: 12, fontWeight: 800 }}>
+                          Shop <ArrowForwardRounded sx={{ fontSize: 16 }} />
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              )
+            })}
           </Box>
         </Box>
 
@@ -233,28 +361,139 @@ export default function SimpleHomePage() {
 
         {/* Most Popular */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
             <Box>
               <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Most Popular</Typography>
               <Typography variant="body2" color="text.secondary">These get reordered again and again</Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
             {popular.map((p) => (
-              <Card key={p.id} elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff' }}>
-                <CardActionArea onClick={() => navigate(p.slug)}>
-                  <Box sx={{ height: 260, display: 'grid', placeItems: 'center', bgcolor: '#fff' }}>
-				      <Media src={p.image} alt={p.title} />
+            <Card
+              key={p.id}
+              elevation={0}
+              sx={{
+                borderRadius: '14px',
+                overflow: 'hidden',
+                background: 'linear-gradient(to bottom, #1e293b, #0f172a)',
+                border: 'none',
+                boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
+                transition: 'all 0.4s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                cursor: 'pointer',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+                },
+                '&:hover .card-img': {
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <CardActionArea onClick={() => navigate(p.slug)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+                {/* Image / YouTube Video */}
+                <Box sx={{ height: { xs: 180, sm: 220, md: 240 }, position: 'relative', width: '100%', overflow: 'hidden' }}>
+                  {(() => {
+                    // Extract YouTube embed URL if youtubeUrl is present
+                    if ((p as any).youtubeUrl) {
+                      const raw = (p as any).youtubeUrl as string
+                      const ytId = (raw.match(/[?&]v=([^&]+)/) || raw.match(/youtu\.be\/([^?]+)/) || raw.match(/embed\/([^?]+)/))?.[1]
+                      const embedUrl = ytId
+                        ? `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&playsinline=1&controls=0&showinfo=0&rel=0`
+                        : raw
+                      return (
+                        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+                          <iframe
+                            src={embedUrl}
+                            title={p.title}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            style={{ width: '100%', height: '100%', border: 0, objectFit: 'cover', pointerEvents: 'none' }}
+                          />
+                        </Box>
+                      )
+                    }
+                    return p.images[0] ? (
+                      <Box component="img" className="card-img" src={p.images[0]} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} />
+                    ) : (
+                      <Media src={p.images[0]} alt={p.title} />
+                    )
+                  })()}
+                  <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f172a, rgba(15,23,42,0.3) 50%, transparent)', zIndex: 1 }} />
+
+                  {/* Discount Badge */}
+                  {(() => {
+                    const price = Number(p.price || 0)
+                    const compareAt = Number(p.compareAt || 0)
+                    const pct = compareAt > price && compareAt > 0 ? Math.round(((compareAt - price) / compareAt) * 100) : 0
+                    return pct ? (
+                      <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, background: 'linear-gradient(to right, #f59e0b, #f97316)', px: 1.2, py: 0.4, borderRadius: 999, fontSize: 11, fontWeight: 700, color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                        {`-${pct}% OFF`}
+                      </Box>
+                    ) : null
+                  })()}
+
+                  {/* Title on Image */}
+                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, px: 2, pb: 1.2, zIndex: 10 }}>
+                    <Typography sx={{ fontSize: { xs: 15, md: 17 }, fontWeight: 700, lineHeight: 1.25, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.5)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.title}
+                    </Typography>
                   </Box>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography sx={{ fontWeight: 950, mb: 0.4 }}>{p.title}</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                      <Typography sx={{ fontWeight: 950 }}>{money(p.price)}</Typography>
-                      {p.compareAt ? <Typography variant="caption" sx={{ color: 'text.secondary', textDecoration: 'line-through' }}>{money(p.compareAt)}</Typography> : null}
+                </Box>
+
+                {/* Content */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, px: 2, pt: 1, pb: 2 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#fbbf24', mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {p.subtitle || 'Premium quality'}
+                  </Typography>
+                  <Typography sx={{ fontSize: 12, lineHeight: 1.4, color: '#94a3b8', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 1 }}>
+                    {(p as any).tags?.length ? (p as any).tags.join(' • ') : 'Premium quality & unbeatable value.'}
+                  </Typography>
+
+                  {/* Rating + Price */}
+                  <Box sx={{ mt: 'auto', pt: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 0.5 }}>
+                      <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <StarRounded key={i} sx={{ fontSize: 14, color: i < Math.round(Number((p as any).ratingAvg || 4.5)) ? '#fbbf24' : '#475569' }} />
+                        ))}
+                      </Box>
+                      <Typography sx={{ fontSize: 11, color: '#64748b' }}>
+                        ({Number((p as any).ratingCount || 0) || 0})
+                      </Typography>
                     </Box>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.6 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.6 }}>
+                        <Typography sx={{ fontWeight: 800, fontSize: 18, color: '#fff', letterSpacing: -0.3 }}>
+                          {money(p.price)}
+                        </Typography>
+                        {p.compareAt ? (
+                          <Typography sx={{ fontSize: 13, color: '#64748b', textDecoration: 'line-through', fontWeight: 500 }}>
+                            {money(p.compareAt)}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                      <Box
+                        sx={{
+                          px: 1.4,
+                          py: 0.5,
+                          borderRadius: 999,
+                          background: 'linear-gradient(to right, #f59e0b, #f97316)',
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: '#fff',
+                          letterSpacing: 0.3,
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 2px 8px rgba(249,115,22,0.4)',
+                        }}
+                      >
+                        Buy Now
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </CardActionArea>
+            </Card>
             ))}
           </Box>
         </Box>

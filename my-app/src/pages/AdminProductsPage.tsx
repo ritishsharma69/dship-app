@@ -89,7 +89,11 @@ function ProductDialog({
   const [error, setError] = useState<string | null>(null)
 
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [uploadingHeroImages, setUploadingHeroImages] = useState(false)
+  const [dragOverImages, setDragOverImages] = useState(false)
+  const [dragOverHero, setDragOverHero] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const heroFileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [title, setTitle] = useState('')
   const [sku, setSku] = useState('')
@@ -99,6 +103,7 @@ function ProductDialog({
   const [compareAtPrice, setCompareAtPrice] = useState('')
   const [inventoryStatus, setInventoryStatus] = useState<InventoryStatus>('IN_STOCK')
   const [images, setImages] = useState('')
+  const [heroImages, setHeroImages] = useState('')
   const [bullets, setBullets] = useState('')
   const [descriptionHeading, setDescriptionHeading] = useState('')
   const [description, setDescription] = useState('')
@@ -121,6 +126,7 @@ function ProductDialog({
     setCompareAtPrice((p as any).compareAtPrice != null ? String((p as any).compareAtPrice) : '')
     setInventoryStatus((p.inventoryStatus as any) || 'IN_STOCK')
     setImages(arrToLines(p.images))
+    setHeroImages(arrToLines((p as any).heroImages))
     setBullets(arrToLines(p.bullets))
     setDescriptionHeading((p as any).descriptionHeading || '')
     setDescription((p as any).description || '')
@@ -143,9 +149,14 @@ function ProductDialog({
     })
   }
 
-  async function uploadCloudinaryImages(files: FileList | null) {
+  async function uploadCloudinaryTo(
+    files: FileList | null,
+    appendFn: (urls: string[]) => void,
+    setLoading: (v: boolean) => void,
+    inputRef: React.RefObject<HTMLInputElement | null>,
+  ) {
     if (!files || !files.length) return
-    if (busy || uploadingImages) return
+    if (busy || uploadingImages || uploadingHeroImages) return
 
     const maxFiles = 10
     const maxBytes = 2_000_000
@@ -172,7 +183,7 @@ function ProductDialog({
     const okFiles = picked.filter(f => (f.size || 0) <= maxBytes && allowedTypes.has(String(f.type || '').toLowerCase()))
     if (!okFiles.length) return
 
-    setUploadingImages(true)
+    setLoading(true)
     try {
       const sign = await apiPostJson<{
         ok: true
@@ -218,7 +229,7 @@ function ProductDialog({
       }
 
       if (okUrls.length) {
-        appendImageUrls(okUrls)
+        appendFn(okUrls)
         push(`${okUrls.length} image(s) uploaded to Cloudinary`)
       }
       if (failed.length) {
@@ -232,10 +243,26 @@ function ProductDialog({
         push(msg || 'Image upload failed')
       }
     } finally {
-      setUploadingImages(false)
-      // allow selecting the same file again
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      setLoading(false)
+      if (inputRef.current) inputRef.current.value = ''
     }
+  }
+
+  function uploadCloudinaryImages(files: FileList | null) {
+    return uploadCloudinaryTo(files, appendImageUrls, setUploadingImages, fileInputRef)
+  }
+
+  function appendHeroImageUrls(urls: string[]) {
+    if (!urls.length) return
+    setHeroImages(prev => {
+      const left = String(prev || '').trimEnd()
+      const right = urls.join('\n')
+      return left ? `${left}\n${right}` : right
+    })
+  }
+
+  function uploadCloudinaryHeroImages(files: FileList | null) {
+    return uploadCloudinaryTo(files, appendHeroImageUrls, setUploadingHeroImages, heroFileInputRef)
   }
 
   async function save() {
@@ -263,6 +290,7 @@ function ProductDialog({
       compareAtPrice: compareAtPrice.trim() ? Number(compareAtPrice) : null,
       inventoryStatus,
       images: linesToArr(images),
+      heroImages: linesToArr(heroImages),
       bullets: linesToArr(bullets),
       description,
       descriptionHeading: descriptionHeading.trim(),
@@ -332,26 +360,37 @@ function ProductDialog({
 	            placeholder={'https://images.unsplash.com/photo-1576091160550-112173f7f869?w=500&h=500&fit=crop\nhttps://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=500&h=500&fit=crop'}
 	            InputLabelProps={{ shrink: true }}
 	          />
-		          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-		            <Button
-		              variant="outlined"
-		              component="label"
-		              disabled={busy || uploadingImages}
-		            >
-		              {uploadingImages ? 'Uploading…' : 'Upload images from device'}
-		              <input
-		                ref={fileInputRef}
-		                type="file"
-		                hidden
-		                multiple
-		                accept="image/*"
-		                onChange={(e) => uploadCloudinaryImages(e.target.files)}
-		              />
-		            </Button>
-		            <Typography variant="caption" color="text.secondary">
-		              Tip: max 10 files, ≤ 2MB each. Uploaded images will be added as URLs above.
-		            </Typography>
-		          </Stack>
+          <Box
+            onDragOver={(e) => { e.preventDefault(); setDragOverImages(true) }}
+            onDragLeave={() => setDragOverImages(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOverImages(false); uploadCloudinaryImages(e.dataTransfer.files) }}
+            sx={{
+              border: dragOverImages ? '2px dashed #1976d2' : '2px dashed rgba(0,0,0,0.18)',
+              borderRadius: 3,
+              p: 2.5,
+              textAlign: 'center',
+              bgcolor: dragOverImages ? 'rgba(25,118,210,0.06)' : 'transparent',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              '&:hover': { borderColor: '#1976d2', bgcolor: 'rgba(25,118,210,0.03)' },
+            }}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              multiple
+              accept="image/*"
+              onChange={(e) => uploadCloudinaryImages(e.target.files)}
+            />
+            <Typography variant="body2" sx={{ fontWeight: 600, color: dragOverImages ? '#1976d2' : 'text.secondary' }}>
+              {uploadingImages ? 'Uploading…' : dragOverImages ? 'Drop images here' : 'Drag & drop images here or click to browse'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Max 10 files, ≤ 2MB each (jpg/png/webp/gif)
+            </Typography>
+          </Box>
           {/* Image thumbnails preview */}
           {(() => {
             const urls = linesToArr(images)
@@ -420,6 +459,102 @@ function ProductDialog({
               </Box>
             )
           })()}
+          <Divider />
+          <TextField
+            label="Hero Images – Homepage only (one URL per line)"
+            value={heroImages}
+            onChange={(e) => setHeroImages(e.target.value)}
+            multiline
+            minRows={2}
+            fullWidth
+            placeholder="Paste image URLs that should appear ONLY on the homepage Featured / Explore cards (not on product page)"
+            InputLabelProps={{ shrink: true }}
+            helperText="These images show on homepage cards only. Leave empty to use regular product images."
+          />
+          <Box
+            onDragOver={(e) => { e.preventDefault(); setDragOverHero(true) }}
+            onDragLeave={() => setDragOverHero(false)}
+            onDrop={(e) => { e.preventDefault(); setDragOverHero(false); uploadCloudinaryHeroImages(e.dataTransfer.files) }}
+            sx={{
+              border: dragOverHero ? '2px dashed #7c3aed' : '2px dashed rgba(124,58,237,0.3)',
+              borderRadius: 3,
+              p: 2.5,
+              textAlign: 'center',
+              bgcolor: dragOverHero ? 'rgba(124,58,237,0.06)' : 'transparent',
+              transition: 'all 0.2s',
+              cursor: 'pointer',
+              '&:hover': { borderColor: '#7c3aed', bgcolor: 'rgba(124,58,237,0.03)' },
+            }}
+            onClick={() => heroFileInputRef.current?.click()}
+          >
+            <input
+              ref={heroFileInputRef}
+              type="file"
+              hidden
+              multiple
+              accept="image/*"
+              onChange={(e) => uploadCloudinaryHeroImages(e.target.files)}
+            />
+            <Typography variant="body2" sx={{ fontWeight: 600, color: dragOverHero ? '#7c3aed' : 'text.secondary' }}>
+              {uploadingHeroImages ? 'Uploading…' : dragOverHero ? 'Drop hero images here' : 'Drag & drop hero images here or click to browse'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Max 10 files, ≤ 2MB each. These will show only on homepage cards.
+            </Typography>
+          </Box>
+          {/* Hero Image thumbnails preview */}
+          {(() => {
+            const urls = linesToArr(heroImages)
+            if (!urls.length) return null
+            return (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.2, mt: 0.5 }}>
+                {urls.map((url, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      position: 'relative',
+                      width: 64,
+                      height: 64,
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      border: '2px solid #7c3aed',
+                      bgcolor: '#f5f5f5',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={url}
+                      alt={`Hero ${idx + 1}`}
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      onError={(e: any) => { e.target.style.display = 'none' }}
+                    />
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        const arr = linesToArr(heroImages)
+                        arr.splice(idx, 1)
+                        setHeroImages(arr.join('\n'))
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 2,
+                        bgcolor: 'rgba(0,0,0,0.55)',
+                        color: '#fff',
+                        width: 18,
+                        height: 18,
+                        '&:hover': { bgcolor: 'rgba(220,38,38,0.85)' },
+                      }}
+                    >
+                      <CloseRoundedIcon sx={{ fontSize: 12 }} />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
+            )
+          })()}
+          <Divider />
 	          <TextField
 	            label="Bullets (one per line)"
 	            value={bullets}

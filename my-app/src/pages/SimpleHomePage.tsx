@@ -92,7 +92,7 @@ export default function SimpleHomePage() {
         title: p.title,
         subtitle: p.bullets?.[0] || p.brand || 'Bestseller pick',
 				tags: tags.length ? tags : (p.brand ? [p.brand] : []),
-        images: p.images || [],
+        images: (p as any).heroImages?.length ? (p as any).heroImages : (p.images || []),
         youtubeUrl: p.youtubeUrl,
         price: p.price,
         compareAt: p.compareAtPrice,
@@ -154,11 +154,11 @@ export default function SimpleHomePage() {
 
     const tones = ['#F4EEE6', '#F6F1E9', '#F2ECE2', '#F5EFE6', '#F3EDE4']
     const spans = [
-      { md: 'span 7', row: 'span 2' },
-      { md: 'span 5', row: 'span 1' },
-      { md: 'span 5', row: 'span 1' },
-      { md: 'span 6', row: 'span 1' },
-      { md: 'span 6', row: 'span 1' },
+      { md: 'span 7', row: 'span 2', big: true },
+      { md: 'span 5', row: 'span 1', big: false },
+      { md: 'span 5', row: 'span 1', big: false },
+      { md: 'span 6', row: 'span 1', big: false },
+      { md: 'span 6', row: 'span 1', big: false },
     ]
 
     return picks.map((p, i) => {
@@ -167,10 +167,11 @@ export default function SimpleHomePage() {
         key: slug,
         title: p.title,
         subtitle: p.bullets?.[0] || p.brand || 'Explore now',
-        image: p.images?.[0],
+        image: (p as any).heroImages?.[0] || p.images?.[0],
         href: '/p/' + slug,
         tone: tones[i % tones.length],
         span: spans[i % spans.length],
+        big: spans[i % spans.length].big,
       }
     })
   }, [products, productsBySlug])
@@ -184,7 +185,6 @@ export default function SimpleHomePage() {
             <Box sx={{ p: { xs: 2.2, md: 3.5 }, display: 'grid', gap: 1.4 }}>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Chip label="Premium Wellness" size="small" sx={{ bgcolor: '#F8F3CE', fontWeight: 800 }} />
-                <Chip label="Cash on delivery" size="small" variant="outlined" sx={{ bgcolor: 'rgba(255,255,255,0.7)' }} />
               </Box>
               <Typography className="hero-text" sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 34, md: 52 }, lineHeight: 1.02, letterSpacing: -0.5, fontWeight: 700 }}>
                 Comfort essentials,
@@ -246,7 +246,7 @@ export default function SimpleHomePage() {
                         const idx = featImgIdx[p.id] || 0
                         const cur = imgs[idx] || imgs[0]
                         return cur ? (
-                          <Box component="img" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease', p: 2 }} />
+                          <Box component="img" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} />
                         ) : (
                           <Media src={undefined} alt={p.title} />
                         )
@@ -278,7 +278,7 @@ export default function SimpleHomePage() {
                       )}
                       {/* Discount badge */}
                       {pct > 0 && (
-                        <Box sx={{ position: 'absolute', top: 10, left: 10, zIndex: 2, background: 'linear-gradient(135deg, #ef4444, #dc2626)', px: 1.2, py: 0.35, borderRadius: 999, fontSize: 11, fontWeight: 800, color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.35)' }}>
+                        <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 2, background: 'linear-gradient(135deg, #ef4444, #dc2626)', px: 1.2, py: 0.35, borderRadius: 999, fontSize: 11, fontWeight: 800, color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.35)' }}>
                           {pct}% OFF
                         </Box>
                       )}
@@ -339,18 +339,18 @@ export default function SimpleHomePage() {
         {/* Bento (dynamic products) */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
           <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mb: 1.5 }}>Explore</Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gridAutoRows: { md: 150 }, gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gridAutoRows: { md: 190 }, gap: 2 }}>
             {bentoItems.map((c) => (
               <Card key={c.key} elevation={0} sx={{ gridColumn: { md: c.span.md }, gridRow: { md: c.span.row }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: c.tone }}>
                 <CardActionArea onClick={() => navigate(c.href)} sx={{ height: '100%' }}>
-                  <Box sx={{ height: '100%', display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1.1fr 0.9fr' }, alignItems: 'center', gap: 2, p: { xs: 2, md: 2.5 } }}>
-                    <Box>
-                      <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 20, md: 26 }, fontWeight: 700, lineHeight: 1.05 }}>{c.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6 }}>{c.subtitle}</Typography>
-                      <Button variant="text" sx={{ px: 0, mt: 1, fontWeight: 900, color: '#2b2b2b' }}>Shop now</Button>
+                  <Box sx={{ height: '100%', display: 'grid', gridTemplateColumns: c.big ? { xs: '1fr', sm: '1fr 1fr' } : { xs: '1fr', sm: '1.3fr 0.7fr' }, alignItems: 'center', gap: c.big ? 2 : 1.5, p: c.big ? { xs: 2, md: 3 } : { xs: 1.5, md: 2 } }}>
+                    <Box sx={{ overflow: 'hidden' }}>
+                      <Typography noWrap={!c.big} sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: c.big ? { xs: 22, md: 28 } : { xs: 16, md: 18 }, fontWeight: 700, lineHeight: 1.15 }}>{c.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.4, fontSize: c.big ? 14 : 12 }}>{c.subtitle}</Typography>
+                      <Button variant="text" size={c.big ? 'medium' : 'small'} sx={{ px: 0, mt: c.big ? 1.5 : 0.5, fontWeight: 900, color: '#2b2b2b', fontSize: c.big ? 14 : 12, minHeight: 'auto' }}>Shop now →</Button>
                     </Box>
-                    <Box sx={{ height: { xs: 180, md: '100%' }, display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,255,255,0.65)', borderRadius: 3, border: '1px solid rgba(0,0,0,0.05)' }}>
-				      <Media src={c.image} alt={c.title} />
+                    <Box sx={{ height: { xs: 160, md: '100%' }, display: 'grid', placeItems: 'center', borderRadius: 3, overflow: 'hidden' }}>
+                      <Media src={c.image} alt={c.title} />
                     </Box>
                   </Box>
                 </CardActionArea>

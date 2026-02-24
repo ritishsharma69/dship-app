@@ -11,6 +11,7 @@ export interface Product {
   price: number;
   compareAtPrice?: number;
   images: string[];
+  heroImages?: string[]; // homepage-only images (Featured / Explore cards)
   video?: string; // URL to mp4/webm
   youtubeUrl?: string; // optional YouTube URL for gallery (embed as 2nd item)
   bullets: string[];

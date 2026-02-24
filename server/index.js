@@ -831,6 +831,7 @@ try {
         price: Number(d.price || 0) || 0,
         compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
         images: Array.isArray(d.images) ? d.images : [],
+        heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
         bullets: Array.isArray(d.bullets) ? d.bullets : [],
         description: d.description == null ? '' : String(d.description),
         descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
@@ -918,6 +919,7 @@ try {
         price: Number(d.price || 0) || 0,
         compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
         images: Array.isArray(d.images) ? d.images : [],
+        heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
         bullets: Array.isArray(d.bullets) ? d.bullets : [],
         description: d.description == null ? '' : String(d.description),
         descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
@@ -966,6 +968,7 @@ try {
         price,
         compareAtPrice,
         images: sanitizeStringArray(body.images, 10, 2000),
+        heroImages: sanitizeStringArray(body.heroImages, 10, 2000),
         bullets: sanitizeStringArray(body.bullets, 20, 200),
         description: sanitizeString(body.description, 20000),
         descriptionHeading: sanitizeString(body.descriptionHeading, 200),
@@ -1016,6 +1019,7 @@ try {
       if (has('price')) $set.price = sanitizePrice(body.price)
       if (has('compareAtPrice')) $set.compareAtPrice = body.compareAtPrice == null || body.compareAtPrice === '' ? null : sanitizePrice(body.compareAtPrice)
       if (has('images')) $set.images = sanitizeStringArray(body.images, 10, 2000)
+      if (has('heroImages')) $set.heroImages = sanitizeStringArray(body.heroImages, 10, 2000)
       if (has('bullets')) $set.bullets = sanitizeStringArray(body.bullets, 20, 200)
       if (has('description')) $set.description = sanitizeString(body.description, 20000)
       if (has('descriptionHeading')) $set.descriptionHeading = sanitizeString(body.descriptionHeading, 200)

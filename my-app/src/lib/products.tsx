@@ -144,17 +144,36 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
     let cancelled = false
 
-    apiGetJson<Product[]>('/api/products', { timeoutMs: 8000 })
-      .then((data) => {
-        if (!cancelled) {
-          setProducts(Array.isArray(data) ? data : [])
+    async function fetchWithRetry(attempt = 0): Promise<void> {
+      const MAX_RETRIES = 4
+      const timeouts = [10000, 12000, 15000, 18000]
+      try {
+        const data = await apiGetJson<Product[]>('/api/products', { timeoutMs: timeouts[attempt] || 18000 })
+        if (cancelled) return
+        const arr = Array.isArray(data) ? data : []
+        if (arr.length > 0 || attempt >= MAX_RETRIES - 1) {
+          setProducts(arr)
+          setLoading(false)
+        } else {
+          // Got empty array — backend might still be waking up, retry
+          const delay = 1500 * (attempt + 1)
+          await new Promise(r => setTimeout(r, delay))
+          if (!cancelled) return fetchWithRetry(attempt + 1)
         }
-      })
-      .catch(() => {
-        // If API fails, show nothing (no hardcoded products)
-        if (!cancelled) setProducts([])
-      })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      } catch {
+        if (cancelled) return
+        if (attempt < MAX_RETRIES - 1) {
+          const delay = 2000 * (attempt + 1)
+          await new Promise(r => setTimeout(r, delay))
+          if (!cancelled) return fetchWithRetry(attempt + 1)
+        } else {
+          setProducts([])
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchWithRetry()
     return () => { cancelled = true }
   }, [])
 

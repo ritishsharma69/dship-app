@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, Card, CardActionArea, CardContent, Chip, Container, IconButton, Paper, Snackbar, TextField, Typography } from '@mui/material'
+import { Box, Button, Card, CardActionArea, CardContent, Chip, Container, IconButton, Paper, Skeleton, Snackbar, TextField, Typography } from '@mui/material'
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded'
 import CloseRounded from '@mui/icons-material/CloseRounded'
 import GroupsRounded from '@mui/icons-material/GroupsRounded'
@@ -22,7 +22,7 @@ const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', {
 
 export default function SimpleHomePage() {
   const { navigate } = useRouter()
-  const { products, productsBySlug } = useProducts()
+  const { products, productsBySlug, loading: productsLoading } = useProducts()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [slideIdx, setSlideIdx] = useState(0)
   const [email, setEmail] = useState('')
@@ -201,7 +201,7 @@ export default function SimpleHomePage() {
               </Typography>
               <Box sx={{ display: 'flex', gap: 1.2, flexWrap: 'wrap', alignItems: 'center', mt: 0.5 }}>
                 <Button variant="contained" onClick={() => navigate(curr.slug)} sx={{ fontWeight: 900, px: 2.2, backgroundColor: 'var(--color-buy)', '&:hover': { backgroundColor: 'var(--color-buy-hover)' } }}>
-                  Shop {curr.title}
+                  {productsLoading && !products.length ? 'Shop Now' : `Shop ${curr.title}`}
                 </Button>
                 <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>Need help?</Button>
               </Box>
@@ -221,10 +221,23 @@ export default function SimpleHomePage() {
           <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 2 }}>
             <Box>
               <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Featured</Typography>
-              <Typography variant="body2" color="text.secondary">Handpicked bestsellers</Typography>
+              <Typography variant="body2" color="text.secondary">{productsLoading && featured.length === 0 ? 'Loading products…' : 'Handpicked bestsellers'}</Typography>
             </Box>
             <Button variant="text" onClick={() => navigate('/')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
           </Box>
+          {productsLoading && featured.length === 0 ? (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+              {[1,2,3,4,5,6].map(i => (
+                <Card key={i} elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fff' }}>
+                  <Skeleton variant="rectangular" height={220} animation="wave" />
+                  <CardContent sx={{ p: 1.5 }}>
+                    <Skeleton width="70%" height={20} animation="wave" sx={{ mb: 0.5 }} />
+                    <Skeleton width="40%" height={24} animation="wave" />
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
             {featured.slice(0, 6).map((p) => {
               const price = Number(p.price || 0)
@@ -340,11 +353,19 @@ export default function SimpleHomePage() {
               )
             })}
           </Box>
+          )}
         </Box>
 
         {/* Bento (dynamic products) */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
           <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mb: 1.5 }}>Explore</Typography>
+          {productsLoading && bentoItems.length === 0 ? (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+              {[1,2,3,4].map(i => (
+                <Skeleton key={i} variant="rectangular" height={180} animation="wave" sx={{ borderRadius: 4 }} />
+              ))}
+            </Box>
+          ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gridAutoRows: { md: 190 }, gap: 2 }}>
             {bentoItems.map((c) => (
               <Card key={c.key} elevation={0} sx={{ gridColumn: { md: c.span.md }, gridRow: { md: c.span.row }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', background: c.tone }}>
@@ -363,6 +384,7 @@ export default function SimpleHomePage() {
               </Card>
             ))}
           </Box>
+          )}
         </Box>
 
         {/* Most Popular */}

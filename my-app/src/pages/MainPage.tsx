@@ -283,8 +283,8 @@ export default function MainPage() {
               </Stack>
             )}
 
-
-
+            {/* Trust badges banner */}
+            <Box component="img" src="/home-banner.png" alt="COD Available, Free Fast Delivery, Easy Returns, SSL Secure" sx={{ width: '100%', mt: 2, mb: 1, borderRadius: 2, display: 'block', objectFit: 'contain' }} />
 
             {/* Product Features */}
             <Box sx={{ mb: 3 }}>

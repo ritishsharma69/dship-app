@@ -19,6 +19,7 @@ import Button from '@mui/material/Button'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import Skeleton from '@mui/material/Skeleton'
 
 const LiveSalesToast = lazy(() => import('../components/LiveSalesToast'))
 
@@ -148,8 +149,25 @@ export default function MainPage() {
   const hasItems = count > 0
 
   // Guarded UI returns after hooks to keep hook order stable
-  // While loading, we rely on global Pink Loader overlay; render nothing to avoid plain text.
-  if (loading) return null
+  if (loading) return (
+    <Container sx={{ py: 3 }}>
+      <Box sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'start' }}>
+        <Skeleton variant="rectangular" sx={{ width: '100%', height: { xs: 300, md: 420 }, borderRadius: 2 }} animation="wave" />
+        <Box>
+          <Skeleton width="80%" height={40} animation="wave" sx={{ mb: 1 }} />
+          <Skeleton width="40%" height={24} animation="wave" sx={{ mb: 2 }} />
+          <Skeleton width="50%" height={36} animation="wave" sx={{ mb: 3 }} />
+          <Skeleton variant="rectangular" height={48} animation="wave" sx={{ mb: 1, borderRadius: 1 }} />
+          <Skeleton variant="rectangular" height={48} animation="wave" sx={{ mb: 3, borderRadius: 1 }} />
+          <Skeleton variant="rectangular" height={80} animation="wave" sx={{ borderRadius: 2, mb: 2 }} />
+          <Skeleton width="60%" height={24} animation="wave" />
+          <Skeleton width="100%" height={20} animation="wave" />
+          <Skeleton width="90%" height={20} animation="wave" />
+          <Skeleton width="70%" height={20} animation="wave" />
+        </Box>
+      </Box>
+    </Container>
+  )
   if (error) return <Container sx={{ py: 3, color: 'crimson' }}>Error: {error}</Container>
   if (!p) return <Container sx={{ py: 3 }}>No product found</Container>
 
@@ -209,7 +227,7 @@ export default function MainPage() {
         <Box className="product-grid" sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'start' }}>
           {/* Left side - Product Images */}
           <Paper className="sticky-media" sx={{ p: 1 }}>
-            <Suspense fallback={<div style={{ minHeight: 300 }} />}>
+            <Suspense fallback={<Skeleton variant="rectangular" sx={{ width: '100%', height: { xs: 300, md: 420 }, borderRadius: 2 }} animation="wave" />}>
               <MediaGallery product={p} />
             </Suspense>
           </Paper>
@@ -284,7 +302,7 @@ export default function MainPage() {
             )}
 
             {/* Trust badges banner */}
-            <Box component="img" src="/home-banner.png" alt="COD Available, Free Fast Delivery, Easy Returns, SSL Secure" sx={{ width: '100%', mt: 2, mb: 1, borderRadius: 2, display: 'block', objectFit: 'contain' }} />
+            <Box component="img" loading="lazy" src="/home-banner.png" alt="COD Available, Free Fast Delivery, Easy Returns, SSL Secure" sx={{ width: '100%', mt: 2, mb: 1, borderRadius: 2, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
 
             {/* Product Features */}
             <Box sx={{ mb: 3 }}>
@@ -292,7 +310,7 @@ export default function MainPage() {
               <Paper sx={{ p: 2, mb: 1.5, border: '1px dashed var(--color-border)', borderRadius: 2 }}>
                 <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#000000', fontSize: 18 }}>{p.bullets[0]}</Typography>
               </Paper>
-              <Suspense fallback={null}>
+              <Suspense fallback={<Box sx={{ display: 'grid', gap: 1 }}>{[1,2,3].map(i => <Skeleton key={i} height={24} animation="wave" />)}</Box>}>
                 <FeatureList bullets={p.descriptionPoints && p.descriptionPoints.length > 0 ? p.descriptionPoints : p.bullets.slice(1)} />
               </Suspense>
             </Box>
@@ -367,7 +385,7 @@ export default function MainPage() {
       <Container sx={{ py: 2 }}>
         <Box className="reveal" sx={{ p: 2, display: 'grid', gap: 1.5, textAlign: 'center', boxShadow: 'none', border: 'none' }}>
           <Typography variant="h6" sx={{ color: '#000000', fontWeight: 'bold' }}>What customers say</Typography>
-          <Suspense fallback={null}>
+          <Suspense fallback={<Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>{[1,2,3,4].map(i => <Skeleton key={i} variant="rectangular" height={100} animation="wave" sx={{ borderRadius: 2 }} />)}</Box>}>
             <ReviewGrid />
           </Suspense>
         </Box>

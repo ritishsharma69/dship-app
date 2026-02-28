@@ -47,7 +47,7 @@ export default function SimpleHomePage() {
 
   const Media = ({ src, alt }: { src?: string; alt: string }) => {
     if (src) {
-      return <Box component="img" src={src} alt={alt} sx={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+      return <Box component="img" loading="lazy" src={src} alt={alt} sx={{ width: '100%', height: '100%', objectFit: 'contain' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement?.querySelector('[data-fallback]')?.removeAttribute('hidden') }} />
     }
     return (
       <Box
@@ -205,7 +205,7 @@ export default function SimpleHomePage() {
                 </Button>
                 <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>Need help?</Button>
               </Box>
-              <Box component="img" src="/home-banner.png" alt="Free delivery, Easy returns, COD, SSL secure" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} />
+              <Box component="img" loading="lazy" src="/home-banner.png" alt="Free delivery, Easy returns, COD, SSL secure" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
             </Box>
           </Card>
 
@@ -265,7 +265,7 @@ export default function SimpleHomePage() {
                         const idx = featImgIdx[p.id] || 0
                         const cur = imgs[idx] || imgs[0]
                         return cur ? (
-                          <Box component="img" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} />
+                          <Box component="img" loading="lazy" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                         ) : (
                           <Media src={undefined} alt={p.title} />
                         )
@@ -442,7 +442,7 @@ export default function SimpleHomePage() {
                       )
                     }
                     return p.images[0] ? (
-                      <Box component="img" className="card-img" src={p.images[0]} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} />
+                      <Box component="img" loading="lazy" className="card-img" src={p.images[0]} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                     ) : (
                       <Media src={p.images[0]} alt={p.title} />
                     )

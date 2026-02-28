@@ -204,6 +204,7 @@ try {
 let client
 let db
 
+let ordersIndexReady = false
 async function getDb() {
   if (db) return db
   const uri = process.env.MONGODB_URI
@@ -217,6 +218,12 @@ async function getDb() {
   })
   await client.connect()
   db = client.db('dship')
+  // Create indexes for orders collection (background, idempotent)
+  if (!ordersIndexReady) {
+    ordersIndexReady = true
+    db.collection('orders').createIndex({ 'customer.email': 1 }, { background: true }).catch(() => {})
+    db.collection('orders').createIndex({ createdAt: -1 }, { background: true }).catch(() => {})
+  }
   return db
 }
 // ----- PhonePe (Standard Checkout) -----
@@ -334,19 +341,22 @@ try {
 
 // ----- Email (optional) -----
 // Configure via .env: SMTP_HOST, SMTP_PORT=587, SMTP_USER, SMTP_PASS, FROM_EMAIL, STORE_NAME
+let cachedMailer = null
 function getMailer() {
+  if (cachedMailer) return cachedMailer
   const { SMTP_HOST, SMTP_USER, SMTP_PASS } = process.env
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) return null
   try {
     const nodemailer = require('nodemailer')
     const port = Number(process.env.SMTP_PORT || 587)
     const secure = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true' || port === 465
-    return nodemailer.createTransport({
+    cachedMailer = nodemailer.createTransport({
       host: SMTP_HOST,
       port,
       secure,
       auth: { user: SMTP_USER, pass: SMTP_PASS },
     })
+    return cachedMailer
   } catch (e) {
     console.warn('[mail] nodemailer not installed; skipping emails')
     return null
@@ -831,10 +841,17 @@ try {
 }
 
 
-// GET /api/products – read products from dship.products
+// GET /api/products – read products from dship.products (with 30s in-memory cache)
+let productsCache = { data: null, expiresAt: 0 }
+const PRODUCTS_CACHE_TTL = 30000 // 30 seconds
+
 try {
-  app.get('/api/products', async (req, res) => {
+  app.get('/api/products', async (_req, res) => {
     try {
+      const now = Date.now()
+      if (productsCache.data && now < productsCache.expiresAt) {
+        return res.json(productsCache.data)
+      }
       const database = await getDb()
       const docs = await database.collection('products').find({}).limit(50).toArray()
       const out = docs.map(d => ({
@@ -858,6 +875,7 @@ try {
         ratingAvg: d.ratingAvg == null ? undefined : Number(d.ratingAvg),
         ratingCount: d.ratingCount == null ? undefined : Number(d.ratingCount),
       }))
+      productsCache = { data: out, expiresAt: now + PRODUCTS_CACHE_TTL }
       res.json(out)
     } catch (err) {
       console.error('GET /api/products error', err)
@@ -1003,6 +1021,7 @@ try {
       if (existing) return res.status(409).json({ error: 'sku_exists' })
 
       const ins = await database.collection('products').insertOne(doc)
+      productsCache = { data: null, expiresAt: 0 } // invalidate cache
       res.json({ id: String(ins.insertedId) })
     } catch (err) {
       console.error('POST /api/products/admin error', err)
@@ -1060,6 +1079,7 @@ try {
       if (!upd.matchedCount) return res.status(404).json({ error: 'Not found' })
       const doc = await database.collection('products').findOne(filter)
       if (!doc) return res.status(404).json({ error: 'Not found' })
+      productsCache = { data: null, expiresAt: 0 } // invalidate cache
       res.json({ ok: true, product: { id: String(doc._id), ...doc } })
     } catch (err) {
       console.error('PATCH /api/products/admin/:id error', err)
@@ -1082,6 +1102,7 @@ try {
       const filter = { _id: coerceObjectId(id) }
       const del = await database.collection('products').deleteOne(filter)
       if (!del.deletedCount) return res.status(404).json({ error: 'Not found' })
+      productsCache = { data: null, expiresAt: 0 } // invalidate cache
       res.json({ ok: true })
     } catch (err) {
       console.error('DELETE /api/products/admin/:id error', err)

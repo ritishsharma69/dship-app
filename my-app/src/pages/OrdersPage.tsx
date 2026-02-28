@@ -11,6 +11,7 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
+import Skeleton from '@mui/material/Skeleton'
 
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any; hasReturn?: boolean }
 
@@ -237,7 +238,20 @@ export default function OrdersPage() {
                 </button>
               </div>
             </div>
-            {list.length === 0 && !loading ? (
+            {loading ? (
+              <Box sx={{ display: 'grid', gap: 1.5 }}>
+                {[1,2,3].map(i => (
+                  <Box key={i} sx={{ borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', p: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Skeleton width="30%" height={22} animation="wave" />
+                      <Skeleton width="20%" height={22} animation="wave" />
+                    </Box>
+                    <Skeleton width="60%" height={16} animation="wave" sx={{ mb: 0.5 }} />
+                    <Skeleton width="45%" height={16} animation="wave" />
+                  </Box>
+                ))}
+              </Box>
+            ) : list.length === 0 ? (
               <div style={{ color: '#6b7280' }}>No orders yet.</div>
             ) : (
               <div className="orders-list" style={{ display: 'grid', gap: 10 }}>

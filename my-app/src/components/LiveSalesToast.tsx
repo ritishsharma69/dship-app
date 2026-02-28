@@ -30,7 +30,7 @@ function LiveSalesToast({ open, name, city, title, image, timeAgo, onClose }: Li
         </IconButton>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <Box sx={{ width: 44, height: 44, borderRadius: '50%', overflow: 'hidden', border: '1px solid #e5e7eb', flexShrink: 0 }}>
-            <img src={image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
           </Box>
           <Box sx={{ minWidth: 0 }}>
             <Typography variant="body2" sx={{ color: '#111827', lineHeight: 1.2, overflowWrap: 'anywhere' }}>

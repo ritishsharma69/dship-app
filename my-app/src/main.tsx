@@ -9,6 +9,9 @@ import { ProductsProvider } from './lib/products'
 import { ThemeProvider, CssBaseline } from '@mui/material'
 import theme from './theme'
 
+// Pre-warm backend on Render free tier (cold start takes 30-60s)
+fetch('/api/ping').catch(() => {})
+
 // Install global fetch loader: show overlay on slow network calls
 import('./lib/loader').then(({ show, hide }) => {
   const orig = window.fetch

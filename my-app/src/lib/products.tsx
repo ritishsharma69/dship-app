@@ -144,11 +144,18 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
     let cancelled = false
 
-    async function fetchWithRetry(attempt = 0): Promise<void> {
-      const MAX_RETRIES = 4
-      const timeouts = [10000, 12000, 15000, 18000]
+    // First ping the server to wake it up (Render free tier cold start can take 30-60s)
+    async function warmupBackend(): Promise<void> {
       try {
-        const data = await apiGetJson<Product[]>('/api/products', { timeoutMs: timeouts[attempt] || 18000 })
+        await fetch('/api/ping', { signal: AbortSignal.timeout(5000) }).catch(() => {})
+      } catch { /* ignore */ }
+    }
+
+    async function fetchWithRetry(attempt = 0): Promise<void> {
+      const MAX_RETRIES = 6
+      const timeouts = [25000, 30000, 35000, 40000, 45000, 50000] // Longer timeouts for Render cold start
+      try {
+        const data = await apiGetJson<Product[]>('/api/products', { timeoutMs: timeouts[attempt] || 50000 })
         if (cancelled) return
         const arr = Array.isArray(data) ? data : []
         if (arr.length > 0 || attempt >= MAX_RETRIES - 1) {
@@ -156,14 +163,16 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
           setLoading(false)
         } else {
           // Got empty array — backend might still be waking up, retry
-          const delay = 1500 * (attempt + 1)
+          const delay = 2000 * (attempt + 1)
           await new Promise(r => setTimeout(r, delay))
           if (!cancelled) return fetchWithRetry(attempt + 1)
         }
       } catch {
         if (cancelled) return
         if (attempt < MAX_RETRIES - 1) {
-          const delay = 2000 * (attempt + 1)
+          // Ping backend to wake it up before retry
+          await warmupBackend()
+          const delay = 3000 * (attempt + 1)
           await new Promise(r => setTimeout(r, delay))
           if (!cancelled) return fetchWithRetry(attempt + 1)
         } else {
@@ -173,7 +182,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    fetchWithRetry()
+    warmupBackend().then(() => fetchWithRetry())
     return () => { cancelled = true }
   }, [])
 

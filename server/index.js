@@ -1392,6 +1392,158 @@ try {
   console.error('[routes] Failed to register PATCH /api/orders/:id/status:', err.message)
 }
 
+// ----- AI Chatbot (Groq) -----
+// POST /api/chat - AI chatbot using Groq API (llama-3.3-70b-versatile)
+// Fetches real products from DB to give accurate information
+try {
+  app.post('/api/chat', async (req, res) => {
+    try {
+      const GROQ_API_KEY = process.env.GROQ_API_KEY
+      if (!GROQ_API_KEY) {
+        return res.status(500).json({ error: 'Groq API not configured' })
+      }
+
+      const messages = Array.isArray(req.body?.messages) ? req.body.messages : []
+      const userMessage = String(req.body?.message || '').trim()
+
+      if (!userMessage && messages.length === 0) {
+        return res.status(400).json({ error: 'Message required' })
+      }
+
+      // Fetch real products from database
+      let productsInfo = ''
+      try {
+        const database = await getDb()
+        const products = await database.collection('products').find({}).project({
+          title: 1, brand: 1, price: 1, compareAtPrice: 1, bullets: 1, description: 1, inventoryStatus: 1
+        }).limit(20).toArray()
+
+        if (products.length > 0) {
+          productsInfo = `\n\n=== HUMARI DUKAAN KE PRODUCTS (Total: ${products.length}) ===\n`
+          products.forEach((p, i) => {
+            const discount = p.compareAtPrice ? Math.round((1 - p.price / p.compareAtPrice) * 100) : 0
+            productsInfo += `\n${i + 1}. ${p.title}${p.brand ? ` (${p.brand})` : ''}`
+            productsInfo += `\n   Price: ₹${p.price}${p.compareAtPrice ? ` (MRP: ₹${p.compareAtPrice}, ${discount}% OFF)` : ''}`
+            productsInfo += `\n   Status: ${p.inventoryStatus === 'IN_STOCK' ? 'Available ✅' : p.inventoryStatus === 'LOW_STOCK' ? 'Limited Stock ⚠️' : 'Out of Stock ❌'}`
+            if (p.bullets && p.bullets.length > 0) {
+              productsInfo += `\n   Features: ${p.bullets.slice(0, 3).join(', ')}`
+            }
+          })
+          productsInfo += '\n'
+        }
+      } catch (dbErr) {
+        console.warn('[chat] Could not fetch products:', dbErr.message)
+      }
+
+      // Build comprehensive system prompt with real data
+      const systemPrompt = `You are the official AI assistant for Khushiyan Store (खुशियाँ स्टोर) - a premium Indian e-commerce store.
+
+=== STORE INFORMATION ===
+Store Name: Khushiyan Store (खुशियाँ स्टोर)
+Website: khushiyan.store
+Tagline: "Spreading happiness through quality products"
+
+=== SHIPPING POLICY ===
+- FREE shipping on all prepaid orders above ₹499
+- Shipping charge ₹49 for orders below ₹499
+- Delivery time: 5-7 business days (metro cities: 3-5 days)
+- We ship all over India
+- Tracking number provided via email/SMS after dispatch
+- Orders dispatched within 24-48 hours
+
+=== PAYMENT METHODS ===
+- Cash on Delivery (COD) - ₹30 extra charge
+- UPI (PhonePe, Google Pay, Paytm)
+- Credit/Debit Cards
+- Net Banking
+- All payments are 100% secure
+
+=== RETURN & REFUND POLICY ===
+- 7-day easy return policy from delivery date
+- Product must be unused, in original packaging
+- Refund processed within 5-7 business days after pickup
+- For damaged/defective products: Free replacement
+- To initiate return: Go to "My Orders" → Select order → "Return Request"
+
+=== CANCELLATION POLICY ===
+- Orders can be cancelled before dispatch
+- Once shipped, cancellation not possible (can return after delivery)
+- Refund for cancelled orders: 3-5 business days
+
+=== CONTACT INFORMATION ===
+- Email: support@khushiyan.store
+- Response time: Within 24 hours
+- For urgent queries, use this chat
+${productsInfo}
+=== YOUR BEHAVIOR RULES ===
+1. ONLY answer questions about Khushiyan Store, its products, policies, and services
+2. If someone asks about products, ONLY mention products from the list above - DO NOT make up products
+3. If a product is not in the list, say "Yeh product hamare store pe available nahi hai"
+4. Mix Hindi and English naturally (Hinglish) - most customers prefer this
+5. Be warm, friendly, and helpful 😊
+6. Keep responses concise (2-4 sentences usually)
+7. Use emojis occasionally but don't overdo
+8. If you don't know something specific, suggest contacting support@khushiyan.store
+9. Never discuss competitor stores or unrelated topics
+10. For order tracking, tell them to check "My Orders" section on website
+
+=== COMMON GREETINGS ===
+- "Namaste! 🙏" or "Hello!" for greetings
+- Always thank customers at the end`
+
+      const chatMessages = [{ role: 'system', content: systemPrompt }]
+
+      // Add conversation history
+      for (const msg of messages.slice(-10)) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          chatMessages.push({ role: msg.role, content: String(msg.content || '') })
+        }
+      }
+
+      // Add current user message
+      if (userMessage) {
+        chatMessages.push({ role: 'user', content: userMessage })
+      }
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: chatMessages,
+          temperature: 0.6,
+          max_tokens: 400,
+          top_p: 0.9,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('[chat] Groq API error:', response.status, errorData)
+        return res.status(500).json({ error: 'AI service temporarily unavailable' })
+      }
+
+      const data = await response.json()
+      const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not process your request.'
+
+      res.json({
+        reply,
+        model: data.model,
+        usage: data.usage
+      })
+    } catch (err) {
+      console.error('POST /api/chat error', err)
+      res.status(500).json({ error: 'Internal error' })
+    }
+  })
+  console.log('[routes] /api/chat registered')
+} catch (err) {
+  console.error('[routes] Failed to register /api/chat:', err.message)
+}
+
 // Serve index.html for all non-API routes (client-side routing)
 if (fs.existsSync(FRONTEND_DIST)) {
   try {

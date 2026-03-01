@@ -17,9 +17,9 @@ let loaderTimer: number | null = null
 const origFetch = window.fetch
 
 window.fetch = async (input: any, init?: any) => {
-  // Skip loader for ping requests (background warmup)
+  // Skip loader for ping, analytics, and chat requests (chatbot has its own loader)
   const url = typeof input === 'string' ? input : (input as Request)?.url || ''
-  const skipLoader = url.includes('/api/ping') || url.includes('collect?') || url.includes('analytics')
+  const skipLoader = url.includes('/api/ping') || url.includes('collect?') || url.includes('analytics') || url.includes('/api/chat')
 
   if (!skipLoader) {
     activeRequests++

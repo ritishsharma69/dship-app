@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Route, Switch, useRouter } from './lib/router'
 import TopBar from './components/TopBar'
 import ErrorBoundary from './components/ErrorBoundary'
+import ChatBot from './components/ChatBot'
 
 import PageLoader from './components/PageLoader'
 
@@ -145,6 +146,8 @@ export default function App() {
         </Switch>
       </Suspense>
       </ErrorBoundary>
+      {/* AI Chatbot - available on all pages except admin */}
+      {!isAdminRoute && <ChatBot />}
     </>
   )
 }

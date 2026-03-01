@@ -103,7 +103,7 @@ export default function SimpleHomePage() {
     })
   }, [products, productsBySlug])
 
-  const popular = useMemo(() => featured.slice(0, 10), [featured])
+  const popular = useMemo(() => featured.slice(0, 6), [featured])
 
   // Scroll reveals
   useEffect(() => {
@@ -352,7 +352,7 @@ export default function SimpleHomePage() {
               <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Featured</Typography>
               <Typography variant="body2" color="text.secondary">{productsLoading && featured.length === 0 ? 'Loading products…' : 'Handpicked bestsellers'}</Typography>
             </Box>
-            <Button variant="text" onClick={() => navigate('/')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
+            <Button variant="text" onClick={() => navigate('/featured')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
           </Box>
           {productsLoading && featured.length === 0 ? (
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>

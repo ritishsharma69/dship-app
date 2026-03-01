@@ -841,9 +841,48 @@ try {
 }
 
 
-// GET /api/products – read products from dship.products (with 30s in-memory cache)
+// GET /api/products – read products from dship.products (with 5-min in-memory cache)
 let productsCache = { data: null, expiresAt: 0 }
-const PRODUCTS_CACHE_TTL = 30000 // 30 seconds
+const PRODUCTS_CACHE_TTL = 300000 // 5 minutes (products rarely change)
+
+// Pre-warm products cache on server start
+async function warmProductsCache() {
+  try {
+    const database = await getDb()
+    const projection = {
+      title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1,
+      bullets: 1, description: 1, descriptionHeading: 1, descriptionPoints: 1,
+      youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
+      ratingAvg: 1, ratingCount: 1
+    }
+    const docs = await database.collection('products').find({}, { projection }).limit(50).toArray()
+    const out = docs.map(d => ({
+      id: String(d._id),
+      title: String(d.title || ''),
+      brand: d.brand == null ? '' : String(d.brand),
+      price: Number(d.price || 0) || 0,
+      compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
+      images: Array.isArray(d.images) ? d.images : [],
+      heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
+      bullets: Array.isArray(d.bullets) ? d.bullets : [],
+      description: d.description == null ? '' : String(d.description),
+      descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
+      descriptionPoints: Array.isArray(d.descriptionPoints) ? d.descriptionPoints : [],
+      youtubeUrl: d.youtubeUrl == null ? '' : String(d.youtubeUrl),
+      video: d.video == null ? '' : String(d.video),
+      testimonials: Array.isArray(d.testimonials) ? d.testimonials : [],
+      sku: d.sku == null ? '' : String(d.sku),
+      slug: d.slug == null ? '' : String(d.slug),
+      inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
+      ratingAvg: d.ratingAvg == null ? undefined : Number(d.ratingAvg),
+      ratingCount: d.ratingCount == null ? undefined : Number(d.ratingCount),
+    }))
+    productsCache = { data: out, expiresAt: Date.now() + PRODUCTS_CACHE_TTL }
+    console.log(`[cache] Products cache warmed: ${out.length} products`)
+  } catch (err) {
+    console.error('[cache] Failed to warm products cache:', err.message)
+  }
+}
 
 try {
   app.get('/api/products', async (_req, res) => {
@@ -853,7 +892,13 @@ try {
         return res.json(productsCache.data)
       }
       const database = await getDb()
-      const docs = await database.collection('products').find({}).limit(50).toArray()
+      const projection = {
+        title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1,
+        bullets: 1, description: 1, descriptionHeading: 1, descriptionPoints: 1,
+        youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
+        ratingAvg: 1, ratingCount: 1
+      }
+      const docs = await database.collection('products').find({}, { projection }).limit(50).toArray()
       const out = docs.map(d => ({
         id: String(d._id),
         title: String(d.title || ''),
@@ -1363,11 +1408,18 @@ if (fs.existsSync(FRONTEND_DIST)) {
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`[server] listening on http://localhost:${PORT}`)
-    // Warm DB connection and keep alive to avoid cold-start delays
-    getDb().then(() => console.log('[db] connected (warmed)')).catch(console.error)
+    // Warm DB connection + products cache on startup
+    getDb()
+      .then(() => {
+        console.log('[db] connected (warmed)')
+        return warmProductsCache()
+      })
+      .catch(console.error)
+    // Keep DB alive and refresh products cache every 4 minutes
     setInterval(() => {
       getDb()
         .then(db => db.command({ ping: 1 }))
+        .then(() => warmProductsCache())
         .catch(() => {})
     }, 240000) // every 4 minutes
   })

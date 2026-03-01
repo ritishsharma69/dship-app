@@ -13,8 +13,15 @@ let root: Root | null = null
 let containerEl: HTMLDivElement | null = null
 let currentText = 'Loading...'
 let version = 0 // increment on mount; used to avoid racing unmounts
+let hideDebounceTimer: number | null = null
 
 function mount(text?: string) {
+  // Cancel any pending hide
+  if (hideDebounceTimer) {
+    window.clearTimeout(hideDebounceTimer)
+    hideDebounceTimer = null
+  }
+
   if (!containerEl) {
     containerEl = document.createElement('div')
     containerEl.id = 'mui-gsap-loader'
@@ -28,13 +35,12 @@ function mount(text?: string) {
 }
 
 function unmount() {
-  // Schedule unmount outside the current React commit to avoid
-  // "Attempted to synchronously unmount a root while React was already rendering".
-  const scheduledVersion = version
-  setTimeout(() => {
-    // If a new show() ran after we scheduled this unmount, skip.
-    if (scheduledVersion !== version) return
-    // Also ensure the ref-count is still 0.
+  // Debounce unmount to prevent flicker on rapid show/hide cycles
+  if (hideDebounceTimer) return // Already scheduled
+
+  hideDebounceTimer = window.setTimeout(() => {
+    hideDebounceTimer = null
+    // Ensure ref-count is still 0
     if ((window.__pinkLoaderCount ?? 0) > 0) return
     try {
       if (root) root.unmount()
@@ -43,7 +49,7 @@ function unmount() {
       root = null
       containerEl = null
     }
-  }, 0)
+  }, 50) // 50ms debounce to prevent flicker
 }
 
 export function showPinkLoader(text?: string) {

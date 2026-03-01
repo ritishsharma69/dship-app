@@ -209,9 +209,138 @@ export default function SimpleHomePage() {
             </Box>
           </Card>
 
-          <Card data-anim="fade" elevation={0} sx={{ gridColumn: { md: '8 / span 5' }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff' }}>
-            <Box className="hero-visual" sx={{ height: { xs: 280, md: 420 }, display: 'grid', placeItems: 'center', p: 2, background: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,243,206,0.25) 100%)' }}>
-              <Media src={curr.image} alt={curr.title} />
+          {/* 3D Stacked Cards Carousel */}
+          <Card data-anim="fade" elevation={0} sx={{ gridColumn: { md: '8 / span 5' }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff', position: 'relative' }}>
+            {/* Soft gradient background */}
+            <Box sx={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(145deg, #fef3c7 0%, #fce7f3 30%, #e0e7ff 70%, #f0fdf4 100%)',
+            }} />
+
+            <Box className="hero-visual" sx={{ height: { xs: 300, md: 420 }, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
+              {/* 3D Stacked Cards */}
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', px: 2, py: 3, perspective: '1000px' }}>
+                {/* Show prev, current, next cards */}
+                {(() => {
+                  const total = heroSlides.length
+                  if (total === 0) return null
+
+                  const prevIdx = (slideIdx - 1 + total) % total
+                  const nextIdx = (slideIdx + 1) % total
+                  const visibleIndices = [prevIdx, slideIdx, nextIdx]
+
+                  return visibleIndices.map((idx) => {
+                    const slide = heroSlides[idx]
+                    if (!slide) return null
+
+                    const isActive = idx === slideIdx
+                    const isPrev = idx === prevIdx && prevIdx !== slideIdx
+                    const isNext = idx === nextIdx && nextIdx !== slideIdx
+
+                    return (
+                      <Box
+                        key={slide.id + '-' + idx}
+                        onClick={() => !isActive && setSlideIdx(idx)}
+                        sx={{
+                          position: 'absolute',
+                          width: isActive ? { xs: '80%', md: '75%' } : { xs: '60%', md: '55%' },
+                          height: isActive ? { xs: '90%', md: '88%' } : { xs: '70%', md: '68%' },
+                          borderRadius: 4,
+                          overflow: 'hidden',
+                          bgcolor: '#fff',
+                          boxShadow: isActive
+                            ? '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)'
+                            : '0 10px 30px -10px rgba(0,0,0,0.15)',
+                          transform: isActive
+                            ? 'translateX(0) scale(1) rotateY(0deg)'
+                            : isPrev
+                              ? 'translateX(-55%) scale(0.8) rotateY(25deg)'
+                              : 'translateX(55%) scale(0.8) rotateY(-25deg)',
+                          zIndex: isActive ? 10 : 5,
+                          opacity: isActive ? 1 : 0.5,
+                          cursor: isActive ? 'default' : 'pointer',
+                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transformStyle: 'preserve-3d',
+                          '&:hover': !isActive ? { opacity: 0.7 } : {},
+                        }}
+                      >
+                        {slide.image ? (
+                          <Box component="img" loading="lazy" src={slide.image} alt={slide.title} sx={{
+                            width: '100%', height: '100%', objectFit: 'cover',
+                          }} onError={(e: any) => { e.target.style.display = 'none' }} />
+                        ) : (
+                          <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', bgcolor: '#f5f5f5' }}>
+                            <Typography sx={{ color: '#999', fontWeight: 600 }}>Loading...</Typography>
+                          </Box>
+                        )}
+
+                        {/* Overlay for inactive cards */}
+                        {!isActive && (
+                          <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(255,255,255,0.25)' }} />
+                        )}
+                      </Box>
+                    )
+                  })
+                })()}
+              </Box>
+
+              {/* Bottom info section */}
+              <Box sx={{ px: 2.5, pb: 2.5 }}>
+                {/* Dots navigation */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.8, mb: 2 }}>
+                  {heroSlides.slice(0, 5).map((_, i) => (
+                    <Box
+                      key={i}
+                      onClick={() => setSlideIdx(i)}
+                      sx={{
+                        width: i === slideIdx ? 20 : 8, height: 8, borderRadius: 999,
+                        bgcolor: i === slideIdx ? '#111' : 'rgba(0,0,0,0.15)',
+                        cursor: 'pointer', transition: 'all 0.3s ease',
+                        '&:hover': { bgcolor: i === slideIdx ? '#111' : 'rgba(0,0,0,0.3)' }
+                      }}
+                    />
+                  ))}
+                </Box>
+
+                {/* Product info bar */}
+                <Box sx={{
+                  p: 2, borderRadius: 3,
+                  background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2
+                }}>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography sx={{
+                      color: '#111', fontWeight: 800, fontSize: { xs: 14, md: 15 },
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                    }}>
+                      {curr.title}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
+                      <Typography sx={{ color: 'var(--color-buy)', fontWeight: 900, fontSize: { xs: 16, md: 18 } }}>
+                        {money(curr.price)}
+                      </Typography>
+                      {curr.compareAt && curr.compareAt > curr.price && (
+                        <Typography sx={{ color: '#999', textDecoration: 'line-through', fontSize: 13 }}>
+                          {money(curr.compareAt)}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                  <Button
+                    onClick={() => navigate(curr.slug)}
+                    endIcon={<ArrowForwardRounded />}
+                    sx={{
+                      px: 2, py: 0.8, borderRadius: 2, fontWeight: 800, fontSize: 12,
+                      bgcolor: 'var(--color-buy)', color: '#fff', textTransform: 'none',
+                      '&:hover': { bgcolor: 'var(--color-buy-hover)' },
+                    }}
+                  >
+                    Shop
+                  </Button>
+                </Box>
+              </Box>
             </Box>
           </Card>
         </Box>

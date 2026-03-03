@@ -123,17 +123,20 @@ interface ProductsCtx {
   products: Product[]
   productsBySlug: Record<string, Product>
   loading: boolean
+  retryCount: number // Track retry attempts for UI feedback
 }
 
 const Ctx = createContext<ProductsCtx>({
   products: [],
   productsBySlug: {},
   loading: true,
+  retryCount: 0,
 })
 
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (DEMO_SINGLE_PRODUCT) {
@@ -154,6 +157,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
     async function fetchWithRetry(attempt = 0): Promise<void> {
       const MAX_RETRIES = 6
       const timeouts = [25000, 30000, 35000, 40000, 45000, 50000] // Longer timeouts for Render cold start
+      if (!cancelled) setRetryCount(attempt)
       try {
         const data = await apiGetJson<Product[]>('/api/products', { timeoutMs: timeouts[attempt] || 50000 })
         if (cancelled) return
@@ -161,6 +165,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         if (arr.length > 0 || attempt >= MAX_RETRIES - 1) {
           setProducts(arr)
           setLoading(false)
+          setRetryCount(0)
         } else {
           // Got empty array — backend might still be waking up, retry
           const delay = 2000 * (attempt + 1)
@@ -178,6 +183,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
         } else {
           setProducts([])
           setLoading(false)
+          setRetryCount(0)
         }
       }
     }
@@ -192,7 +198,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <Ctx.Provider value={{ products, productsBySlug, loading }}>
+    <Ctx.Provider value={{ products, productsBySlug, loading, retryCount }}>
       {children}
     </Ctx.Provider>
   )

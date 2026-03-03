@@ -23,7 +23,7 @@ const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', {
 
 export default function SimpleHomePage() {
   const { navigate } = useRouter()
-  const { products, productsBySlug, loading: productsLoading } = useProducts()
+  const { products, productsBySlug, loading: productsLoading, retryCount } = useProducts()
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [slideIdx, setSlideIdx] = useState(0)
   const [email, setEmail] = useState('')
@@ -356,16 +356,36 @@ export default function SimpleHomePage() {
             <Button variant="text" onClick={() => navigate('/featured')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
           </Box>
           {productsLoading && featured.length === 0 ? (
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
-              {[1,2,3,4,5,6].map(i => (
-                <Card key={i} elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fff' }}>
-                  <Skeleton variant="rectangular" height={220} animation="wave" />
-                  <CardContent sx={{ p: 1.5 }}>
-                    <Skeleton width="70%" height={20} animation="wave" sx={{ mb: 0.5 }} />
-                    <Skeleton width="40%" height={24} animation="wave" />
-                  </CardContent>
-                </Card>
-              ))}
+            <Box>
+              {retryCount > 0 && (
+                <Box sx={{
+                  mb: 2, p: 2, borderRadius: 2,
+                  background: 'linear-gradient(135deg, #fef3c7 0%, #fce7f3 100%)',
+                  border: '1px solid rgba(251,191,36,0.3)',
+                  display: 'flex', alignItems: 'center', gap: 1.5
+                }}>
+                  <Box sx={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: '2px solid #f59e0b', borderTopColor: 'transparent',
+                    animation: 'spin 1s linear infinite',
+                    '@keyframes spin': { '100%': { transform: 'rotate(360deg)' } }
+                  }} />
+                  <Typography sx={{ fontSize: 14, color: '#92400e', fontWeight: 600 }}>
+                    Server starting up... Please wait ({retryCount}/6)
+                  </Typography>
+                </Box>
+              )}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+                {[1,2,3,4,5,6].map(i => (
+                  <Card key={i} elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fff' }}>
+                    <Skeleton variant="rectangular" height={220} animation="wave" />
+                    <CardContent sx={{ p: 1.5 }}>
+                      <Skeleton width="70%" height={20} animation="wave" sx={{ mb: 0.5 }} />
+                      <Skeleton width="40%" height={24} animation="wave" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
             </Box>
           ) : (
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>

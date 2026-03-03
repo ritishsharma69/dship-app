@@ -5,6 +5,7 @@ import { ArrowBackIosNew, ArrowForwardIos, LocalShipping, WorkspacePremium, Paym
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { productSlug, useProducts } from '../lib/products'
+import { optimizeImage } from '../lib/cloudinary'
 
 // Register GSAP plugin once (client only)
 if (typeof window !== 'undefined') {
@@ -65,7 +66,7 @@ function HeroCarousel() {
       <Box sx={{ position: 'relative', height: '100%', display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'center', gap: 2, px: { xs: 2, md: 4 } }}>
         <Box sx={{ display: 'grid', placeItems: 'center' }}>
 	          {s.type === 'image' && s.src ? (
-	            <img src={s.src} alt={s.heading} style={{ width: '100%', maxWidth: 560, height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 12px 38px rgba(0,0,0,0.25))' }} />
+	            <img src={optimizeImage(s.src, 'product')} alt={s.heading} style={{ width: '100%', maxWidth: 560, height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 12px 38px rgba(0,0,0,0.25))' }} />
 	          ) : (
 	            <Box sx={{ width: '100%', maxWidth: 560, height: { xs: 180, sm: 240, md: 320 }, borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', background: 'linear-gradient(135deg, rgba(251,247,241,1) 0%, rgba(246,240,230,1) 55%, rgba(248,243,206,0.65) 100%)', display: 'grid', placeItems: 'center' }}>
 	              <Typography color="text.secondary" sx={{ fontWeight: 800 }}>Products will appear here</Typography>
@@ -160,7 +161,7 @@ function DealsCarousel() {
         {deals.map((d, idx) => (
           <Card key={idx} className="deal-card" sx={{ minWidth: 220, scrollSnapAlign: 'start', border: '1px solid var(--color-border)', borderRadius: 2 }}>
 	            {d.img ? (
-	              <CardMedia component="img" height="160" image={d.img} alt={d.title} sx={{ objectFit: 'contain', background: '#fff' }} />
+	              <CardMedia component="img" height="160" image={optimizeImage(d.img, 'card')} alt={d.title} sx={{ objectFit: 'contain', background: '#fff' }} />
 	            ) : (
 	              <Box sx={{ height: 160, display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, rgba(251,247,241,1) 0%, rgba(246,240,230,1) 55%, rgba(248,243,206,0.65) 100%)' }}>
 	                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Image coming soon</Typography>
@@ -223,7 +224,7 @@ function HighlightCard() {
     <Card sx={{ mb: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid var(--color-border)' }}>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'center' }}>
         <Box sx={{ p: { xs: 2, md: 3 }, display: 'grid', placeItems: 'center' }}>
-          <img src={featured.images?.[0] || ''} alt={featured.title} style={{ width: '100%', maxWidth: 560, objectFit: 'contain' }} />
+          <img src={optimizeImage(featured.images?.[0], 'product')} alt={featured.title} style={{ width: '100%', maxWidth: 560, objectFit: 'contain' }} />
         </Box>
         <Box sx={{ p: { xs: 2, md: 3 } }}>
           <Typography variant="overline" sx={{ letterSpacing: 1.5 }}>Trending</Typography>
@@ -267,7 +268,7 @@ export default function LandingPage() {
               <Card elevation={0} sx={{ border: '1px solid var(--color-border)', borderRadius: 3, overflow: 'hidden', transition: 'transform .18s ease, box-shadow .18s ease', '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 12px 34px rgba(0,0,0,0.08)' } }}>
                 <CardActionArea onClick={onClick}>
                   {it.image ? (
-                    <CardMedia component="img" height="260" image={it.image} alt={it.title} sx={{ objectFit: 'contain', background: '#fff' }} />
+                    <CardMedia component="img" height="260" image={optimizeImage(it.image, 'card')} alt={it.title} sx={{ objectFit: 'contain', background: '#fff' }} />
                   ) : (
                     <Box sx={{ height: 260, background: '#F3F4F6', display: 'grid', placeItems: 'center' }}>
                       <Typography color="text.disabled">Image coming soon</Typography>

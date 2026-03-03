@@ -17,6 +17,7 @@ import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
 import { useRouter } from '../lib/router'
 import { gsap } from '../lib/gsap'
 import { productSlug, useProducts } from '../lib/products'
+import { optimizeImage } from '../lib/cloudinary'
 
 const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v))
 
@@ -265,7 +266,7 @@ export default function SimpleHomePage() {
                         }}
                       >
                         {slide.image ? (
-                          <Box component="img" loading="lazy" src={slide.image} alt={slide.title} sx={{
+                          <Box component="img" loading="lazy" src={optimizeImage(slide.image, 'product')} alt={slide.title} sx={{
                             width: '100%', height: '100%', objectFit: 'cover',
                           }} onError={(e: any) => { e.target.style.display = 'none' }} />
                         ) : (
@@ -394,7 +395,7 @@ export default function SimpleHomePage() {
                         const idx = featImgIdx[p.id] || 0
                         const cur = imgs[idx] || imgs[0]
                         return cur ? (
-                          <Box component="img" loading="lazy" className="feat-img" src={cur} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                         ) : (
                           <Media src={undefined} alt={p.title} />
                         )
@@ -571,7 +572,7 @@ export default function SimpleHomePage() {
                       )
                     }
                     return p.images[0] ? (
-                      <Box component="img" loading="lazy" className="card-img" src={p.images[0]} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                      <Box component="img" loading="lazy" className="card-img" src={optimizeImage(p.images[0], 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                     ) : (
                       <Media src={p.images[0]} alt={p.title} />
                     )

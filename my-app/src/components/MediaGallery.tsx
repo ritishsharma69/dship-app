@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import type { Product } from '../types'
+import { optimizeImage } from '../lib/cloudinary'
 
 export default function MediaGallery({ product }: { product: Product }) {
   const images = product.images ?? []
@@ -148,7 +149,7 @@ export default function MediaGallery({ product }: { product: Product }) {
           >
 	            {media[active]?.src && !broken[active] ? (
 	              <img
-	                src={media[active]?.src}
+	                src={optimizeImage(media[active]?.src, 'product')}
 	                alt={product.title}
 	                className="gallery-main"
 	                loading="lazy"
@@ -177,7 +178,7 @@ export default function MediaGallery({ product }: { product: Product }) {
             ) : (
 	              (m.src && !broken[i]) ? (
 	                <img
-	                  src={m.src}
+	                  src={optimizeImage(m.src, 'thumb')}
 	                  alt={`${product.title} ${i + 1}`}
 	                  style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
 	                  loading="lazy"
@@ -248,7 +249,7 @@ export default function MediaGallery({ product }: { product: Product }) {
 
 	          {media[active]?.type === 'image' && media[active]?.src && !broken[active] ? (
 	            <img
-	              src={media[active]?.src}
+	              src={optimizeImage(media[active]?.src, 'full')}
 	              alt={product.title}
 	              style={{
 	                maxWidth: 'min(96vw,1200px)',

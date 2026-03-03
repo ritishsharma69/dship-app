@@ -3,6 +3,7 @@ import { Box, Container, Typography, Card, CardContent, IconButton, Skeleton, Ch
 import { ArrowBack, Star, ArrowForward, ChevronLeft, ChevronRight, FilterList, GridView, ViewList } from '@mui/icons-material'
 import { useProducts, productSlug } from '../lib/products'
 import { useRouter } from '../lib/router'
+import { optimizeImage } from '../lib/cloudinary'
 
 export default function FeaturedProductsPage() {
   const { products, productsBySlug, loading } = useProducts()
@@ -113,7 +114,7 @@ export default function FeaturedProductsPage() {
                     transition: 'all 0.3s ease', '&:hover': { boxShadow: '0 8px 30px rgba(0,0,0,0.12)', transform: 'translateY(-2px)' }
                   }}>
                     <Box sx={{ width: 200, height: 160, flexShrink: 0, position: 'relative', bgcolor: '#f8f8f8' }}>
-                      {p.images[0] && <Box component="img" src={p.images[0]} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      {p.images[0] && <Box component="img" src={optimizeImage(p.images[0], 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                       {pct > 0 && <Chip label={`${pct}% OFF`} size="small" sx={{ position: 'absolute', top: 8, right: 8, bgcolor: '#ef4444', color: '#fff', fontWeight: 700, fontSize: 11 }} />}
                     </Box>
                     <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', p: 2.5 }}>
@@ -141,7 +142,7 @@ export default function FeaturedProductsPage() {
                   {/* Image Section */}
                   <Box sx={{ position: 'relative', height: 280, bgcolor: '#f8f8f8', overflow: 'hidden' }} onClick={() => navigate(p.slug)}>
                     {p.images[currentImg] ? (
-                      <Box component="img" src={p.images[currentImg]} alt={p.title} sx={{ 
+                      <Box component="img" src={optimizeImage(p.images[currentImg], 'card')} alt={p.title} sx={{
                         width: '100%', height: '100%', objectFit: 'cover',
                         transition: 'transform 0.5s ease', '&:hover': { transform: 'scale(1.05)' }
                       }} />

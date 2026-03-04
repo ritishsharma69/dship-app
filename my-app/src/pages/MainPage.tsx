@@ -340,17 +340,17 @@ export default function MainPage() {
                 <Typography fontWeight={800} sx={{ color: '#000000', fontSize: { xs: 16, sm: 18 } }}>Payment Offer</Typography>
               </Stack>
               <Typography sx={{ color: '#000000', fontSize: { xs: 15, sm: 16 }, lineHeight: 1.45, mb: 1 }}>
-                <Box component="span" sx={{ color: '#FF3F6C', fontWeight: 800 }}>Extra 5% OFF</Box> (up to ₹50) on online payments
+                <Box component="span" sx={{ color: '#FF3F6C', fontWeight: 800 }}>Cash on Delivery</Box> available on all orders!
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
-                  <Payments sx={{ fontSize: 14, color: '#FF3F6C' }} /> UPI/Cards
+                  <Payments sx={{ fontSize: 14, color: '#FF3F6C' }} /> COD Available
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
-                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Instant confirmation
+                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Fast Delivery
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, border: '1px solid #ffe0e7', background: '#fff5f7', color: '#111827', borderRadius: '999px', px: 1.2, py: 0.6, fontSize: 12, whiteSpace: 'nowrap' }}>
-                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Secure payments
+                  <CheckCircle sx={{ fontSize: 14, color: '#FF3F6C' }} /> Easy Returns
                 </Box>
               </Box>
             </Paper>

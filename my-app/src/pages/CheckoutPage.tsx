@@ -18,7 +18,7 @@ export default function CheckoutPage() {
   const { items, clear, update } = useCart()
   const { navigate } = useRouter()
   const { push } = useToast()
-  const [paymentMethod, setPaymentMethod] = useState<string>('phonepe')
+  const [paymentMethod, setPaymentMethod] = useState<string>('cod')
 
   // Discount modal state
   // COD confirmation modal
@@ -169,42 +169,53 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="container">
-      <div className="page-surface checkout-surface">
+    <div className="container" style={{ background: '#f8fafc' }}>
+      <div className="page-surface checkout-surface" style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 16px', paddingBottom: 40 }}>
         {!items.length ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center', gap: 16, padding: 32 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', textAlign: 'center', gap: 16, padding: 32, background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 64, lineHeight: 1 }}>🛒</div>
             <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#1f2937' }}>Your cart is empty</h2>
             <p style={{ margin: 0, color: '#6b7280', fontSize: 14, maxWidth: 320 }}>Looks like you haven't added anything yet. Browse our collection and find something you love!</p>
-            <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 8, padding: '12px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700 }}>
+            <button className="btn btn-primary" onClick={() => navigate('/')} style={{ marginTop: 8, padding: '12px 32px', borderRadius: 12, fontSize: 15, fontWeight: 700, background: 'linear-gradient(135deg, #FF3F6C 0%, #E73962 100%)', color: '#fff', border: 'none', cursor: 'pointer' }}>
               Continue Shopping
             </button>
           </div>
         ) : (
           <div>
-            <header style={{ padding: '8px 8px 12px 8px' }}>
-              <h1 style={{ margin: 0, fontSize: 24, letterSpacing: 0.2 }}>Checkout</h1>
-            </header>
-            <div className="checkout-grid">
-              <form className="card checkout-form" onSubmit={placeOrder} ref={formRef}>
-                <div style={{ fontWeight: 800 }}>Contact</div>
-                <div className="form-grid">
-                  <input className="input" name="email" placeholder="Email" required type="email" inputMode="email" />
-                  <input className="input" name="phone" placeholder="Phone" required pattern="[0-9]{10}" inputMode="numeric" maxLength={10} onInput={onDigits10} title="Enter 10-digit mobile number" />
-                  <input className="input" name="name" placeholder="Full name" required style={{ gridColumn: '1 / -1' }} maxLength={50} minLength={2} onInput={allowLetters} />
+            <div className="checkout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 24, alignItems: 'start' }}>
+              <form className="card checkout-form" onSubmit={placeOrder} ref={formRef} style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
+                
+                {/* Contact Section */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontSize: 24 }}>📧</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#1f2937' }}>Contact Information</div>
+                </div>
+                <div className="form-grid" style={{ display: 'grid', gap: 12 }}>
+                  <input className="input" name="email" placeholder="📧 Email address" required type="email" inputMode="email" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} />
+                  <input className="input" name="phone" placeholder="📱 Phone number" required pattern="[0-9]{10}" inputMode="numeric" maxLength={10} onInput={onDigits10} title="Enter 10-digit mobile number" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} />
+                  <input className="input" name="name" placeholder="👤 Full name" required style={{ gridColumn: '1 / -1', padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} maxLength={50} minLength={2} onInput={allowLetters} />
                 </div>
 
-                <div style={{ fontWeight: 800, marginTop: 6 }}>Shipping</div>
-                <div className="form-grid">
-                  <input className="input" name="line1" placeholder="Address line 1" required style={{ gridColumn: '1 / -1' }} minLength={5} maxLength={120} />
-                  <input className="input" name="line2" placeholder="Address line 2 (optional)" style={{ gridColumn: '1 / -1' }} maxLength={120} />
-                  <input className="input" name="city" placeholder="City" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" />
-                  <input className="input" name="state" placeholder="State" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" />
-                  <input className="input" name="zip" placeholder="PIN/ZIP" required pattern="[0-9]{6}" inputMode="numeric" maxLength={6} onInput={onDigits6} title="Enter 6-digit PIN code" />
+                {/* Shipping Section */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 16 }}>
+                  <span style={{ fontSize: 24 }}>🚚</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#1f2937' }}>Shipping Address</div>
+                </div>
+                <div className="form-grid" style={{ display: 'grid', gap: 12 }}>
+                  <input className="input" name="line1" placeholder="🏠 Address line 1" required style={{ gridColumn: '1 / -1', padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} minLength={5} maxLength={120} />
+                  <input className="input" name="line2" placeholder="🏢 Address line 2 (optional)" style={{ gridColumn: '1 / -1', padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} maxLength={120} />
+                  <input className="input" name="city" placeholder="🌆 City" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} />
+                  <input className="input" name="state" placeholder="🗺️ State" required pattern="[A-Za-z\\s]{2,40}" maxLength={40} onInput={allowLetters} title="Letters and spaces only" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} />
+                  <input className="input" name="zip" placeholder="📍 PIN Code" required pattern="[0-9]{6}" inputMode="numeric" maxLength={6} onInput={onDigits6} title="Enter 6-digit PIN code" style={{ padding: '14px 16px', borderRadius: 10, border: '1px solid #e5e7eb', fontSize: 15 }} />
                 </div>
                 <input type="hidden" name="country" value="India" />
 
-                <div style={{ fontWeight: 800, marginTop: 6 }}>Payment</div>
+                {/* Payment Section */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 16 }}>
+                  <span style={{ fontSize: 24 }}>💳</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#1f2937' }}>Payment Method</div>
+                </div>
+                {/* PhonePe option - temporarily disabled
                 <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
                   <input type="radio" name="payment" value="phonepe" defaultChecked={true}
                     onChange={() => setPaymentMethod('phonepe')} />
@@ -213,50 +224,65 @@ export default function CheckoutPage() {
                     <div className="small-muted" style={{ marginTop: 4 }}>You’ll be redirected to PhonePe to complete payment</div>
                   </div>
                 </label>
-                <label className="payment-row" style={{ gap: 8, alignItems: 'flex-start' as const }}>
-                  <input type="radio" name="payment" value="cod"
-                    onChange={() => setPaymentMethod('cod')} />
-                  <div>
-                    <div style={{ fontWeight: 600 }}>Cash on Delivery (COD)</div>
-                    <div style={{ color: 'var(--color-muted)', fontSize: 12, marginTop: 4 }}>Pay with cash when your order arrives</div>
+                */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 12, border: '2px solid #FF3F6C', background: 'linear-gradient(135deg, #fff5f7 0%, #fff 100%)', cursor: 'pointer', marginBottom: 20 }}>
+                  <input type="radio" name="payment" value="cod" defaultChecked={true}
+                    onChange={() => setPaymentMethod('cod')} style={{ width: 20, height: 20, accentColor: '#FF3F6C' }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#1f2937', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span>💵</span> Cash on Delivery (COD)
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>Pay with cash when your order arrives at your doorstep</div>
                   </div>
+                  <span style={{ background: '#22c55e', color: '#fff', padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700 }}>Available</span>
                 </label>
+
                 {paymentMethod !== 'cod' ? (
-                  <button className="btn btn-buy order-btn" type="submit">Pay & Order</button>
+                  <button className="btn btn-buy order-btn" type="submit" style={{ width: '100%', padding: '16px 24px', borderRadius: 12, fontSize: 16, fontWeight: 800, background: 'linear-gradient(135deg, #FF3F6C 0%, #E73962 100%)', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(255,63,108,0.3)' }}>🛒 Pay & Order</button>
                 ) : (
-                  <button className="btn btn-buy order-btn" type="button" onClick={() => setShowConfirmCOD(true)}>Place COD Order</button>
+                  <button className="btn btn-buy order-btn" type="button" onClick={() => setShowConfirmCOD(true)} style={{ width: '100%', padding: '16px 24px', borderRadius: 12, fontSize: 16, fontWeight: 800, background: 'linear-gradient(135deg, #FF3F6C 0%, #E73962 100%)', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 15px rgba(255,63,108,0.3)' }}>🛒 Place COD Order</button>
                 )}
               </form>
 
-              <aside className="card order-summary-card">
-                <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 4 }}>Order Summary</div>
+              <aside className="card order-summary-card" style={{ background: '#fff', borderRadius: 16, padding: '16px', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 20px rgba(0,0,0,0.04)', height: 'fit-content', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontSize: 24 }}>📦</span>
+                  <div style={{ fontWeight: 800, fontSize: 18, color: '#1f2937' }}>Order Summary</div>
+                </div>
                 {items.slice(0,5).map(i => (
-                  <div key={i.product.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center', padding: '8px 0', borderBottom: '1px dashed var(--color-border)' }}>
-                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.product.title}</div>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <div className="qty-stepper">
-                        <button type="button" className="stepper-btn" onClick={() => {
-                          const nextQty = i.quantity - 1
-                          if (nextQty <= 0) {
-                            setPendingProductId(i.product.id)
-                            setShowDiscount(true)
-                          } else {
-                            update(i.product.id, nextQty)
-                          }
-                        }}>-</button>
-                        <span className="stepper-value">x{i.quantity}</span>
-                        <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
+                  <div key={i.product.id} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', padding: '12px 0', borderBottom: '1px dashed var(--color-border)' }}>
+                    <img
+                      src={i.product.images?.[0] || '/placeholder.png'}
+                      alt={i.product.title}
+                      style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, border: '1px solid #eee', flexShrink: 0 }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 14 }}>{i.product.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                        <div className="qty-stepper" style={{ transform: 'scale(0.9)', transformOrigin: 'left' }}>
+                          <button type="button" className="stepper-btn" onClick={() => {
+                            const nextQty = i.quantity - 1
+                            if (nextQty <= 0) {
+                              setPendingProductId(i.product.id)
+                              setShowDiscount(true)
+                            } else {
+                              update(i.product.id, nextQty)
+                            }
+                          }}>-</button>
+                          <span className="stepper-value">x{i.quantity}</span>
+                          <button type="button" className="stepper-btn" onClick={() => update(i.product.id, i.quantity + 1)}>+</button>
+                        </div>
+                        <span style={{ fontWeight: 800, fontSize: 14 }}>₹{i.product.price * i.quantity}</span>
+                        <button
+                          type="button"
+                          className="btn btn-remove"
+                          onClick={() => { setPendingProductId(i.product.id); setShowDiscount(true) }}
+                          style={{ padding: '4px 10px', fontSize: 12 }}
+                          aria-label={`Remove ${i.product.title} from cart`}
+                        >
+                          Remove
+                        </button>
                       </div>
-                      <span style={{ fontWeight: 800 }}>₹{i.product.price * i.quantity}</span>
-                      <button
-                        type="button"
-                        className="btn btn-remove"
-                        onClick={() => { setPendingProductId(i.product.id); setShowDiscount(true) }}
-                        style={{ marginLeft: 6 }}
-                        aria-label={`Remove ${i.product.title} from cart`}
-                      >
-                        Remove
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -265,16 +291,41 @@ export default function CheckoutPage() {
                     +{items.length - 5} more item(s)
                   </div>
                 )}
-                <div className="list-row"><span>Subtotal</span><span>₹{subtotal}</span></div>
-                {couponApplied && (
-                  <div className="list-row" style={{ color:'#22c55e' }}>
-                    <span>Coupon (YOUARESPECIAL)</span><span>-₹50</span>
+                {/* Price breakdown */}
+                <div style={{ marginTop: 16, padding: '12px 0', borderTop: '1px dashed #e5e7eb' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, color: '#6b7280', fontSize: 14 }}>
+                    <span>Subtotal</span><span style={{ color: '#1f2937', fontWeight: 600 }}>₹{subtotal}</span>
                   </div>
-                )}
-                <div className="list-row"><span>Shipping</span><span>₹{shipping}</span></div>
-                <div className="list-row"><span>Tax</span><span>₹{tax}</span></div>
-                <div className="order-total">
-                  <span>Total</span><span>₹{Math.max(0, total - (couponApplied ? 50 : 0))}</span>
+                  {couponApplied && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, color: '#22c55e', fontSize: 14 }}>
+                      <span>🎉 Coupon</span><span style={{ fontWeight: 600 }}>-₹50</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, color: '#6b7280', fontSize: 14 }}>
+                    <span>🚚 Shipping</span><span style={{ color: shipping === 0 ? '#22c55e' : '#1f2937', fontWeight: 600 }}>{shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, color: '#6b7280', fontSize: 14 }}>
+                    <span>Tax</span><span style={{ color: '#1f2937', fontWeight: 600 }}>₹{tax}</span>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'linear-gradient(135deg, #fff5f7 0%, #fff 100%)', borderRadius: 12, border: '2px solid #FF3F6C' }}>
+                  <span style={{ fontWeight: 800, fontSize: 16, color: '#1f2937' }}>Total</span>
+                  <span style={{ fontWeight: 900, fontSize: 20, color: '#FF3F6C' }}>₹{Math.max(0, total - (couponApplied ? 50 : 0))}</span>
+                </div>
+
+                {/* Trust badges */}
+                <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: '#166534', padding: '5px 10px', borderRadius: 16, fontSize: 10, fontWeight: 600 }}>
+                    🔒 Secure
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#fef3c7', color: '#92400e', padding: '5px 10px', borderRadius: 16, fontSize: 10, fontWeight: 600 }}>
+                    🚚 Fast
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ede9fe', color: '#5b21b6', padding: '5px 10px', borderRadius: 16, fontSize: 10, fontWeight: 600 }}>
+                    ↩️ Returns
+                  </span>
                 </div>
               </aside>
             </div>

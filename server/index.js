@@ -1392,6 +1392,34 @@ try {
   console.error('[routes] Failed to register PATCH /api/orders/:id/status:', err.message)
 }
 
+// Admin: delete order
+try {
+  app.delete('/api/orders/:id', async (req, res) => {
+    try {
+      const email = parseDemoToken(req.headers.authorization)
+      const adminEmail = process.env.ADMIN_EMAIL || 'khushiyanstore@gmail.com'
+      if (!email || email !== adminEmail) return res.status(403).json({ error: 'Forbidden' })
+
+      const id = String(req.params.id || '')
+      if (!id) return res.status(400).json({ error: 'missing_id' })
+
+      const database = await getDb()
+      const filter = { _id: new ObjectId(id) }
+      const del = await database.collection('orders').deleteOne(filter)
+      if (!del.deletedCount) return res.status(404).json({ error: 'Order not found' })
+
+      console.log(`[orders] Admin deleted order ${id}`)
+      res.json({ ok: true })
+    } catch (err) {
+      console.error('DELETE /api/orders/:id error', err)
+      res.status(500).json({ error: 'Internal error' })
+    }
+  })
+  console.log('[routes] DELETE /api/orders/:id registered')
+} catch (err) {
+  console.error('[routes] Failed to register DELETE /api/orders/:id:', err.message)
+}
+
 // ----- AI Chatbot (Groq) -----
 // POST /api/chat - AI chatbot using Groq API (llama-3.3-70b-versatile)
 // Fetches real products from DB to give accurate information

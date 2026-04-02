@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AdminGuard from '../admin/AdminGuard'
 import AdminLayout from '../admin/AdminLayout'
 import { getAuthToken } from '../lib/auth'
-import { apiGetJson, apiPatchJson } from '../lib/api'
+import { apiDeleteJson, apiGetJson, apiPatchJson } from '../lib/api'
 import { useRouter } from '../lib/router'
 import { useToast } from '../lib/toast'
 
@@ -40,6 +40,8 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [open, setOpen] = useState<Record<string, boolean>>({})
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   async function load() {
     setError(null)
@@ -63,6 +65,20 @@ export default function AdminOrdersPage() {
       push(`Status set to ${newStatus}`)
     } catch (e: any) {
       push(e?.message || 'Failed to update status')
+    }
+  }
+
+  async function deleteOrder(orderId: string) {
+    setDeleting(true)
+    try {
+      await apiDeleteJson(`/api/orders/${orderId}`, undefined, { authToken: tok, loaderText: 'Deleting…', timeoutMs: 45000 })
+      setList(prev => prev.filter(o => o.id !== orderId))
+      push('Order deleted')
+      setConfirmDelete(null)
+    } catch (e: any) {
+      push(e?.message || 'Failed to delete order')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -162,6 +178,7 @@ export default function AdminOrdersPage() {
                       )}
                       <button onClick={() => { const a = o.address; navigator.clipboard.writeText(`${o.customer?.name || ''}\n${a?.line1 || ''}\n${a?.city || ''}, ${a?.state || ''} ${a?.zip || ''}\n${o.customer?.phone || a?.phone || ''}`); push('Address copied!') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📋 Copy Address</button>
                       <button onClick={() => { const a = o.address; window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${a?.line1 || ''} ${a?.city || ''} ${a?.state || ''} ${a?.zip || ''}`)}`, '_blank') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📍 Open in Maps</button>
+                      <button onClick={() => setConfirmDelete(o.id)} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>🗑️ Delete</button>
                     </div>
                   </div>
                 )}
@@ -173,6 +190,22 @@ export default function AdminOrdersPage() {
         {!loading && filtered.length === 0 ? (
           <Typography color="text.secondary" sx={{ mt: 2 }}>No orders.</Typography>
         ) : null}
+
+        {/* Delete confirmation dialog */}
+        {confirmDelete && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: '#1f2937' }}>🗑️ Delete Order?</div>
+              <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>
+                Are you sure you want to delete order <b>#{confirmDelete.slice(-8)}</b>? This action cannot be undone.
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button onClick={() => setConfirmDelete(null)} disabled={deleting} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => deleteOrder(confirmDelete)} disabled={deleting} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Deleting…' : 'Delete'}</button>
+              </div>
+            </div>
+          </div>
+        )}
       </AdminLayout>
     </AdminGuard>
   )

@@ -114,8 +114,8 @@ export default function MainPage() {
 			  __clearToastTimer()
 			  cycleRef.current = window.setTimeout(() => {
 			    setShowToast(false)
-			    cycleRef.current = window.setTimeout(__showThenHide, 15000)
-			  }, 5000)
+			    cycleRef.current = window.setTimeout(__showThenHide, 8000)
+			  }, 7000)
 			}
 			__showThenHide()
 

@@ -11,9 +11,9 @@ type ImageSize = 'thumb' | 'card' | 'product' | 'full'
 
 const SIZE_MAP: Record<ImageSize, number> = {
   thumb: 100,    // Thumbnails, dots
-  card: 400,     // Product cards on homepage
-  product: 800,  // Product detail page
-  full: 1200,    // Lightbox / zoom
+  card: 800,     // Product cards on homepage
+  product: 1000, // Product detail page
+  full: 1400,    // Lightbox / zoom
 }
 
 /**

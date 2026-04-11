@@ -267,7 +267,7 @@ export default function SimpleHomePage() {
                       >
                         {slide.image ? (
                           <Box component="img" loading="lazy" src={optimizeImage(slide.image, 'product')} alt={slide.title} sx={{
-                            width: '100%', height: '100%', objectFit: 'cover',
+                            width: '100%', height: '100%', objectFit: 'contain', p: 1,
                           }} onError={(e: any) => { e.target.style.display = 'none' }} />
                         ) : (
                           <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', bgcolor: '#f5f5f5' }}>
@@ -283,6 +283,26 @@ export default function SimpleHomePage() {
                     )
                   })
                 })()}
+
+                {/* Left / Right navigation arrows */}
+                {heroSlides.length > 1 && (
+                  <>
+                    <IconButton
+                      size="small"
+                      onClick={() => setSlideIdx((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
+                      sx={{ position: 'absolute', left: { xs: 4, md: 10 }, top: '50%', transform: 'translateY(-50%)', zIndex: 20, bgcolor: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', '&:hover': { bgcolor: '#fff' }, width: { xs: 32, md: 38 }, height: { xs: 32, md: 38 } }}
+                    >
+                      <ChevronLeftRounded sx={{ fontSize: { xs: 20, md: 24 } }} />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => setSlideIdx((prev) => (prev + 1) % heroSlides.length)}
+                      sx={{ position: 'absolute', right: { xs: 4, md: 10 }, top: '50%', transform: 'translateY(-50%)', zIndex: 20, bgcolor: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', '&:hover': { bgcolor: '#fff' }, width: { xs: 32, md: 38 }, height: { xs: 32, md: 38 } }}
+                    >
+                      <ChevronRightRounded sx={{ fontSize: { xs: 20, md: 24 } }} />
+                    </IconButton>
+                  </>
+                )}
               </Box>
 
               {/* Bottom info section */}
@@ -415,7 +435,7 @@ export default function SimpleHomePage() {
                         const idx = featImgIdx[p.id] || 0
                         const cur = imgs[idx] || imgs[0]
                         return cur ? (
-                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                         ) : (
                           <Media src={undefined} alt={p.title} />
                         )

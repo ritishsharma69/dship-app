@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Box, Container, Typography, Card, CardContent, IconButton, Skeleton, Chip, Button } from '@mui/material'
 import { ArrowBack, Star, ArrowForward, ChevronLeft, ChevronRight, FilterList, GridView, ViewList } from '@mui/icons-material'
 import { useProducts, productSlug } from '../lib/products'
@@ -8,6 +8,7 @@ import { optimizeImage } from '../lib/cloudinary'
 export default function FeaturedProductsPage() {
   const { products, productsBySlug, loading } = useProducts()
   const { navigate } = useRouter()
+  useEffect(() => { document.title = 'Featured Products — Khushiyan Store | Bestsellers & Trending' }, [])
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [featImgIdx, setFeatImgIdx] = useState<Record<string, number>>({})
 

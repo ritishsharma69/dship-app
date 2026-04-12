@@ -1,0 +1,12 @@
+# Khushiyan Store - robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /order/
+Disallow: /payment/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://khushiyan.store/sitemap.xml

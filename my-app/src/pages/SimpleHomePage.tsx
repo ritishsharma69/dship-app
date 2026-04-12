@@ -106,6 +106,39 @@ export default function SimpleHomePage() {
 
   const popular = useMemo(() => featured.slice(0, 6), [featured])
 
+  // SEO: Homepage title, description & canonical
+  useEffect(() => {
+    document.title = 'Khushiyan Store — Best Home & Kitchen Essentials | Free Delivery India'
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta) }
+    meta.content = 'Shop premium home & kitchen essentials at Khushiyan Store. Hand juicers, massagers, table lamps & more. Free fast delivery, COD available, easy returns across India.'
+    // Canonical
+    let canon = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+    if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon) }
+    canon.href = 'https://khushiyan.store/'
+    return () => { canon?.remove() }
+  }, [])
+
+  // JSON-LD: WebSite + Organization schema
+  const homeLd = useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        name: 'Khushiyan Store',
+        url: 'https://khushiyan.store/',
+        potentialAction: { '@type': 'SearchAction', target: 'https://khushiyan.store/featured?q={search_term_string}', 'query-input': 'required name=search_term_string' },
+      },
+      {
+        '@type': 'Organization',
+        name: 'Khushiyan Store',
+        url: 'https://khushiyan.store/',
+        logo: 'https://khushiyan.store/mainlogo.png',
+        contactPoint: { '@type': 'ContactPoint', email: 'support@khushiyan.store', contactType: 'customer service' },
+      },
+    ],
+  }), [])
+
   // Scroll reveals
   useEffect(() => {
     const root = rootRef.current
@@ -185,6 +218,7 @@ export default function SimpleHomePage() {
 
   return (
     <Box sx={{ background: 'radial-gradient(1200px 600px at 10% 0%, #fff 0%, #FBF7F1 45%, #F6F0E6 100%)' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeLd) }} />
       <Container sx={{ py: { xs: 2.5, md: 5 } }} ref={rootRef}>
         {/* Top Bento (Hero) */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gap: 2, mb: { xs: 3, md: 5 } }}>

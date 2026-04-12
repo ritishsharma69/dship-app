@@ -1,9 +1,11 @@
+import { useEffect } from 'react'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
 
 export default function ContactUsPage() {
   const support = 'khushiyanstore@gmail.com'
+  useEffect(() => { document.title = 'Contact Us — Khushiyan Store | Email, Support & Help' }, [])
   return (
     <Container sx={{ py: { xs: 4, md: 6 } }}>
       <Box sx={{ maxWidth: 620, mx: 'auto', textAlign: 'center' }}>

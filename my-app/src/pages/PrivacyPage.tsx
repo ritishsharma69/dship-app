@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
@@ -13,6 +14,7 @@ const Section = ({ icon, title, items }: { icon: string; title: string; items: s
 
 export default function PrivacyPage() {
   const email = 'khushiyanstore@gmail.com'
+  useEffect(() => { document.title = 'Privacy Policy — Khushiyan Store' }, [])
   return (
     <Container sx={{ py: { xs: 4, md: 6 } }}>
       <Box sx={{ maxWidth: 720, mx: 'auto' }}>

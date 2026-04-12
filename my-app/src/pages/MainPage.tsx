@@ -45,30 +45,64 @@ export default function MainPage() {
 
   const out = p?.inventoryStatus === 'OUT_OF_STOCK'
 
-  // SEO title and description
+  // SEO title, description & OG tags
   useEffect(() => {
     if (!p) return
-    document.title = `${p.title} — ${p.bullets[0]} | ${p.brand ?? 'Brand'}`
+    const title = `${p.title} — ${p.bullets[0]} | ${p.brand ?? 'Khushiyan Store'}`
+    document.title = title
     const baseDesc = p.description || [p.descriptionHeading, ...(p.descriptionPoints ?? [])].filter(Boolean).join(' • ') || `${p.bullets.slice(0, 3).join(' • ')}`
     const desc = `${baseDesc}`.slice(0, 160)
-    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null
-    if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta) }
-    meta!.content = desc
+
+    const setMeta = (attr: string, key: string, content: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null
+      if (!el) { el = document.createElement('meta'); el.setAttribute(attr, key); document.head.appendChild(el) }
+      el.content = content
+    }
+    setMeta('name', 'description', desc)
+    setMeta('property', 'og:title', title)
+    setMeta('property', 'og:description', desc)
+    setMeta('property', 'og:image', p.images[0] || 'https://khushiyan.store/mainlogo.png')
+    setMeta('property', 'og:url', window.location.href)
+    setMeta('property', 'og:type', 'product')
+    setMeta('name', 'twitter:card', 'summary_large_image')
+    setMeta('name', 'twitter:title', title)
+    setMeta('name', 'twitter:description', desc)
+    setMeta('name', 'twitter:image', p.images[0] || 'https://khushiyan.store/mainlogo.png')
+
+    // Canonical
+    let canon = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
+    if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon) }
+    canon.href = window.location.href.split('?')[0]
   }, [p])
 
-  // JSON-LD
+  // JSON-LD Product + BreadcrumbList
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
+    const desc = p.description || p.bullets?.slice(0, 3).join('. ') || ''
     return {
-      '@context': 'https://schema.org', '@type': 'Product', name: p.title, sku: p.sku,
-      brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
-      image: p.images,
-      aggregateRating: (p.ratingCount ?? 0) > 0 ? { '@type': 'AggregateRating', ratingValue: (p.ratingAvg ?? 0).toFixed(1), reviewCount: p.ratingCount } : undefined,
-      offers: {
-        '@type': 'Offer', priceCurrency: 'INR', price: p.price,
-        availability: out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
-        url: typeof window !== 'undefined' ? window.location.href : undefined,
-      },
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Product', name: p.title, sku: p.sku,
+          description: desc.slice(0, 300),
+          brand: p.brand ? { '@type': 'Brand', name: p.brand } : undefined,
+          image: p.images,
+          aggregateRating: (p.ratingCount ?? 0) > 0 ? { '@type': 'AggregateRating', ratingValue: (p.ratingAvg ?? 0).toFixed(1), reviewCount: p.ratingCount } : undefined,
+          offers: {
+            '@type': 'Offer', priceCurrency: 'INR', price: p.price,
+            availability: out ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+            url: typeof window !== 'undefined' ? window.location.href : undefined,
+            seller: { '@type': 'Organization', name: 'Khushiyan Store' },
+          },
+        },
+        {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://khushiyan.store/' },
+            { '@type': 'ListItem', position: 2, name: p.title, item: typeof window !== 'undefined' ? window.location.href : undefined },
+          ],
+        },
+      ],
     }
   }, [p, out])
 

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Container from '@mui/material/Container'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
@@ -5,6 +6,7 @@ import Stack from '@mui/material/Stack'
 
 export default function ShippingReturnsPage() {
   const email = 'khushiyanstore@gmail.com'
+  useEffect(() => { document.title = 'Shipping & Returns — Khushiyan Store' }, [])
   return (
     <Container sx={{ py: 3 }}>
       <Paper variant="outlined" square elevation={0} sx={{ width: '100%', maxWidth: 980, mx: 'auto', p: 3, borderRadius: 0, textAlign: 'left', borderColor: 'rgba(0,0,0,0.18)' }}>

@@ -16,6 +16,7 @@ import Skeleton from '@mui/material/Skeleton'
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any; hasReturn?: boolean }
 
 export default function OrdersPage() {
+  useEffect(() => { document.title = 'My Orders — Khushiyan Store | Track Your Order' }, [])
   const [email, setEmail] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [code, setCode] = useState('')

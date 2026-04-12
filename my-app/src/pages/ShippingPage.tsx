@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
@@ -14,6 +15,7 @@ const Step = ({ icon, title, desc }: { icon: string; title: string; desc: string
 
 export default function ShippingPage() {
   const email = 'khushiyanstore@gmail.com'
+  useEffect(() => { document.title = 'Shipping Policy — Khushiyan Store | Free Fast Delivery' }, [])
   return (
     <Container sx={{ py: { xs: 4, md: 6 } }}>
       <Box sx={{ maxWidth: 720, mx: 'auto' }}>

@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { useCart } from '../lib/cart'
 import { useRouter } from '../lib/router'
 
 export default function CartPage() {
+  useEffect(() => { document.title = 'Your Cart — Khushiyan Store' }, [])
   const { items, update, remove } = useCart()
   const { navigate } = useRouter()
 

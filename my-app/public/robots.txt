@@ -9,4 +9,4 @@ Disallow: /payment/
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://khushiyan.store/sitemap.xml
+Sitemap: https://www.khushiyan.store/sitemap.xml

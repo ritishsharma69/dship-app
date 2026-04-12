@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useLayoutEffect, useRef, Suspense, lazy } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import { liveNames, liveCities } from '../data'
-import { useProducts } from '../lib/products'
+import { useProducts, productSlug } from '../lib/products'
+import { optimizeImage } from '../lib/cloudinary'
 import { events } from '../analytics'
 import type { Product } from '../types'
 const MediaGallery = lazy(() => import('../components/MediaGallery'))
@@ -45,6 +46,22 @@ export default function MainPage() {
 
   const out = p?.inventoryStatus === 'OUT_OF_STOCK'
 
+  // Related products for internal linking
+  const relatedProducts = useMemo(() => {
+    if (!p) return []
+    const currentSlug = window.location.pathname.split('/').filter(Boolean)[1] || ''
+    return Object.entries(productsBySlug)
+      .filter(([slug]) => slug !== currentSlug)
+      .slice(0, 4)
+      .map(([, prod]) => ({
+        title: prod.title,
+        image: prod.images?.[0],
+        price: prod.price,
+        compareAt: prod.compareAtPrice,
+        href: '/p/' + (prod.slug || productSlug(prod)),
+      }))
+  }, [p, productsBySlug])
+
   // SEO title, description & OG tags
   useEffect(() => {
     if (!p) return
@@ -61,13 +78,13 @@ export default function MainPage() {
     setMeta('name', 'description', desc)
     setMeta('property', 'og:title', title)
     setMeta('property', 'og:description', desc)
-    setMeta('property', 'og:image', p.images[0] || 'https://khushiyan.store/mainlogo.png')
+    setMeta('property', 'og:image', p.images[0] || 'https://www.khushiyan.store/mainlogo.png')
     setMeta('property', 'og:url', window.location.href)
     setMeta('property', 'og:type', 'product')
     setMeta('name', 'twitter:card', 'summary_large_image')
     setMeta('name', 'twitter:title', title)
     setMeta('name', 'twitter:description', desc)
-    setMeta('name', 'twitter:image', p.images[0] || 'https://khushiyan.store/mainlogo.png')
+    setMeta('name', 'twitter:image', p.images[0] || 'https://www.khushiyan.store/mainlogo.png')
 
     // Canonical
     let canon = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
@@ -75,7 +92,21 @@ export default function MainPage() {
     canon.href = window.location.href.split('?')[0]
   }, [p])
 
-  // JSON-LD Product + BreadcrumbList
+  // Generate FAQ data for product
+  const productFaqs = useMemo(() => {
+    if (!p) return []
+    const title = p.title
+    const price = formatINR(p.price)
+    return [
+      { question: `What is the price of ${title}?`, answer: `The ${title} is available at ${price} on Khushiyan Store with free delivery across India.` },
+      { question: `Is Cash on Delivery available for ${title}?`, answer: `Yes, Cash on Delivery (COD) is available for the ${title}. You can also pay online via UPI, cards, or net banking.` },
+      { question: `What is the delivery time for ${title}?`, answer: `The ${title} is typically delivered within 2-5 business days across India. Tracking details are shared via SMS and email.` },
+      { question: `Can I return the ${title}?`, answer: `Yes, easy returns are available. If you're not satisfied, you can initiate a return within the return window. Visit our Returns page for details.` },
+      { question: `Is ${title} original and brand new?`, answer: `Yes, all products on Khushiyan Store including the ${title} are 100% brand new and quality checked before dispatch.` },
+    ]
+  }, [p])
+
+  // JSON-LD Product + BreadcrumbList + FAQPage
   const jsonLd: any = useMemo(() => {
     if (!p) return {}
     const desc = p.description || p.bullets?.slice(0, 3).join('. ') || ''
@@ -98,13 +129,21 @@ export default function MainPage() {
         {
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://khushiyan.store/' },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.khushiyan.store/' },
             { '@type': 'ListItem', position: 2, name: p.title, item: typeof window !== 'undefined' ? window.location.href : undefined },
           ],
         },
+        {
+          '@type': 'FAQPage',
+          mainEntity: productFaqs.map(faq => ({
+            '@type': 'Question',
+            name: faq.question,
+            acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+          })),
+        },
       ],
     }
-  }, [p, out])
+  }, [p, out, productFaqs])
 
   useEffect(() => {
     if (!p) return
@@ -243,6 +282,17 @@ export default function MainPage() {
 	      <div className="container">
 	        <div className="page-surface">
 
+          {/* Visual Breadcrumb Navigation */}
+          <Container sx={{ pt: 1.5, pb: 0.5 }}>
+            <Box component="nav" aria-label="Breadcrumb" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 13, color: '#6b7280' }}>
+              <Box component="a" href="/" sx={{ color: '#6D28D9', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>Home</Box>
+              <span>›</span>
+              <Box component="a" href="/featured" sx={{ color: '#6D28D9', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>Products</Box>
+              <span>›</span>
+              <Typography component="span" sx={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>{p?.title || 'Product'}</Typography>
+            </Box>
+          </Container>
+
           {/* Live sales popup */}
           <Suspense fallback={null}>
             <LiveSalesToast
@@ -269,7 +319,7 @@ export default function MainPage() {
           {/* Right side - Product Details */}
           <Box sx={{ pl: { md: 2 } }}>
             {/* Product Title */}
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 800, lineHeight: 1.2, color: '#000000' }}>
+            <Typography component="h1" variant="h4" sx={{ mb: 1, fontWeight: 800, lineHeight: 1.2, color: '#000000' }}>
               {p.title}
             </Typography>
 
@@ -336,7 +386,7 @@ export default function MainPage() {
             )}
 
             {/* Trust badges banner */}
-            <Box component="img" loading="lazy" src="/home-banner.png" alt="COD Available, Free Fast Delivery, Easy Returns, SSL Secure" sx={{ width: '100%', mt: 2, mb: 1, borderRadius: 2, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
+            <Box component="img" src="/home-banner.png" alt="Khushiyan Store - COD Available, Free Fast Delivery across India, Easy Returns, SSL Secure Checkout" sx={{ width: '100%', mt: 2, mb: 1, borderRadius: 2, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
 
             {/* Product Features */}
             <Box sx={{ mb: 3 }}>
@@ -415,6 +465,19 @@ export default function MainPage() {
         </Box>
       </Container>
 
+      {/* FAQ Section */}
+      <Container sx={{ py: 2 }}>
+        <Box sx={{ p: 2 }}>
+          <Typography component="h2" variant="h6" sx={{ color: '#000000', fontWeight: 800, mb: 2 }}>Frequently Asked Questions</Typography>
+          {productFaqs.map((faq, i) => (
+            <Box key={i} sx={{ mb: 2, p: 2, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+              <Typography component="h3" sx={{ fontWeight: 700, fontSize: 15, color: '#111827', mb: 0.5 }}>{faq.question}</Typography>
+              <Typography sx={{ fontSize: 14, color: '#4b5563', lineHeight: 1.6 }}>{faq.answer}</Typography>
+            </Box>
+          ))}
+        </Box>
+      </Container>
+
       {/* Social proof */}
       <Container sx={{ py: 2 }}>
         <Box className="reveal" sx={{ p: 2, display: 'grid', gap: 1.5, textAlign: 'center', boxShadow: 'none', border: 'none' }}>
@@ -446,22 +509,54 @@ export default function MainPage() {
         </Box>
       </Container>
 
+      {/* Related Products — internal linking for SEO */}
+      {relatedProducts.length > 0 && (
+        <Container sx={{ py: 3 }}>
+          <Typography component="h2" variant="h6" sx={{ fontWeight: 800, color: '#000', mb: 2 }}>You May Also Like</Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
+            {relatedProducts.map((rp, i) => (
+              <Box key={i} component="a" href={rp.href} sx={{ textDecoration: 'none', color: 'inherit', border: '1px solid #e5e7eb', borderRadius: 2, overflow: 'hidden', '&:hover': { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' } }}>
+                {rp.image && <Box component="img" loading="lazy" src={optimizeImage(rp.image, 'card')} alt={`${rp.title} - Buy online at Khushiyan Store`} sx={{ width: '100%', height: 160, objectFit: 'contain', p: 1, backgroundColor: '#fafafa' }} />}
+                <Box sx={{ p: 1.5 }}>
+                  <Typography sx={{ fontSize: 13, fontWeight: 700, color: '#111', lineHeight: 1.3, mb: 0.5 }}>{rp.title}</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 800, color: '#111' }}>{formatINR(rp.price)}</Typography>
+                    {rp.compareAt && rp.compareAt > rp.price && <Typography sx={{ fontSize: 12, color: '#9ca3af', textDecoration: 'line-through' }}>{formatINR(rp.compareAt)}</Typography>}
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </Container>
+      )}
+
       {/* Close page-surface wrapper */}
         </div>
       </div>
 
-      {/* Footer */}
+      {/* SEO-Rich Footer */}
       <footer style={{
         backgroundColor: '#f8f9fa',
-        padding: '20px 0',
-        textAlign: 'center',
+        padding: '32px 0 20px',
         borderTop: '1px solid #e9ecef',
         marginTop: '40px',
         color: '#000000'
       }}>
         <Container>
-          <Typography variant="body2" sx={{ color: '#000000' }}>
-            All rights reserved to KhushiyanStoreLtd
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', mb: 2 }}>
+            <Box component="a" href="/" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Home</Box>
+            <Box component="a" href="/featured" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>All Products</Box>
+            <Box component="a" href="/contact" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Contact Us</Box>
+            <Box component="a" href="/shipping" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Shipping Policy</Box>
+            <Box component="a" href="/cancellation-refund" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Returns & Refunds</Box>
+            <Box component="a" href="/privacy" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Privacy Policy</Box>
+            <Box component="a" href="/terms-conditions" sx={{ color: '#6D28D9', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>Terms & Conditions</Box>
+          </Box>
+          <Typography variant="body2" sx={{ color: '#6b7280', textAlign: 'center', fontSize: 12 }}>
+            Khushiyan Store — Best Home & Kitchen Essentials Online India. Free Delivery, COD Available, Easy Returns.
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#9ca3af', textAlign: 'center', fontSize: 11, mt: 1 }}>
+            © {new Date().getFullYear()} Khushiyan Store. All rights reserved.
           </Typography>
         </Container>
       </footer>

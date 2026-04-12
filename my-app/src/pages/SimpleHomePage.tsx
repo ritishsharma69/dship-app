@@ -115,29 +115,39 @@ export default function SimpleHomePage() {
     // Canonical
     let canon = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null
     if (!canon) { canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon) }
-    canon.href = 'https://khushiyan.store/'
+    canon.href = 'https://www.khushiyan.store/'
     return () => { canon?.remove() }
   }, [])
 
-  // JSON-LD: WebSite + Organization schema
+  // JSON-LD: WebSite + Organization + ItemList schema
   const homeLd = useMemo(() => ({
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'WebSite',
         name: 'Khushiyan Store',
-        url: 'https://khushiyan.store/',
-        potentialAction: { '@type': 'SearchAction', target: 'https://khushiyan.store/featured?q={search_term_string}', 'query-input': 'required name=search_term_string' },
+        url: 'https://www.khushiyan.store/',
+        potentialAction: { '@type': 'SearchAction', target: 'https://www.khushiyan.store/featured?q={search_term_string}', 'query-input': 'required name=search_term_string' },
       },
       {
         '@type': 'Organization',
         name: 'Khushiyan Store',
-        url: 'https://khushiyan.store/',
-        logo: 'https://khushiyan.store/mainlogo.png',
+        url: 'https://www.khushiyan.store/',
+        logo: 'https://www.khushiyan.store/mainlogo.png',
         contactPoint: { '@type': 'ContactPoint', email: 'support@khushiyan.store', contactType: 'customer service' },
       },
+      {
+        '@type': 'ItemList',
+        name: 'Featured Products',
+        itemListElement: featured.map((p, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          url: `https://www.khushiyan.store${p.slug}`,
+          name: p.title,
+        })),
+      },
     ],
-  }), [])
+  }), [featured])
 
   // Scroll reveals
   useEffect(() => {
@@ -227,9 +237,9 @@ export default function SimpleHomePage() {
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                 <Chip label="Premium Wellness" size="small" sx={{ bgcolor: '#F8F3CE', fontWeight: 800 }} />
               </Box>
-              <Typography className="hero-text" sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 34, md: 52 }, lineHeight: 1.02, letterSpacing: -0.5, fontWeight: 700 }}>
-                Comfort essentials,
-                <Box component="span" sx={{ display: 'block' }}>made to feel luxe.</Box>
+              <Typography component="h1" className="hero-text" sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 34, md: 52 }, lineHeight: 1.02, letterSpacing: -0.5, fontWeight: 700 }}>
+                Best Home &amp; Kitchen Essentials
+                <Box component="span" sx={{ display: 'block' }}>— Premium Quality, Free Delivery</Box>
               </Typography>
               <Typography color="text.secondary" sx={{ maxWidth: 520 }}>
                 A warm, minimal collection of tools that help you recover faster and feel lighter — every day.
@@ -240,7 +250,7 @@ export default function SimpleHomePage() {
                 </Button>
                 <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>Need help?</Button>
               </Box>
-              <Box component="img" loading="lazy" src="/home-banner.png" alt="Free delivery, Easy returns, COD, SSL secure" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
+              <Box component="img" src="/home-banner.png" alt="Khushiyan Store - Free delivery across India, Easy returns, Cash on Delivery, SSL secure checkout" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
             </Box>
           </Card>
 
@@ -300,7 +310,7 @@ export default function SimpleHomePage() {
                         }}
                       >
                         {slide.image ? (
-                          <Box component="img" loading="lazy" src={optimizeImage(slide.image, 'product')} alt={slide.title} sx={{
+                          <Box component="img" fetchPriority="high" src={optimizeImage(slide.image, 'product')} alt={`${slide.title} - Buy online at Khushiyan Store`} sx={{
                             width: '100%', height: '100%', objectFit: 'contain', p: 1,
                           }} onError={(e: any) => { e.target.style.display = 'none' }} />
                         ) : (
@@ -469,7 +479,7 @@ export default function SimpleHomePage() {
                         const idx = featImgIdx[p.id] || 0
                         const cur = imgs[idx] || imgs[0]
                         return cur ? (
-                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={`${p.title} - Buy online at best price in India | Khushiyan Store`} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                         ) : (
                           <Media src={undefined} alt={p.title} />
                         )
@@ -646,7 +656,7 @@ export default function SimpleHomePage() {
                       )
                     }
                     return p.images[0] ? (
-                      <Box component="img" loading="lazy" className="card-img" src={optimizeImage(p.images[0], 'card')} alt={p.title} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                      <Box component="img" loading="lazy" className="card-img" src={optimizeImage(p.images[0], 'card')} alt={`${p.title} - Shop trending products online India | Khushiyan Store`} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
                     ) : (
                       <Media src={p.images[0]} alt={p.title} />
                     )

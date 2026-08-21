@@ -32,12 +32,18 @@ import Tooltip from '@mui/material/Tooltip'
 
 import Box from '@mui/material/Box'
 
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
+
 import SearchIcon from '@mui/icons-material/Search'
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import PublishRoundedIcon from '@mui/icons-material/PublishRounded'
 
 type AdminProduct = Product & { createdAt?: string | null; updatedAt?: string | null }
 
@@ -113,6 +119,7 @@ function ProductDialog({
   const [testimonials, setTestimonials] = useState('')
   const [ratingAvg, setRatingAvg] = useState('')
   const [ratingCount, setRatingCount] = useState('')
+  const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -136,6 +143,7 @@ function ProductDialog({
     setTestimonials(testimonialsToLines((p as any).testimonials))
     setRatingAvg((p as any).ratingAvg != null ? String((p as any).ratingAvg) : '')
     setRatingCount((p as any).ratingCount != null ? String((p as any).ratingCount) : '')
+    setHidden((p as any).hidden === true)
   }, [open, initial])
 
   const valid = title.trim().length > 0 && sku.trim().length > 0
@@ -300,6 +308,7 @@ function ProductDialog({
       testimonials: parseTestimonials(testimonials),
       ratingAvg: ratingAvg ? Number(ratingAvg) : null,
       ratingCount: ratingCount ? Number(ratingCount) : null,
+      hidden,
     }
 
     setBusy(true)
@@ -349,6 +358,22 @@ function ProductDialog({
               <MenuItem value="OUT_OF_STOCK">OUT_OF_STOCK</MenuItem>
             </TextField>
           </Stack>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, p: 1.5, borderRadius: 2, bgcolor: hidden ? 'rgba(245, 158, 11, 0.08)' : 'rgba(34, 197, 94, 0.08)', border: '1px solid', borderColor: hidden ? 'rgba(245, 158, 11, 0.35)' : 'rgba(34, 197, 94, 0.35)' }}>
+            <Box>
+              <Typography sx={{ fontWeight: 900, fontSize: 14 }}>
+                {hidden ? 'Hidden (admin-only draft)' : 'Live (visible to customers)'}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {hidden ? 'Customers will NOT see this product on the storefront, search, or featured pages.' : 'This product appears on the storefront, featured page, and is searchable.'}
+              </Typography>
+            </Box>
+            <FormControlLabel
+              control={<Switch checked={!hidden} onChange={(e) => setHidden(!e.target.checked)} color="success" />}
+              label={hidden ? 'Publish' : 'Published'}
+              labelPlacement="start"
+              sx={{ m: 0, '& .MuiFormControlLabel-label': { fontWeight: 800, fontSize: 13 } }}
+            />
+          </Box>
           <Divider />
 	          <TextField
 	            label="Images (one URL per line)"
@@ -622,6 +647,11 @@ export default function AdminProductsPage() {
   const [confirmDel, setConfirmDel] = useState<AdminProduct | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [bulkPublishing, setBulkPublishing] = useState(false)
+
+  const hiddenCount = useMemo(() => rows.filter(r => (r as any).hidden === true).length, [rows])
+
   async function load() {
     setError(null)
     setLoading(true)
@@ -668,6 +698,42 @@ export default function AdminProductsPage() {
     }
   }
 
+  async function togglePublish(p: AdminProduct) {
+    const id = String(p.id || '')
+    if (!id || togglingId) return
+    const nextHidden = !((p as any).hidden === true)
+    setTogglingId(id)
+    try {
+      await apiPatchJson(`/api/products/admin/${id}`, { hidden: nextHidden }, { authToken: tok, loaderText: nextHidden ? 'Hiding…' : 'Publishing…', timeoutMs: 30000 })
+      setRows(rs => rs.map(r => r.id === id ? ({ ...r, hidden: nextHidden } as AdminProduct) : r))
+      push(nextHidden ? 'Product hidden from customers' : 'Product is now live')
+    } catch (e: any) {
+      push(e?.message || 'Failed to update visibility')
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
+  async function publishAllHidden() {
+    const targets = rows.filter(r => (r as any).hidden === true)
+    if (!targets.length || bulkPublishing) return
+    if (!window.confirm(`Publish ${targets.length} hidden product${targets.length === 1 ? '' : 's'}? They will become visible to customers immediately.`)) return
+    setBulkPublishing(true)
+    let okCount = 0
+    let failCount = 0
+    for (const p of targets) {
+      try {
+        await apiPatchJson(`/api/products/admin/${p.id}`, { hidden: false }, { authToken: tok, timeoutMs: 30000 })
+        okCount++
+      } catch {
+        failCount++
+      }
+    }
+    setBulkPublishing(false)
+    push(`Published ${okCount}${failCount ? ` (${failCount} failed)` : ''}`)
+    await load()
+  }
+
   return (
     <AdminGuard>
       <AdminLayout
@@ -675,6 +741,14 @@ export default function AdminProductsPage() {
         actions={
           <Stack direction="row" spacing={1} alignItems="center">
             <Chip label={loading ? 'Loading…' : `${rows.length} shown`} variant="outlined" sx={{ fontWeight: 900 }} />
+            {hiddenCount > 0 ? (
+              <Chip
+                color="warning"
+                label={`${hiddenCount} hidden`}
+                variant="filled"
+                sx={{ fontWeight: 900 }}
+              />
+            ) : null}
             <Tooltip title="Refresh">
               <IconButton color="inherit" onClick={load}><RefreshIcon /></IconButton>
             </Tooltip>
@@ -705,6 +779,18 @@ export default function AdminProductsPage() {
             >
               {[25, 50, 100, 200].map(n => <MenuItem key={n} value={n}>{n}</MenuItem>)}
             </TextField>
+            {hiddenCount > 0 ? (
+              <Button
+                variant="outlined"
+                color="warning"
+                startIcon={<PublishRoundedIcon />}
+                onClick={publishAllHidden}
+                disabled={bulkPublishing}
+                sx={{ fontWeight: 800 }}
+              >
+                {bulkPublishing ? 'Publishing…' : `Publish all hidden (${hiddenCount})`}
+              </Button>
+            ) : null}
             <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
               New
             </Button>
@@ -721,12 +807,13 @@ export default function AdminProductsPage() {
                 <TableCell sx={{ fontWeight: 950 }}>SKU</TableCell>
                 <TableCell sx={{ fontWeight: 950 }}>Price</TableCell>
                 <TableCell sx={{ fontWeight: 950 }}>Inventory</TableCell>
-                <TableCell sx={{ fontWeight: 950, width: 120 }}>Actions</TableCell>
+                <TableCell sx={{ fontWeight: 950, width: 110 }}>Visibility</TableCell>
+                <TableCell sx={{ fontWeight: 950, width: 160 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {rows.map((p) => (
-                <TableRow key={p.id} hover>
+                <TableRow key={p.id} hover sx={{ ...((p as any).hidden === true ? { bgcolor: 'rgba(245, 158, 11, 0.04)' } : {}) }}>
                   <TableCell>
                     <Avatar variant="rounded" src={(p.images || [])[0] || undefined} sx={{ width: 48, height: 48 }}>
                       {String(p.title || 'P').slice(0, 1).toUpperCase()}
@@ -745,6 +832,24 @@ export default function AdminProductsPage() {
                   </TableCell>
                   <TableCell>{inventoryChip(p.inventoryStatus)}</TableCell>
                   <TableCell>
+                    {(p as any).hidden === true ? (
+                      <Chip size="small" color="warning" icon={<VisibilityOffIcon sx={{ fontSize: 14 }} />} label="Hidden" sx={{ fontWeight: 800 }} />
+                    ) : (
+                      <Chip size="small" color="success" icon={<VisibilityIcon sx={{ fontSize: 14 }} />} label="Live" sx={{ fontWeight: 800 }} />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip title={(p as any).hidden === true ? 'Publish (make visible to customers)' : 'Hide (admin-only draft)'}>
+                      <span>
+                        <IconButton
+                          onClick={() => togglePublish(p)}
+                          disabled={togglingId === p.id}
+                          color={(p as any).hidden === true ? 'success' : 'default'}
+                        >
+                          {(p as any).hidden === true ? <VisibilityIcon /> : <VisibilityOffIcon />}
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                     <Tooltip title="Edit"><IconButton onClick={() => openEdit(p)}><EditIcon /></IconButton></Tooltip>
                     <Tooltip title="Delete"><IconButton onClick={() => setConfirmDel(p)} color="error"><DeleteIcon /></IconButton></Tooltip>
                   </TableCell>

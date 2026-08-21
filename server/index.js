@@ -855,7 +855,8 @@ async function warmProductsCache() {
       youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
       ratingAvg: 1, ratingCount: 1
     }
-    const docs = await database.collection('products').find({}, { projection }).limit(50).toArray()
+    // Exclude products marked hidden:true (drafts / admin-only)
+    const docs = await database.collection('products').find({ hidden: { $ne: true } }, { projection }).limit(50).toArray()
     const out = docs.map(d => ({
       id: String(d._id),
       title: String(d.title || ''),
@@ -898,7 +899,8 @@ try {
         youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
         ratingAvg: 1, ratingCount: 1
       }
-      const docs = await database.collection('products').find({}, { projection }).limit(50).toArray()
+      // Exclude products marked hidden:true (drafts / admin-only)
+      const docs = await database.collection('products').find({ hidden: { $ne: true } }, { projection }).limit(50).toArray()
       const out = docs.map(d => ({
         id: String(d._id),
         title: String(d.title || ''),
@@ -1008,6 +1010,8 @@ try {
         inventoryStatus: String(d.inventoryStatus || 'IN_STOCK'),
         ratingAvg: d.ratingAvg == null ? undefined : Number(d.ratingAvg),
         ratingCount: d.ratingCount == null ? undefined : Number(d.ratingCount),
+        hidden: d.hidden === true,
+        source: d.source == null ? '' : String(d.source),
         createdAt: d.createdAt || null,
         updatedAt: d.updatedAt || null,
       }))
@@ -1108,6 +1112,7 @@ try {
       if (has('ratingCount')) $set.ratingCount = body.ratingCount == null || body.ratingCount === '' ? null : Math.max(0, Number(body.ratingCount) || 0)
       if (has('sku')) $set.sku = sanitizeString(body.sku, 80)
       if (has('inventoryStatus')) $set.inventoryStatus = sanitizeString(body.inventoryStatus, 40)
+      if (has('hidden')) $set.hidden = body.hidden === true || body.hidden === 'true'
 
       if ($set.title !== undefined && !$set.title) return res.status(400).json({ error: 'title_required' })
       if ($set.sku !== undefined && !$set.sku) return res.status(400).json({ error: 'sku_required' })

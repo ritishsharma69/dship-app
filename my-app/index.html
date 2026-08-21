@@ -47,20 +47,70 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="alternate" hreflang="en-IN" href="https://www.khushiyan.store/" />
     <link rel="alternate" hreflang="x-default" href="https://www.khushiyan.store/" />
+
+    <style>
+      @keyframes spin { to { transform: rotate(360deg); } }
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #fff;
+        z-index: 2000;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      }
+      #initial-loader .spinner-wrap {
+        position: relative;
+        width: 64px;
+        height: 64px;
+      }
+      #initial-loader .spinner-track {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 4px solid rgba(109, 40, 217, 0.18);
+      }
+      #initial-loader .spinner-arc {
+        position: absolute;
+        inset: 0;
+        border-radius: 999px;
+        border: 4px solid transparent;
+        border-top-color: #6D28D9;
+        animation: spin 1s linear infinite;
+      }
+      #initial-loader .loader-text {
+        font-weight: 800;
+        font-size: 15px;
+        color: #4C1D95;
+        letter-spacing: 0.3px;
+        margin-top: 12px;
+      }
+    </style>
   </head>
   <body>
     <div id="root">
-      <!-- Pre-render SEO content (replaced by React on hydration) -->
-      <div style="max-width:1200px;margin:0 auto;padding:24px 16px">
-        <h1 style="font-family:Georgia,serif;font-size:32px;color:#111;margin:0 0 8px">Khushiyan Store — Best Home &amp; Kitchen Essentials Online India</h1>
-        <p style="color:#555;font-size:16px;line-height:1.6;max-width:700px">Shop premium trending products at Khushiyan Store. Rechargeable juicers, scalp massagers, crystal table lamps, kitchen gadgets &amp; more. Free fast delivery across India, COD available, easy returns.</p>
-        <nav aria-label="Product categories" style="margin-top:16px">
-          <ul style="list-style:none;padding:0;display:flex;gap:12px;flex-wrap:wrap">
-            <li><a href="/featured" style="color:#6D28D9;font-weight:700">Featured Products</a></li>
-            <li><a href="/p/rechargeable-hand-juicer" style="color:#6D28D9;font-weight:700">Rechargeable Hand Juicer</a></li>
-            <li><a href="/p/scalp-scratcher" style="color:#6D28D9;font-weight:700">Scalp Massager</a></li>
-            <li><a href="/p/crystal-diamond-table-lamp" style="color:#6D28D9;font-weight:700">Crystal Table Lamp</a></li>
-            <li><a href="/contact" style="color:#6D28D9;font-weight:700">Contact Us</a></li>
+      <!-- Branded loader shown before React hydrates (replaced by React mount) -->
+      <div id="initial-loader">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="spinner-wrap">
+            <div class="spinner-track"></div>
+            <div class="spinner-arc"></div>
+          </div>
+          <div class="loader-text">Loading...</div>
+        </div>
+      </div>
+
+      <!-- SEO fallback content: hidden from users, still visible to crawlers -->
+      <div style="position:absolute;left:-9999px;top:0;height:0;overflow:hidden;visibility:hidden;" aria-hidden="true">
+        <h1>Khushiyan Store — Best Home &amp; Kitchen Essentials Online India</h1>
+        <p>Shop premium trending products at Khushiyan Store. Rechargeable juicers, scalp massagers, crystal table lamps, kitchen gadgets &amp; more. Free fast delivery across India, COD available, easy returns.</p>
+        <nav aria-label="Product categories">
+          <ul>
+            <li><a href="/featured">Featured Products</a></li>
+            <li><a href="/p/rechargeable-hand-juicer">Rechargeable Hand Juicer</a></li>
+            <li><a href="/p/scalp-scratcher">Scalp Massager</a></li>
+            <li><a href="/p/crystal-diamond-table-lamp">Crystal Table Lamp</a></li>
+            <li><a href="/contact">Contact Us</a></li>
           </ul>
         </nav>
       </div>

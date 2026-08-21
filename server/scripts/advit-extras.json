@@ -1,0 +1,402 @@
+{
+  "MINI-BOOST-SPEAKER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=VUgcLdV93lo",
+    "testimonials": [
+      {
+        "author": "Rahul S., Pune",
+        "quote": "Sound is unreal for the size. Bass is punchy and Bluetooth pairs in 2 sec. Worth every rupee!",
+        "rating": 5
+      },
+      {
+        "author": "Priya M., Mumbai",
+        "quote": "Got this for my daughter's room — she loves the colour and the loud sound. Battery lasts the whole evening.",
+        "rating": 5
+      },
+      {
+        "author": "Karan D., Delhi",
+        "quote": "Perfect travel speaker. Fits in my backpack pocket. Great quality for the price.",
+        "rating": 4
+      }
+    ]
+  },
+  "CRYSTAL-BALL-LAMP": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=nGPxQGNk09w",
+    "testimonials": [
+      {
+        "author": "Anjali K., Bangalore",
+        "quote": "Stunning night lamp! The crystal effect is mesmerising. Looks 3x more expensive than what I paid.",
+        "rating": 5
+      },
+      {
+        "author": "Vikas R., Hyderabad",
+        "quote": "Bought 2 — one for bedside, one as a gift. Both received love. Warm glow is super soothing at night.",
+        "rating": 5
+      },
+      {
+        "author": "Neha P., Chennai",
+        "quote": "My kids fight over who gets to turn it on. Beautiful piece for the bedroom.",
+        "rating": 4
+      }
+    ]
+  },
+  "ASTRONAUT-GALAXY-PROJECTOR": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Amit B., Jaipur",
+        "quote": "Galaxy on my ceiling! My 8-year-old refuses to sleep without it. Remote control works perfectly.",
+        "rating": 5
+      },
+      {
+        "author": "Shreya G., Kolkata",
+        "quote": "Used it for a small party — instant vibe. The nebula effect is stunning. Sturdy build too.",
+        "rating": 5
+      },
+      {
+        "author": "Manish T., Lucknow",
+        "quote": "Worth every penny. Use it daily for relaxing. The astronaut head rotates smoothly.",
+        "rating": 5
+      }
+    ]
+  },
+  "BLADELESS-NECK-FAN": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=O0wwNreq2h4",
+    "testimonials": [
+      {
+        "author": "Ritu S., Ahmedabad",
+        "quote": "Lifesaver in Indian summer! Use it during my commute and while cooking. Bladeless = safe for kids.",
+        "rating": 5
+      },
+      {
+        "author": "Aakash V., Chandigarh",
+        "quote": "Battery easily lasts 7-8 hours. Quiet enough to wear at office. Best ₹450 spent this year.",
+        "rating": 5
+      },
+      {
+        "author": "Sonia M., Indore",
+        "quote": "Wear it during yoga and walks. Cool breeze, no hair tangling. Highly recommend.",
+        "rating": 4
+      }
+    ]
+  },
+  "JADE-FACE-ROLLER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=xca9hBikXdE",
+    "testimonials": [
+      {
+        "author": "Pooja R., Delhi",
+        "quote": "Genuine jade — feels cool on the skin instantly. My morning puffiness is half of what it used to be.",
+        "rating": 5
+      },
+      {
+        "author": "Ishita N., Mumbai",
+        "quote": "Use it daily with my serum. Skin glows in just 2 weeks. Premium feel for the price.",
+        "rating": 5
+      },
+      {
+        "author": "Divya K., Pune",
+        "quote": "Sturdy build, smooth rolling. Better than the salon-bought one I had earlier.",
+        "rating": 5
+      }
+    ]
+  },
+  "PORTABLE-USB-JUICER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=ByP3M0xUVhw",
+    "testimonials": [
+      {
+        "author": "Rohan A., Noida",
+        "quote": "Game changer for gym days. Make my protein shake in office and drink straight from the bottle.",
+        "rating": 5
+      },
+      {
+        "author": "Meera J., Hyderabad",
+        "quote": "Blends fruits smoothly in 30 sec. Easy to clean, USB-C charging is convenient.",
+        "rating": 5
+      },
+      {
+        "author": "Tarun S., Surat",
+        "quote": "Compact, portable and powerful. Use it daily for smoothies and my baby's food.",
+        "rating": 4
+      }
+    ]
+  },
+  "DANCING-CACTUS-REPEAT": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Sneha P., Bangalore",
+        "quote": "My 3-year-old is OBSESSED. Talks to it for hours. Best gift I've bought him.",
+        "rating": 5
+      },
+      {
+        "author": "Arun K., Chennai",
+        "quote": "Hilarious! The whole family laughs every time. Songs are catchy too.",
+        "rating": 5
+      },
+      {
+        "author": "Ridhi M., Bhopal",
+        "quote": "Cute, well-built, USB charging works great. Niece's new favourite toy.",
+        "rating": 5
+      }
+    ]
+  },
+  "EMS-BUTTERFLY-MASSAGER": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Rajesh V., Pune",
+        "quote": "Great relief for back pain after long work hours. Slip it on, relax, done.",
+        "rating": 5
+      },
+      {
+        "author": "Kavita L., Delhi",
+        "quote": "Compact and easy to carry. Use it on my shoulder during meetings — instant relief.",
+        "rating": 4
+      },
+      {
+        "author": "Manoj R., Kanpur",
+        "quote": "5 intensity levels are perfect. Self-adhesive pads stick well and don't irritate skin.",
+        "rating": 5
+      }
+    ]
+  },
+  "ELECTRIC-SCALP-MASSAGER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=BR8312EYEv4",
+    "testimonials": [
+      {
+        "author": "Anita G., Mumbai",
+        "quote": "Salon-level head massage at home. Use it 10 min daily — stress just melts away.",
+        "rating": 5
+      },
+      {
+        "author": "Vivek N., Bangalore",
+        "quote": "Battery life is great. Use it in shower with shampoo — heavenly experience.",
+        "rating": 5
+      },
+      {
+        "author": "Smita H., Gurgaon",
+        "quote": "Helped reduce my hair fall noticeably after a month. Red light is a bonus.",
+        "rating": 4
+      }
+    ]
+  },
+  "CHROME-FACE-ROLLER": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Tanvi S., Mumbai",
+        "quote": "Defined jawline in 2 weeks of daily use. Premium chrome feel is so satisfying.",
+        "rating": 5
+      },
+      {
+        "author": "Riya D., Delhi",
+        "quote": "Reduces my puffy face in the morning. Easy to use, no battery hassle.",
+        "rating": 5
+      },
+      {
+        "author": "Megha B., Pune",
+        "quote": "Beautiful design, smooth rolling. Perfect for a quick face massage before makeup.",
+        "rating": 4
+      }
+    ]
+  },
+  "MOON-TABLE-LAMP": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=ZTNqg9z1zG0",
+    "testimonials": [
+      {
+        "author": "Aditi V., Pune",
+        "quote": "Looks exactly like the real moon — textured surface and warm glow. Bedroom looks straight out of Pinterest now.",
+        "rating": 5
+      },
+      {
+        "author": "Harsh P., Delhi",
+        "quote": "Touch control works flawlessly. 16 colour modes with remote. Gifted to my wife on anniversary — she loved it.",
+        "rating": 5
+      },
+      {
+        "author": "Niharika S., Jaipur",
+        "quote": "Battery lasts 6+ hours. Great mood light for reading or movie nights.",
+        "rating": 4
+      }
+    ]
+  },
+  "MINI-AIR-COOLER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=cFx4xqGqz9w",
+    "testimonials": [
+      {
+        "author": "Rohit M., Lucknow",
+        "quote": "Lifesaver in 45°C Indian summer! Ice chamber actually keeps the air cool for an hour. Tiny but mighty.",
+        "rating": 5
+      },
+      {
+        "author": "Pallavi G., Indore",
+        "quote": "Use it on my study desk — the night light is a nice bonus. Quiet enough to sleep next to.",
+        "rating": 4
+      },
+      {
+        "author": "Yash B., Ahmedabad",
+        "quote": "USB powered means I can use it in the car too. 3 fan speeds, water tank holds enough for the whole evening.",
+        "rating": 5
+      }
+    ]
+  },
+  "AROMA-DIFFUSER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=4Nsajnos0Qo",
+    "testimonials": [
+      {
+        "author": "Shruti R., Mumbai",
+        "quote": "My bedroom feels like a spa now. Lavender + this diffuser = best sleep in months. Ultra quiet.",
+        "rating": 5
+      },
+      {
+        "author": "Karthik N., Bangalore",
+        "quote": "Cute panda design fits my workspace aesthetic. Mist output is strong, refills last all day.",
+        "rating": 5
+      },
+      {
+        "author": "Anushka D., Kolkata",
+        "quote": "Use it during yoga sessions — the gentle light and aroma create the perfect vibe.",
+        "rating": 4
+      }
+    ]
+  },
+  "RAM-LALA-IDOL": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Sushma A., Varanasi",
+        "quote": "Bahut sundar murti hai. Finish premium hai, gold detailing perfect. Mandir mein rakhi hai — ghar mein positive vibes aa gaye.",
+        "rating": 5
+      },
+      {
+        "author": "Deepak J., Patna",
+        "quote": "Gifted to my parents — they got emotional seeing it. Looks just like the Ayodhya idol. Sturdy resin build.",
+        "rating": 5
+      },
+      {
+        "author": "Lakshmi N., Coimbatore",
+        "quote": "Compact size, fits beautifully on my pooja shelf. Worth every rupee for the craftsmanship.",
+        "rating": 5
+      }
+    ]
+  },
+  "ASTRONAUT-RGB-SPEAKER": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=fG6CSP6oCkM",
+    "testimonials": [
+      {
+        "author": "Sahil K., Chandigarh",
+        "quote": "Looks like a designer piece on my shelf. RGB lights sync nicely with the bass. Solid Bluetooth range.",
+        "rating": 5
+      },
+      {
+        "author": "Prerna T., Bhopal",
+        "quote": "Speaker + showpiece in one. My nephew is obsessed with the astronaut design. Sound is surprisingly loud.",
+        "rating": 5
+      },
+      {
+        "author": "Ishaan M., Hyderabad",
+        "quote": "TF card slot is a bonus — plays my offline playlist too. Battery easily 4-5 hours.",
+        "rating": 4
+      }
+    ]
+  },
+  "SOLAR-CAR-FRESHENER": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Vinay P., Pune",
+        "quote": "Looks like a tiny AC unit on my dashboard — super cool. Spins on its own in sunlight. Fragrance is mild and pleasant.",
+        "rating": 5
+      },
+      {
+        "author": "Rashmi K., Mumbai",
+        "quote": "No batteries to worry about. Lavender scent lasted weeks. Adds a premium touch to my Swift's interior.",
+        "rating": 4
+      },
+      {
+        "author": "Faizal A., Hyderabad",
+        "quote": "Gifted to my dad for his car — he loved it. Looks much costlier than what I paid.",
+        "rating": 5
+      }
+    ]
+  },
+  "MOTION-SENSOR-LIGHT": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=T2a0Bfa_yo0",
+    "testimonials": [
+      {
+        "author": "Sunita G., Delhi",
+        "quote": "Stuck one in the hallway and one on the staircase — lights up the moment we walk by. No more fumbling for switches at night.",
+        "rating": 5
+      },
+      {
+        "author": "Amol D., Nashik",
+        "quote": "USB rechargeable so no wiring needed. Battery lasts 3 weeks easily. Magnetic mount is sturdy.",
+        "rating": 5
+      },
+      {
+        "author": "Komal R., Surat",
+        "quote": "Perfect for inside the wardrobe. Auto on/off when I open the door. Such a small thing but huge convenience.",
+        "rating": 4
+      }
+    ]
+  },
+  "FOLDABLE-WATER-BOTTLE": {
+    "youtubeUrl": "https://www.youtube.com/watch?v=W5CnD13E_EI",
+    "testimonials": [
+      {
+        "author": "Nikhil B., Bangalore",
+        "quote": "Carry it daily to the gym — folds into my pocket once empty. Food-grade silicone, no plastic taste at all.",
+        "rating": 5
+      },
+      {
+        "author": "Priya S., Delhi",
+        "quote": "Lifesaver for travel. Squeezes flat in my handbag. Carabiner clip attaches it to my backpack easily.",
+        "rating": 5
+      },
+      {
+        "author": "Mohit V., Jaipur",
+        "quote": "Leakproof tested with juice in my office bag — zero spill. Easy to clean too.",
+        "rating": 4
+      }
+    ]
+  },
+  "BUNNY-NIGHT-LIGHT": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Swati M., Pune",
+        "quote": "My 2-year-old finally sleeps without crying. The star projection on the ceiling is magical. Soft music is so soothing.",
+        "rating": 5
+      },
+      {
+        "author": "Reema P., Mumbai",
+        "quote": "Super cute bunny design — doubles as nursery decor. Multiple light modes and timer is a parent saver.",
+        "rating": 5
+      },
+      {
+        "author": "Ananya K., Chennai",
+        "quote": "Gifted at a baby shower — the mom couldn't stop thanking me. Premium quality, soft glow.",
+        "rating": 5
+      }
+    ]
+  },
+  "LED-DESK-LAMP": {
+    "youtubeUrl": "",
+    "testimonials": [
+      {
+        "author": "Aryan T., Noida",
+        "quote": "Use it for late-night study sessions. Touch dimmer is so smooth, 3 brightness levels cover every situation.",
+        "rating": 5
+      },
+      {
+        "author": "Tanya R., Bhopal",
+        "quote": "Rechargeable battery lasts the whole night. No tangled wires on my desk anymore. Eye-friendly warm light.",
+        "rating": 5
+      },
+      {
+        "author": "Saurav D., Kolkata",
+        "quote": "Folds flat for travel. Took it on a work trip — hotel room lighting was finally bearable.",
+        "rating": 4
+      }
+    ]
+  }
+}

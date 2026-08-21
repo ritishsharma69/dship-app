@@ -174,14 +174,12 @@ export default function SimpleHomePage() {
     return () => clearInterval(id)
   }, [heroSlides.length])
 
-  // Fade-in animation when slide changes
+  // Fade-in animation when slide changes (carousel only — left text stays static)
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
     const q = gsap.utils.selector(root)
-    const tl = gsap.timeline()
-    tl.fromTo(q('.hero-visual'), { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' })
-      .fromTo(q('.hero-text'), { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.32, ease: 'power2.out' }, '<')
+    gsap.fromTo(q('.hero-visual'), { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' })
   }, [slideIdx])
 
   const curr = heroSlides[slideIdx % Math.max(heroSlides.length, 1)] || {

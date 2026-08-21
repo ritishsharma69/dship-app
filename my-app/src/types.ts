@@ -20,6 +20,7 @@ export interface Product {
   testimonials?: Testimonial[]; // optional product testimonials
   ratingAvg?: number; // average rating 0..5
   ratingCount?: number; // number of reviews
+  hidden?: boolean; // admin-only: when true, excluded from public listings
 }
 
 export interface Testimonial {

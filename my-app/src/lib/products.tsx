@@ -133,9 +133,26 @@ const Ctx = createContext<ProductsCtx>({
   retryCount: 0,
 })
 
+const PRODUCTS_CACHE_KEY = 'products_cache_v1'
+
+function readProductsCache(): Product[] {
+  try {
+    const raw = sessionStorage.getItem(PRODUCTS_CACHE_KEY)
+    if (!raw) return []
+    const arr = JSON.parse(raw)
+    return Array.isArray(arr) ? arr : []
+  } catch { return [] }
+}
+
+function writeProductsCache(arr: Product[]) {
+  try { sessionStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify(arr)) } catch { /* ignore */ }
+}
+
 export function ProductsProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
+  // Hydrate from session cache instantly so repeat navigation shows products with zero delay
+  const cached = DEMO_SINGLE_PRODUCT ? DEMO_PRODUCTS : readProductsCache()
+  const [products, setProducts] = useState<Product[]>(cached)
+  const [loading, setLoading] = useState(!cached.length)
   const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
@@ -147,7 +164,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
 
     let cancelled = false
 
-    // First ping the server to wake it up (Render free tier cold start can take 30-60s)
+    // Ping the server to wake it up (Render free tier cold start can take 30-60s)
     async function warmupBackend(): Promise<void> {
       try {
         await fetch('/api/ping', { signal: AbortSignal.timeout(5000) }).catch(() => {})
@@ -166,6 +183,7 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
           setProducts(arr)
           setLoading(false)
           setRetryCount(0)
+          if (arr.length > 0) writeProductsCache(arr)
         } else {
           // Got empty array — backend might still be waking up, retry
           const delay = 2000 * (attempt + 1)
@@ -188,7 +206,11 @@ export function ProductsProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    warmupBackend().then(() => fetchWithRetry())
+    // Fetch immediately (don't serialize behind the warmup ping — that added up to
+    // 5s of dead time before the first products request). Warmup runs in parallel
+    // and is still used between retries for cold-start backends.
+    warmupBackend()
+    fetchWithRetry()
     return () => { cancelled = true }
   }, [])
 

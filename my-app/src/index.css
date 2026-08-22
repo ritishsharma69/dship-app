@@ -22,12 +22,14 @@
 
 /* Reduce motion respect */
 @media (prefers-reduced-motion: reduce) {
-/* Pink topbar accent (matches loader) */
-.topbar { background: linear-gradient(90deg, #0b0b0b 0%, #15121a 35%, #2a1946 65%, #4c1d95 85%, #30124f 100%); color:#fff; border-bottom: 1px solid rgba(255,255,255,0.06); box-shadow: 0 6px 24px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.04); }
-.topbar a { color:#fff; }
-
   .pink-spinner .a, .pink-spinner .b, .pink-spinner .c, .pink-spinner .ring { animation: none; }
 }
+
+/***** App shell: sticky footer *****/
+/* Content area always fills the viewport, so the footer stays pinned to the
+   bottom even while a lazy route chunk / page data is still loading. */
+.app-shell { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+.app-main { flex: 1 0 auto; display: block; width: 100%; }
 
 
 /* Top bar */
@@ -59,20 +61,20 @@
 
 
 :root {
-  /* Neutral palette requested: #57564F, #7A7A73, #DDDAD0, #F8F3CE */
-  --color-text: #000000;    /* Black text */
-  --color-muted: #000000;   /* Black text for muted elements too */
+  /* Premium palette: ink text, warm neutral surfaces, brand pink reserved for CTAs */
+  --color-text: #1A1A1A;    /* Near-black ink text */
+  --color-muted: #6B7280;   /* Soft gray for secondary text */
   --color-bg: #FFFFFF;      /* Page background (keep white) */
-  --color-primary: #57564F; /* Primary/UI accents */
-  --color-border: #DDDAD0;  /* Card borders/dividers */
-  /* Buttons per request: Buy Now = pink, Go to Cart = white */
-  --color-buy: #FF3F6C;     /* Pink primary CTA */
+  --color-primary: #141414; /* Primary/UI accents (ink) */
+  --color-border: #ECE9E2;  /* Card borders/dividers (soft warm) */
+  /* Buttons: Buy Now = brand pink, Go to Cart = white */
+  --color-buy: #F02A4D;     /* Pink primary CTA (matched to mockup) */
   --color-cart: #FFFFFF;    /* White for Go to Cart */
-  --color-primary-hover: #4e4d47;
-  --color-cart-hover: #f1f1f1;
-  --color-buy-hover: #e73962;
-  --color-badge-bg: #F8F3CE;
-  --color-focus-ring: rgba(122,122,115,0.28);
+  --color-primary-hover: #2b2b2b;
+  --color-cart-hover: #f6f6f6;
+  --color-buy-hover: #D92243;
+  --color-badge-bg: #FFF1F4;
+  --color-focus-ring: rgba(255,63,108,0.24);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -80,17 +82,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbar: match Buy Now pink */
+/* Scrollbar: subtle neutral (premium apps never use loud scrollbars) */
 /* Firefox */
-* { scrollbar-color: var(--color-buy) #f1f5f9; scrollbar-width: thin; }
+* { scrollbar-color: #c9c5bc #f6f5f2; scrollbar-width: thin; }
 /* WebKit (Chrome, Edge, Safari) */
-*::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: #f1f5f9; }
-*::-webkit-scrollbar-thumb { background-color: var(--color-buy); border-radius: 999px; border: 2px solid #f1f5f9; }
-*::-webkit-scrollbar-thumb:hover { background-color: var(--color-buy-hover); }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background-color: #c9c5bc; border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background-color: #a8a49a; }
 
 
 html, body { height: 100%; }
+/* Reserve scrollbar space so the page doesn't shift sideways when content loads */
+html { scrollbar-gutter: stable; }
+/* Full-bleed sections use calc(50% - 50vw); clip the scrollbar-width spill so
+   the page can never scroll horizontally on any device. */
+body { overflow-x: clip; }
 
 body {
   margin: 0;
@@ -110,9 +117,9 @@ img, video { max-width: 100%; display: block; border-radius: 12px; }
 
 
 /* Product gallery main image sizing: keep thumbnails visible on desktop */
-.gallery-main { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.gallery-main { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: transparent; border-radius: 0; }
 @media (min-width: 900px) {
-  .gallery-main { aspect-ratio: auto; height: auto; max-height: min(70vh, 560px); }
+  .gallery-main { max-height: min(70vh, 560px); }
 }
 
 /***** Utilities *****/

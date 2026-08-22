@@ -2,6 +2,7 @@ import './App.css'
 import { lazy, Suspense, useEffect } from 'react'
 import { Route, Switch, useRouter } from './lib/router'
 import TopBar from './components/TopBar'
+import Footer from './components/Footer'
 import ErrorBoundary from './components/ErrorBoundary'
 import ChatBot from './components/ChatBot'
 
@@ -13,7 +14,6 @@ const SimpleHomePage = lazy(() => import('./pages/SimpleHomePage'))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'))
 const SuccessPage = lazy(() => import('./pages/SuccessPage')) // legacy
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'))
-// const OrderTrackPage = lazy(() => import('./pages/OrderTrackPage')) // temporarily disabled
 const ContactPage = lazy(() => import('./pages/ContactUsPage'))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'))
 const ShippingReturnsPage = lazy(() => import('./pages/ShippingReturnsPage'))
@@ -24,6 +24,7 @@ const TermsConditionsPage = lazy(() => import('./pages/TermsConditionsPage'))
 const OrdersPage = lazy(() => import('./pages/OrdersPage'))
 const ReturnRequestPage = lazy(() => import('./pages/ReturnRequestPage'))
 const FeaturedProductsPage = lazy(() => import('./pages/FeaturedProductsPage'))
+const WishlistPage = lazy(() => import('./pages/WishlistPage'))
 
 // Admin
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'))
@@ -68,10 +69,13 @@ export default function App() {
   const isAdminRoute = path === '/admin' || path.startsWith('/admin/')
 
   return (
-    <>
+    // Sticky-footer shell: content area grows to fill the viewport so the footer
+    // never jumps up while a lazy page chunk (or its data) is still loading.
+    <div className="app-shell">
       {!isAdminRoute ? <TopBar /> : null}
+      <main className="app-main">
       <ErrorBoundary>
-      <Suspense fallback={<PageLoader />}> {/* show full-screen loader until page resolves */}
+      <Suspense fallback={<PageLoader />}> {/* slim top progress bar until page resolves */}
         <Switch>
           {/* Home: show all products (SimpleHomePage) */}
           <Route path="/">
@@ -111,6 +115,9 @@ export default function App() {
           <Route path="/featured">
             <FeaturedProductsPage />
           </Route>
+          <Route path="/wishlist">
+            <WishlistPage />
+          </Route>
           <Route path="/admin/returns">
             <AdminReturnsPage />
           </Route>
@@ -141,17 +148,16 @@ export default function App() {
           <Route path="/order/success">
             <OrderSuccessPage />
           </Route>
-          {/* <Route path="/order/track/:id">
-            <OrderTrackPage />
-          </Route> */}
-
           {/* 404 fallback — no path prop, Switch renders this if nothing matches */}
           <NotFoundPage />
         </Switch>
       </Suspense>
       </ErrorBoundary>
+      </main>
+      {/* Shared footer — same bottom bar on every page except admin */}
+      {!isAdminRoute && <Footer />}
       {/* AI Chatbot - available on all pages except admin */}
       {!isAdminRoute && <ChatBot />}
-    </>
+    </div>
   )
 }

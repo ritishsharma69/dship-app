@@ -740,7 +740,7 @@ export default function AdminProductsPage() {
         title="Products"
         actions={
           <Stack direction="row" spacing={1} alignItems="center">
-            <Chip label={loading ? 'Loading…' : `${rows.length} shown`} variant="outlined" sx={{ fontWeight: 900 }} />
+            <Chip label={loading ? 'Loading…' : `${rows.length} shown`} variant="outlined" sx={{ fontWeight: 900, color: '#fff', borderColor: 'rgba(255,255,255,0.5)' }} />
             {hiddenCount > 0 ? (
               <Chip
                 color="warning"
@@ -799,7 +799,8 @@ export default function AdminProductsPage() {
         </Paper>
 
         <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden' }}>
-          <Table size="small">
+          <Box sx={{ overflowX: 'auto' }}>
+          <Table size="small" sx={{ minWidth: 720 }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 950, width: 72 }}>Image</TableCell>
@@ -857,8 +858,12 @@ export default function AdminProductsPage() {
               ))}
             </TableBody>
           </Table>
+          </Box>
           {rows.length === 0 && !loading ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>No products found.</Typography>
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+              <Typography sx={{ fontWeight: 800, color: '#374151' }}>No products found</Typography>
+              <Typography variant="body2" color="text.secondary">{q ? 'Search badal ke try karo.' : 'Naya product add karo.'}</Typography>
+            </Box>
           ) : null}
         </Paper>
 

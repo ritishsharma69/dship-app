@@ -104,8 +104,8 @@ export default function AdminDashboardPage() {
               icon={InventoryIcon}
               label="Total Products"
               value={counts?.products}
-              color="#FF3F6C"
-              bgColor="linear-gradient(135deg, rgba(255,63,108,0.08) 0%, rgba(255,107,138,0.04) 100%)"
+              color="#7C3AED"
+              bgColor="linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(164,88,232,0.04) 100%)"
             />
           </Grid>
 	          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -152,12 +152,12 @@ export default function AdminDashboardPage() {
             p: 3,
             borderRadius: 3,
             flex: 1,
-            background: 'linear-gradient(135deg, rgba(255,63,108,0.06) 0%, rgba(76,29,149,0.06) 100%)',
-            border: '1px solid rgba(255,63,108,0.1)',
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(76,29,149,0.06) 100%)',
+            border: '1px solid rgba(124,58,237,0.1)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
           }}>
             <Stack spacing={1.5}>
-              <Typography variant="h6" sx={{ fontWeight: 900, color: '#FF3F6C' }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#7C3AED' }}>
                 📊 Quick Stats
               </Typography>
               <Typography variant="body2" color="text.secondary">

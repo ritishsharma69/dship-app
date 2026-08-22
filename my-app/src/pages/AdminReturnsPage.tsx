@@ -5,6 +5,25 @@ import { getAuthToken } from '../lib/auth'
 import { apiGetJson, apiPostJson } from '../lib/api'
 import { useRouter } from '../lib/router'
 
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import LinearProgress from '@mui/material/LinearProgress'
+import Paper from '@mui/material/Paper'
+import Stack from '@mui/material/Stack'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded'
+import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
+
 interface ReturnRec {
   id: string
   orderId: string
@@ -67,87 +86,99 @@ export default function AdminReturnsPage() {
   }
 
 
+  function ReturnsTable({ rows, action }: { rows: ReturnRec[]; action: (r: ReturnRec) => React.ReactNode }) {
+    return (
+      <TableContainer sx={{ borderRadius: 2, border: '1px solid #f0f0f0' }}>
+        <Table size="small" sx={{ minWidth: 640 }}>
+          <TableHead>
+            <TableRow sx={{ '& th': { fontWeight: 800, color: '#374151', bgcolor: '#fafafa', whiteSpace: 'nowrap' } }}>
+              <TableCell>When</TableCell>
+              <TableCell>Order</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Details</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map((r) => (
+              <TableRow key={r.id} hover>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</TableCell>
+                <TableCell><code>#{String(r.orderId).slice(-8)}</code></TableCell>
+                <TableCell>{r.email}</TableCell>
+                <TableCell sx={{ maxWidth: 420 }}>
+                  <Box sx={{ whiteSpace: 'pre-wrap' }}>{r.customReason || (r.reasons || []).join(', ') || '-'}</Box>
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{action(r)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    )
+  }
+
+  function EmptyState({ text }: { text: string }) {
+    return (
+      <Box sx={{ borderRadius: 2, border: '1px dashed #ddd', p: 3, textAlign: 'center' }}>
+        <InboxRoundedIcon sx={{ fontSize: 32, color: '#c4b5fd' }} />
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>{text}</Typography>
+      </Box>
+    )
+  }
+
   return (
     <AdminGuard>
       <AdminLayout
         title="Returns"
         actions={
-          <button className="btn" onClick={() => navigate('/admin/orders')}>Back to Orders</button>
+          <Button variant="outlined" onClick={() => navigate('/admin/orders')}
+            sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#fff', borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.08)' } }}>
+            Back to Orders
+          </Button>
         }
       >
-        <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-          <input className="input" placeholder="Search email, order, details…" value={q} onChange={e => setQ(e.target.value)} style={{ maxWidth: 320 }} />
-          <span className="muted">Open: {openList.length} · Resolved: {resolvedList.length}</span>
-        </div>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #eee' }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', sm: 'center' }}>
+            <TextField size="small" placeholder="Search email, order, details…" value={q} onChange={e => setQ(e.target.value)} sx={{ maxWidth: { sm: 320 }, flex: 1 }} />
+            <Stack direction="row" spacing={1}>
+              <Chip size="small" label={`Open: ${openList.length}`} sx={{ fontWeight: 700, color: '#b45309', bgcolor: '#fffbeb', border: '1px solid #fde68a' }} />
+              <Chip size="small" label={`Resolved: ${resolvedList.length}`} sx={{ fontWeight: 700, color: '#047857', bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }} />
+            </Stack>
+          </Stack>
+          {error && <Typography color="error" fontWeight={700} sx={{ mt: 1.5 }}>{error}</Typography>}
+          {loading && <LinearProgress sx={{ mt: 1.5, borderRadius: 1, '& .MuiLinearProgress-bar': { bgcolor: '#7C3AED' }, bgcolor: 'rgba(124,58,237,0.12)' }} />}
+        </Paper>
 
-        {error && <div style={{ color: 'crimson', marginTop: 10 }}>{error}</div>}
-        {loading ? (
-          <div className="muted" style={{ marginTop: 12 }}>Loading…</div>
-        ) : (
-          <div style={{ overflowX: 'auto', marginTop: 12 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>
-                  <th style={{ padding: 8 }}>When</th>
-                  <th style={{ padding: 8 }}>Order</th>
-                  <th style={{ padding: 8 }}>Email</th>
-                  <th style={{ padding: 8 }}>Details</th>
-                  <th style={{ padding: 8 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {openList.map((r) => (
-                  <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td style={{ padding: 8 }}>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
-                    <td style={{ padding: 8 }}><code>#{String(r.orderId).slice(-8)}</code></td>
-                    <td style={{ padding: 8 }}>{r.email}</td>
-                    <td style={{ padding: 8, maxWidth: 420 }}>
-                      <div style={{ whiteSpace: 'pre-wrap' }}>{r.customReason || (r.reasons || []).join(', ') || '-'}</div>
-                    </td>
-                    <td style={{ padding: 8 }}>
-                      <button className="btn" onClick={() => markResolved(r.id)}>Mark Resolved</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {openList.length === 0 && !loading ? (
-              <div className="muted" style={{ marginTop: 12 }}>No open return requests.</div>
-            ) : null}
+        {!loading && (
+          <>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #eee' }}>
+              <Typography sx={{ fontWeight: 800, fontSize: 15, mb: 1.5, color: '#111827' }}>🟡 Open requests</Typography>
+              {openList.length > 0 ? (
+                <ReturnsTable rows={openList} action={(r) => (
+                  <Button size="small" variant="outlined" startIcon={<CheckCircleRoundedIcon />} onClick={() => markResolved(r.id)}
+                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#047857', borderColor: '#a7f3d0', '&:hover': { borderColor: '#047857', bgcolor: '#ecfdf5' } }}>
+                    Mark Resolved
+                  </Button>
+                )} />
+              ) : (
+                <EmptyState text="No open return requests." />
+              )}
+            </Paper>
 
-            <div style={{ overflowX: 'auto', marginTop: 24 }}>
-              <h3 style={{ margin: '0 0 8px' }}>Resolved</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid var(--color-border)' }}>
-                    <th style={{ padding: 8 }}>When</th>
-                    <th style={{ padding: 8 }}>Order</th>
-                    <th style={{ padding: 8 }}>Email</th>
-                    <th style={{ padding: 8 }}>Details</th>
-                    <th style={{ padding: 8 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resolvedList.map((r) => (
-                    <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: 8 }}>{r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
-                      <td style={{ padding: 8 }}><code>#{String(r.orderId).slice(-8)}</code></td>
-                      <td style={{ padding: 8 }}>{r.email}</td>
-                      <td style={{ padding: 8, maxWidth: 420 }}>
-                        <div style={{ whiteSpace: 'pre-wrap' }}>{r.customReason || (r.reasons || []).join(', ') || '-'}</div>
-                      </td>
-                      <td style={{ padding: 8 }}>
-                        <button className="btn" onClick={() => reopen(r.id)}>Reopen</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {resolvedList.length === 0 && !loading ? (
-                <div className="muted" style={{ marginTop: 12 }}>No resolved returns yet.</div>
-              ) : null}
-            </div>
-          </div>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #eee' }}>
+              <Typography sx={{ fontWeight: 800, fontSize: 15, mb: 1.5, color: '#111827' }}>🟢 Resolved</Typography>
+              {resolvedList.length > 0 ? (
+                <ReturnsTable rows={resolvedList} action={(r) => (
+                  <Button size="small" variant="outlined" startIcon={<ReplayRoundedIcon />} onClick={() => reopen(r.id)}
+                    sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#7C3AED', borderColor: 'rgba(124,58,237,0.4)', '&:hover': { borderColor: '#7C3AED', bgcolor: 'rgba(124,58,237,0.06)' } }}>
+                    Reopen
+                  </Button>
+                )} />
+              ) : (
+                <EmptyState text="No resolved returns yet." />
+              )}
+            </Paper>
+          </>
         )}
       </AdminLayout>
     </AdminGuard>

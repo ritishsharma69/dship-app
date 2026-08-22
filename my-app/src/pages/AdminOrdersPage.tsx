@@ -8,11 +8,26 @@ import { useToast } from '../lib/toast'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogActions from '@mui/material/DialogActions'
+import DialogContent from '@mui/material/DialogContent'
+import DialogTitle from '@mui/material/DialogTitle'
 import LinearProgress from '@mui/material/LinearProgress'
+import MenuItem from '@mui/material/MenuItem'
 import Paper from '@mui/material/Paper'
 import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded'
+import PlaceRoundedIcon from '@mui/icons-material/PlaceRounded'
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded'
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded'
+import InboxRoundedIcon from '@mui/icons-material/InboxRounded'
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded'
 
 type AdminStatus = 'pending' | 'accepted' | 'delivered'
 
@@ -105,107 +120,132 @@ export default function AdminOrdersPage() {
         title="Orders"
         actions={
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" onClick={() => navigate('/admin/returns')}>Returns</Button>
-            <Button variant="contained" onClick={load} disabled={loading}>Refresh</Button>
+            <Button variant="outlined" onClick={() => navigate('/admin/returns')}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#fff', borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: '#fff', bgcolor: 'rgba(255,255,255,0.08)' } }}>Returns</Button>
+            <Button variant="contained" onClick={load} disabled={loading}
+              sx={{ textTransform: 'none', fontWeight: 800, borderRadius: 2, bgcolor: '#fff', color: '#7C3AED', '&:hover': { bgcolor: '#f3e8ff' } }}>Refresh</Button>
           </Stack>
         }
       >
-        <Paper sx={{ p: 2, borderRadius: 3 }}>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #eee' }}>
           <Stack spacing={1.5}>
-            <TextField label="Search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order id, name, email, city…" />
-            {loading ? <LinearProgress /> : null}
+            <TextField label="Search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order id, name, email, city…" size="small" />
+            {loading ? <LinearProgress sx={{ borderRadius: 1, '& .MuiLinearProgress-bar': { bgcolor: '#7C3AED' }, bgcolor: 'rgba(124,58,237,0.12)' }} /> : null}
             {error ? <Typography color="error" fontWeight={700}>{error}</Typography> : null}
             <Typography variant="body2" color="text.secondary">Total: {filtered.length}</Typography>
           </Stack>
         </Paper>
 
-        <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
+        <Stack spacing={1.25}>
           {filtered.map((o) => {
             const isOpen = !!open[o.id]
-            const statusColor = o.status === 'pending' ? '#f59e0b' : o.status === 'accepted' ? '#3b82f6' : '#10b981'
-            const statusBg = o.status === 'pending' ? '#fffbeb' : o.status === 'accepted' ? '#eff6ff' : '#ecfdf5'
+            const status = (o.status || 'pending') as AdminStatus
+            const statusSx = status === 'pending'
+              ? { color: '#b45309', bgcolor: '#fffbeb', borderColor: '#fde68a' }
+              : status === 'accepted'
+                ? { color: '#1d4ed8', bgcolor: '#eff6ff', borderColor: '#bfdbfe' }
+                : { color: '#047857', bgcolor: '#ecfdf5', borderColor: '#a7f3d0' }
             return (
-              <div key={o.id} style={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', overflow: 'hidden' }}>
-                <button onClick={() => setOpen(prev => ({ ...prev, [o.id]: !prev[o.id] }))} style={{ all: 'unset', cursor: 'pointer', width: '100%', display: 'block', padding: 14, boxSizing: 'border-box' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>#{o.id.slice(-8)}</div>
-                      <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{o.customer?.name || '-'} · {o.customer?.email || ''}{o.address?.city ? ` · ${o.address.city}` : ''}</div>
-                      <div style={{ fontSize: 13, color: '#374151', marginTop: 6 }}><b>Total:</b> ₹{o.total ?? o.totals?.total ?? Math.round(Number(o.totalPrice ?? o.totals?.grandTotal ?? 0))}  <b>Pay:</b> {o.paymentMethod || 'cod'}</div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap' }}>{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}{o.createdAt ? ', ' : ''}{o.createdAt ? new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</div>
-                      <div style={{ marginTop: 6, display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: statusColor, background: statusBg, border: `1px solid ${statusColor}22`, textTransform: 'capitalize' }}>{o.status || 'pending'}</div>
-                    </div>
-                  </div>
-                </button>
+              <Paper key={o.id} elevation={0} sx={{ borderRadius: 3, border: '1px solid #eee', overflow: 'hidden', transition: 'box-shadow 0.2s ease, border-color 0.2s ease', '&:hover': { borderColor: 'rgba(124,58,237,0.35)', boxShadow: '0 4px 16px rgba(124,58,237,0.08)' } }}>
+                <Box component="button" onClick={() => setOpen(prev => ({ ...prev, [o.id]: !prev[o.id] }))}
+                  sx={{ all: 'unset', cursor: 'pointer', width: '100%', display: 'block', p: 1.75, boxSizing: 'border-box' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: 15, color: '#1f2937', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        #{o.id.slice(-8)}
+                        <ExpandMoreRoundedIcon sx={{ fontSize: 18, color: '#9ca3af', transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'none' }} />
+                      </Typography>
+                      <Typography sx={{ fontSize: 12, color: '#6b7280', mt: 0.25 }}>{o.customer?.name || '-'} · {o.customer?.email || ''}{o.address?.city ? ` · ${o.address.city}` : ''}</Typography>
+                      <Typography sx={{ fontSize: 13, color: '#374151', mt: 0.75 }}><b>Total:</b> ₹{o.total ?? o.totals?.total ?? Math.round(Number(o.totalPrice ?? o.totals?.grandTotal ?? 0))}  <b>Pay:</b> {o.paymentMethod || 'cod'}</Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right', flexShrink: 0 }}>
+                      <Typography sx={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap' }}>{o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}{o.createdAt ? ', ' : ''}{o.createdAt ? new Date(o.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''}</Typography>
+                      <Chip label={status} size="small" variant="outlined"
+                        sx={{ mt: 0.75, fontWeight: 700, fontSize: 12, textTransform: 'capitalize', ...statusSx }} />
+                    </Box>
+                  </Box>
+                </Box>
                 {isOpen && (
-                  <div style={{ padding: '0 14px 14px', display: 'grid', gap: 10, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                    <div style={{ paddingTop: 12, display: 'grid', gap: 6 }}>
-                      <div style={{ fontSize: 14 }}><b>📍 Address:</b> {o.address?.line1}{o.address?.city ? `, ${o.address.city}` : ''}{o.address?.state ? `, ${o.address.state}` : ''} {o.address?.zip || ''}</div>
-                      <div style={{ fontSize: 14 }}><b>📞 Phone:</b> {o.customer?.phone || o.address?.phone || '-'}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1f2937' }}>🛒 Items</div>
-                      <div style={{ borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', padding: 10 }}>
+                  <Box sx={{ px: 1.75, pb: 1.75, display: 'grid', gap: 1.25, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <Box sx={{ pt: 1.5, display: 'grid', gap: 0.75 }}>
+                      <Typography sx={{ fontSize: 14 }}><b>📍 Address:</b> {o.address?.line1}{o.address?.city ? `, ${o.address.city}` : ''}{o.address?.state ? `, ${o.address.state}` : ''} {o.address?.zip || ''}</Typography>
+                      <Typography sx={{ fontSize: 14 }}><b>📞 Phone:</b> {o.customer?.phone || o.address?.phone || '-'}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography sx={{ fontWeight: 800, fontSize: 14, mb: 0.75, color: '#1f2937' }}>🛒 Items</Typography>
+                      <Box sx={{ borderRadius: 2, border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fafafa', p: 1.25 }}>
                         {(o.items || []).map((item: any, idx: number) => (
-                          <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, borderBottom: idx < (o.items || []).length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
+                          <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, fontSize: 13, borderBottom: idx < (o.items || []).length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
                             <span>{item.title} × {item.quantity}</span>
-                            <span style={{ fontWeight: 600 }}>₹{item.unitPrice}</span>
-                          </div>
+                            <Box component="span" sx={{ fontWeight: 700 }}>₹{item.unitPrice}</Box>
+                          </Box>
                         ))}
-                        {(!o.items || o.items.length === 0) && <div style={{ color: '#9ca3af', fontSize: 13 }}>No items data</div>}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14 }}>
-                      <span style={{ color: '#6b7280' }}>Items: {o.itemsCount ?? (o.items || []).reduce((a: number, i: any) => a + Number(i.quantity || 0), 0)}</span>
-                      <span style={{ fontWeight: 800, fontSize: 15, color: '#1f2937' }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14 }}>
-                      <b>Status:</b>
-                      <select value={(o.status as any) || 'pending'} onChange={(e) => setOrderStatus(o.id, e.target.value as AdminStatus)} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', fontSize: 13 }}>
-                        <option value="pending">Pending</option>
-                        <option value="accepted">Accepted</option>
-                        <option value="delivered">Delivered</option>
-                      </select>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {o.status !== 'accepted' && (
-                        <button onClick={() => setOrderStatus(o.id, 'accepted')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#eff6ff', color: '#2563eb', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mark Accepted</button>
+                        {(!o.items || o.items.length === 0) && <Typography sx={{ color: '#9ca3af', fontSize: 13 }}>No items data</Typography>}
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography sx={{ fontSize: 14, color: '#6b7280' }}>Items: {o.itemsCount ?? (o.items || []).reduce((a: number, i: any) => a + Number(i.quantity || 0), 0)}</Typography>
+                      <Typography sx={{ fontWeight: 800, fontSize: 15, color: '#1f2937' }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</Typography>
+                    </Box>
+                    <TextField select size="small" label="Status" value={status}
+                      onChange={(e) => setOrderStatus(o.id, e.target.value as AdminStatus)}
+                      sx={{ maxWidth: 200 }}>
+                      <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="accepted">Accepted</MenuItem>
+                      <MenuItem value="delivered">Delivered</MenuItem>
+                    </TextField>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {status !== 'accepted' && (
+                        <Button size="small" variant="outlined" startIcon={<CheckCircleRoundedIcon />} onClick={() => setOrderStatus(o.id, 'accepted')}
+                          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#1d4ed8', borderColor: '#bfdbfe', '&:hover': { borderColor: '#1d4ed8', bgcolor: '#eff6ff' } }}>Mark Accepted</Button>
                       )}
-                      {o.status !== 'delivered' && (
-                        <button onClick={() => setOrderStatus(o.id, 'delivered')} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#ecfdf5', color: '#059669', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Mark Delivered</button>
+                      {status !== 'delivered' && (
+                        <Button size="small" variant="outlined" startIcon={<LocalShippingRoundedIcon />} onClick={() => setOrderStatus(o.id, 'delivered')}
+                          sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#047857', borderColor: '#a7f3d0', '&:hover': { borderColor: '#047857', bgcolor: '#ecfdf5' } }}>Mark Delivered</Button>
                       )}
-                      <button onClick={() => { const a = o.address; navigator.clipboard.writeText(`${o.customer?.name || ''}\n${a?.line1 || ''}\n${a?.city || ''}, ${a?.state || ''} ${a?.zip || ''}\n${o.customer?.phone || a?.phone || ''}`); push('Address copied!') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📋 Copy Address</button>
-                      <button onClick={() => { const a = o.address; window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${a?.line1 || ''} ${a?.city || ''} ${a?.state || ''} ${a?.zip || ''}`)}`, '_blank') }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>📍 Open in Maps</button>
-                      <button onClick={() => setConfirmDelete(o.id)} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #fecaca', background: '#fef2f2', color: '#dc2626', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>🗑️ Delete</button>
-                    </div>
-                  </div>
+                      <Button size="small" variant="outlined" startIcon={<ContentCopyRoundedIcon />}
+                        onClick={() => { const a = o.address; navigator.clipboard.writeText(`${o.customer?.name || ''}\n${a?.line1 || ''}\n${a?.city || ''}, ${a?.state || ''} ${a?.zip || ''}\n${o.customer?.phone || a?.phone || ''}`); push('Address copied!') }}
+                        sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#374151', borderColor: 'rgba(0,0,0,0.16)', '&:hover': { borderColor: '#374151', bgcolor: '#f9fafb' } }}>Copy Address</Button>
+                      <Button size="small" variant="outlined" startIcon={<PlaceRoundedIcon />}
+                        onClick={() => { const a = o.address; window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${a?.line1 || ''} ${a?.city || ''} ${a?.state || ''} ${a?.zip || ''}`)}`, '_blank') }}
+                        sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#374151', borderColor: 'rgba(0,0,0,0.16)', '&:hover': { borderColor: '#374151', bgcolor: '#f9fafb' } }}>Open in Maps</Button>
+                      <Button size="small" variant="outlined" color="error" startIcon={<DeleteOutlineRoundedIcon />} onClick={() => setConfirmDelete(o.id)}
+                        sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, '&:hover': { bgcolor: '#fef2f2' } }}>Delete</Button>
+                    </Box>
+                  </Box>
                 )}
-              </div>
+              </Paper>
             )
           })}
-        </div>
+        </Stack>
 
         {!loading && filtered.length === 0 ? (
-          <Typography color="text.secondary" sx={{ mt: 2 }}>No orders.</Typography>
+          <Paper elevation={0} sx={{ borderRadius: 3, border: '1px dashed #ddd', p: 4, textAlign: 'center' }}>
+            <InboxRoundedIcon sx={{ fontSize: 40, color: '#c4b5fd' }} />
+            <Typography sx={{ fontWeight: 800, color: '#374151', mt: 1 }}>No orders found</Typography>
+            <Typography variant="body2" color="text.secondary">{q ? 'Search badal ke try karo.' : 'Naye orders yahan dikhenge.'}</Typography>
+          </Paper>
         ) : null}
 
         {/* Delete confirmation dialog */}
-        {confirmDelete && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'grid', placeItems: 'center', zIndex: 9999 }}>
-            <div style={{ background: '#fff', borderRadius: 16, padding: 24, maxWidth: 400, width: '90%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
-              <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: '#1f2937' }}>🗑️ Delete Order?</div>
-              <div style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>
-                Are you sure you want to delete order <b>#{confirmDelete.slice(-8)}</b>? This action cannot be undone.
-              </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                <button onClick={() => setConfirmDelete(null)} disabled={deleting} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.12)', background: '#f9fafb', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => deleteOrder(confirmDelete)} disabled={deleting} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Deleting…' : 'Delete'}</button>
-              </div>
-            </div>
-          </div>
-        )}
+        <Dialog open={!!confirmDelete} onClose={() => !deleting && setConfirmDelete(null)} maxWidth="xs" fullWidth
+          PaperProps={{ sx: { borderRadius: 3 } }}>
+          <DialogTitle sx={{ fontWeight: 800 }}>Delete Order?</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary">
+              Are you sure you want to delete order <b>#{(confirmDelete || '').slice(-8)}</b>? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button onClick={() => setConfirmDelete(null)} disabled={deleting}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2, color: '#374151' }}>Cancel</Button>
+            <Button variant="contained" color="error" disabled={deleting} onClick={() => confirmDelete && deleteOrder(confirmDelete)}
+              startIcon={deleting ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : <DeleteOutlineRoundedIcon />}
+              sx={{ textTransform: 'none', fontWeight: 800, borderRadius: 2 }}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </AdminLayout>
     </AdminGuard>
   )

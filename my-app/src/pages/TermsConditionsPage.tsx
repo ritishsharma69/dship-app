@@ -35,7 +35,7 @@ export default function TermsConditionsPage() {
             'Prices may change without notice. Obvious pricing errors may be cancelled/refunded.',
           ]} />
           <Section icon="💳" title="Payments" items={[
-            'We accept secure online payments (UPI/Cards). Orders are processed after payment confirmation.',
+            'We currently accept Cash on Delivery (COD). You pay when your order arrives.',
           ]} />
           <Section icon="🚚" title="Shipping" items={[
             'Dispatch in 24-48 business hours. Delivery typically 3-7 working days depending on location.',

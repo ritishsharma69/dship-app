@@ -2,13 +2,34 @@ import { useEffect, useRef, useState, useLayoutEffect, useMemo } from 'react'
 import { gsap, canAnimate } from '../lib/gsap'
 import type { Product } from '../types'
 import { optimizeImage } from '../lib/cloudinary'
+import { useWishlist } from '../lib/wishlist'
+
+import Box from '@mui/material/Box'
+import IconButton from '@mui/material/IconButton'
+import FavoriteBorderRounded from '@mui/icons-material/FavoriteBorderRounded'
+import FavoriteRounded from '@mui/icons-material/FavoriteRounded'
+import ShareRounded from '@mui/icons-material/ShareRounded'
+import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded'
 
 export default function MediaGallery({ product }: { product: Product }) {
   const images = product.images ?? []
   const [active, setActive] = useState(() => (product.youtubeUrl && images.length > 0 ? 1 : 0))
   const [lightbox, setLightbox] = useState(false)
+  const { has, toggle } = useWishlist()
+  const liked = has(product.id)
   const [broken, setBroken] = useState<Record<number, true>>({})
   const mainRef = useRef<HTMLDivElement>(null)
+
+  const pct = product.compareAtPrice && product.compareAtPrice > product.price
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+    : null
+
+  const onShare = async () => {
+    try {
+      if (navigator.share) await navigator.share({ title: product.title, url: window.location.href })
+      else await navigator.clipboard.writeText(window.location.href)
+    } catch { /* user cancelled */ }
+  }
 
   // Build a media list that inserts YouTube video as the 2nd item if provided
   const media: Array<{ type: 'image' | 'youtube'; src: string }> = useMemo(() => {
@@ -127,70 +148,161 @@ export default function MediaGallery({ product }: { product: Product }) {
 
   return (
     <section>
-      <div ref={mainRef} style={{ position: 'relative' }}>
-        {media[active]?.type === 'youtube' ? (
-          <div style={{ position: 'relative', width: '100%', background: '#000' }}>
-            <div style={{ position: 'relative', paddingTop: '56.25%' }}>
-              <iframe
-                src={embedSrc || media[active].src}
-                title="Product video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, borderRadius: 8 }}
-              />
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setLightbox(true)}
-            title="Tap to zoom"
-            aria-label="Open image"
-            style={{ padding: 0, border: 'none', background: 'transparent', width: '100%', cursor: 'zoom-in' }}
-          >
-	            {media[active]?.src && !broken[active] ? (
-	              <img
-	                src={optimizeImage(media[active]?.src, 'product')}
-	                alt={product.title}
-	                className="gallery-main"
-	                loading="lazy"
-	                onError={() => setBroken((b) => ({ ...b, [active]: true }))}
-	              />
-	            ) : (
-	              <Placeholder label="Image will appear when available" height={360} />
-	            )}
-          </button>
-        )}
-      </div>
+      <Box sx={{ display: 'flex', gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+        {/* Thumbnail rail — vertical on desktop, horizontal below on mobile */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'row', sm: 'column' },
+            gap: 1.25,
+            order: { xs: 2, sm: 1 },
+            overflowX: { xs: 'auto', sm: 'visible' },
+            overflowY: { xs: 'visible', sm: 'auto' },
+            maxHeight: { sm: 480 },
+            flexShrink: 0,
+            pb: { xs: 0.5, sm: 0 },
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          {media.map((m, i) => (
+            <Box
+              key={(m.type === 'image' ? 'img' : 'yt') + i}
+              component="button"
+              onClick={() => setActive(i)}
+              className="thumb"
+              aria-label={`Show media ${i + 1}`}
+              sx={{
+                width: { xs: 64, sm: 72 },
+                height: { xs: 64, sm: 72 },
+                flexShrink: 0,
+                p: 0,
+                overflow: 'hidden',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                background: '#F3F4F6',
+                border: i === active ? '2px solid #7C3AED' : '2px solid transparent',
+                outline: i === active ? 'none' : '1px solid #E5E7EB',
+                outlineOffset: '-1px',
+                transition: 'border-color 0.15s ease, transform 0.15s ease',
+                '&:hover': { transform: 'scale(1.04)' },
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              {m.type === 'youtube' ? (
+                <Box sx={{ width: '100%', height: '100%', background: '#111827', display: 'grid', placeItems: 'center' }}>
+                  <Box sx={{ width: 26, height: 26, borderRadius: '50%', background: '#7C3AED', display: 'grid', placeItems: 'center' }}>
+                    <PlayArrowRounded sx={{ fontSize: 18, color: '#fff' }} />
+                  </Box>
+                </Box>
+              ) : (m.src && !broken[i]) ? (
+                <img
+                  src={optimizeImage(m.src, 'thumb')}
+                  alt={`${product.title} ${i + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#F3F4F6' }}
+                  loading="lazy"
+                  onError={() => setBroken((b) => ({ ...b, [i]: true }))}
+                />
+              ) : (
+                <Placeholder label="—" height="100%" />
+              )}
+            </Box>
+          ))}
+        </Box>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginTop: 8 }}>
-        {media.map((m, i) => (
-          <button
-            key={(m.type==='image'?'img':'yt') + i}
-            onClick={() => setActive(i)}
-            className="thumb"
-            style={{ border: i === active ? '2px solid #2563eb' : '1px solid #e5e7eb', borderRadius: 10, padding: 0, overflow: 'hidden', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
-            aria-label={`Show media ${i + 1}`}
+        {/* Main media */}
+        <Box ref={mainRef} sx={{ position: 'relative', flex: 1, minWidth: 0, order: { xs: 1, sm: 2 } }}>
+          <Box
+            sx={{
+              position: 'relative',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              background: '#F3F4F6',
+              border: '1px solid #EEF0F3',
+            }}
           >
-            {m.type === 'youtube' ? (
-	              <div style={{ position: 'relative', width: '100%', height: 80, background: '#0b0b0b', display: 'grid', placeItems: 'center' }}>
-	                <div style={{ width: 20, height: 20, background: '#ff2a6d', clipPath: 'polygon(25% 20%, 25% 80%, 80% 50%)', borderRadius: 4, boxShadow: '0 1px 6px rgba(0,0,0,0.4)' }} />
-	              </div>
+            {media[active]?.type === 'youtube' ? (
+              <Box sx={{ position: 'relative', width: '100%', background: '#000' }}>
+                <Box sx={{ position: 'relative', paddingTop: '56.25%' }}>
+                  <iframe
+                    src={embedSrc || media[active].src}
+                    title="Product video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+                  />
+                </Box>
+              </Box>
             ) : (
-	              (m.src && !broken[i]) ? (
-	                <img
-	                  src={optimizeImage(m.src, 'thumb')}
-	                  alt={`${product.title} ${i + 1}`}
-	                  style={{ width: '100%', height: 80, objectFit: 'contain', background: '#fff' }}
-	                  loading="lazy"
-	                  onError={() => setBroken((b) => ({ ...b, [i]: true }))}
-	                />
-	              ) : (
-	                <Placeholder label="No image" height={80} />
-	              )
+              <button
+                onClick={() => setLightbox(true)}
+                title="Tap to zoom"
+                aria-label="Open image"
+                style={{ padding: 0, border: 'none', background: 'transparent', width: '100%', cursor: 'zoom-in', display: 'block' }}
+              >
+                {media[active]?.src && !broken[active] ? (
+                  <img
+                    src={optimizeImage(media[active]?.src, 'product')}
+                    alt={product.title}
+                    className="gallery-main"
+                    loading="lazy"
+                    style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'contain', display: 'block' }}
+                    onError={() => setBroken((b) => ({ ...b, [active]: true }))}
+                  />
+                ) : (
+                  <Placeholder label="Image will appear when available" height={360} />
+                )}
+              </button>
             )}
-          </button>
-        ))}
-      </div>
+
+            {/* Discount badge */}
+            {pct != null && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 16,
+                  left: 16,
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: '#EF2B62',
+                  color: '#fff',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  lineHeight: 1.1,
+                  boxShadow: '0 4px 14px rgba(239,43,98,0.4)',
+                  pointerEvents: 'none',
+                }}
+              >
+                <Box component="span" sx={{ fontSize: 15, fontWeight: 900 }}>{pct}%</Box>
+                <Box component="span" sx={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>OFF</Box>
+              </Box>
+            )}
+
+            {/* Heart / Share */}
+            <Box sx={{ position: 'absolute', top: 12, right: 12, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <IconButton
+                aria-label={liked ? 'Remove from wishlist' : 'Add to wishlist'}
+                onClick={() => toggle(product.id)}
+                sx={{ background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.10)', width: 40, height: 40, '&:hover': { background: '#fff' } }}
+              >
+                {liked
+                  ? <FavoriteRounded sx={{ fontSize: 20, color: '#EF2B62' }} />
+                  : <FavoriteBorderRounded sx={{ fontSize: 20, color: '#374151' }} />}
+              </IconButton>
+              <IconButton
+                aria-label="Share product"
+                onClick={onShare}
+                sx={{ background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.10)', width: 40, height: 40, '&:hover': { background: '#fff' } }}
+              >
+                <ShareRounded sx={{ fontSize: 19, color: '#374151' }} />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
 	      {lightbox && (
         <div

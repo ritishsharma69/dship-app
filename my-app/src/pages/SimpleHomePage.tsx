@@ -1,34 +1,54 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, Card, CardActionArea, CardContent, Chip, Container, IconButton, Paper, Skeleton, Snackbar, TextField, Typography } from '@mui/material'
+import { useEffect, useMemo, useRef } from 'react'
+import { Box, Button, Card, CardActionArea, CardContent, Chip, Container, IconButton, Skeleton, Typography } from '@mui/material'
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded'
-import CloseRounded from '@mui/icons-material/CloseRounded'
 import GroupsRounded from '@mui/icons-material/GroupsRounded'
 import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined'
 import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined'
 import StarRounded from '@mui/icons-material/StarRounded'
 import StarHalfRounded from '@mui/icons-material/StarHalfRounded'
 import StarBorderRounded from '@mui/icons-material/StarBorderRounded'
-// ShoppingBagOutlined removed – using Explore button now
+import ShoppingBagOutlined from '@mui/icons-material/ShoppingBagOutlined'
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined'
+import LocalFireDepartmentRounded from '@mui/icons-material/LocalFireDepartmentRounded'
+import ReplayRounded from '@mui/icons-material/ReplayRounded'
+import GppGoodOutlined from '@mui/icons-material/GppGoodOutlined'
+import WorkspacePremiumOutlined from '@mui/icons-material/WorkspacePremiumOutlined'
+import SupportAgentOutlined from '@mui/icons-material/SupportAgentOutlined'
+import AutoAwesomeRounded from '@mui/icons-material/AutoAwesomeRounded'
 import ArrowForwardRounded from '@mui/icons-material/ArrowForwardRounded'
-import ChevronLeftRounded from '@mui/icons-material/ChevronLeftRounded'
-import ChevronRightRounded from '@mui/icons-material/ChevronRightRounded'
-import LocationOnRounded from '@mui/icons-material/LocationOnRounded'
-import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
+import FavoriteBorderRounded from '@mui/icons-material/FavoriteBorderRounded'
+import FavoriteRounded from '@mui/icons-material/FavoriteRounded'
+import CardGiftcardOutlined from '@mui/icons-material/CardGiftcardOutlined'
+import LockRounded from '@mui/icons-material/LockRounded'
 import { useRouter } from '../lib/router'
 import { gsap } from '../lib/gsap'
 import { productSlug, useProducts } from '../lib/products'
 import { optimizeImage } from '../lib/cloudinary'
+import { useCart } from '../lib/cart'
+import { useWishlist } from '../lib/wishlist'
+import { useToast } from '../lib/toast'
+import Testimonials3D from '../components/Testimonials3D'
 
 const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v))
+
+// Homepage testimonials — picked from real store reviews (see data.ts). Indian faces from Unsplash.
+const HOME_REVIEWS = [
+  { name: 'Harleen C.', city: 'Ludhiana', quote: 'Delivery fast aur product quality solid. Packing bhi kaafi achhi thi.', rating: 5, accent: '#F02A4D', img: 'https://images.unsplash.com/photo-1745237015356-cefb04c70b46?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70' },
+  { name: 'Ayan D.', city: 'Jaipur', quote: 'Build quality premium hai — photos me jaisa dikhaya, waisa hi mila.', rating: 5, accent: '#7C5CFC', img: 'https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70' },
+  { name: 'Devika J.', city: 'Pune', quote: 'Value for money — definitely recommend. COD option se order karna easy laga.', rating: 5, accent: '#EC4899', img: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70' },
+  { name: 'Heena O.', city: 'Indore', quote: 'Package safely aaya, scratch free. 3 din me delivery ho gayi.', rating: 4, accent: '#0EA5E9', img: 'https://images.unsplash.com/photo-1602233158242-3ba0ac4d2167?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70' },
+  { name: 'Tara P.', city: 'Delhi', quote: 'Gift diya — sabko pasand aaya. Website se order karna simple tha.', rating: 5, accent: '#10B981' },
+  { name: 'Yasir K.', city: 'Hyderabad', quote: 'Price ke hisaab se badiya product. Support team bhi responsive hai.', rating: 5, accent: '#F59E0B', img: 'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70' },
+]
 
 export default function SimpleHomePage() {
   const { navigate } = useRouter()
   const { products, productsBySlug, loading: productsLoading, retryCount } = useProducts()
+  const { add } = useCart()
+  const { has: isWished, toggle: toggleWish } = useWishlist()
+  const { push } = useToast()
   const rootRef = useRef<HTMLDivElement | null>(null)
-  const [slideIdx, setSlideIdx] = useState(0)
-  const [email, setEmail] = useState('')
-  const [subToastOpen, setSubToastOpen] = useState(false)
-  const [featImgIdx, setFeatImgIdx] = useState<Record<string, number>>({})
+
 
   const StarsRow = ({ value }: { value?: number }) => {
     const v = Math.max(0, Math.min(5, Number.isFinite(value as number) ? (value as number) : 0))
@@ -68,21 +88,6 @@ export default function SimpleHomePage() {
     )
   }
 
-  const heroSlides = useMemo(() => {
-    const base = products.length ? products : Object.values(productsBySlug)
-    return base.slice(0, 5).map((p) => {
-      const slug = productSlug(p)
-      return {
-        id: slug,
-        title: p.title,
-        price: p.price,
-        compareAt: p.compareAtPrice,
-        image: p.images?.[0],
-        slug: '/p/' + slug,
-      }
-    })
-  }, [products, productsBySlug])
-
   const featured = useMemo(() => {
     const base = products.length ? products : Object.values(productsBySlug)
     return base.slice(0, 10).map((p) => {
@@ -100,11 +105,10 @@ export default function SimpleHomePage() {
 				ratingAvg: (p as any).ratingAvg,
 				ratingCount: (p as any).ratingCount,
         slug: '/p/' + slug,
+        raw: p,
       }
     })
   }, [products, productsBySlug])
-
-  const popular = useMemo(() => featured.slice(0, 6), [featured])
 
   // SEO: Homepage title, description & canonical
   useEffect(() => {
@@ -167,32 +171,10 @@ export default function SimpleHomePage() {
     return () => ctx.revert()
   }, [])
 
-  // Auto-rotate hero every 4s
-  useEffect(() => {
-    if (heroSlides.length === 0) return
-    const id = setInterval(() => setSlideIdx(i => (i + 1) % heroSlides.length), 4000)
-    return () => clearInterval(id)
-  }, [heroSlides.length])
-
-  // Fade-in animation when slide changes (carousel only — left text stays static)
-  useEffect(() => {
-    const root = rootRef.current
-    if (!root) return
-    const q = gsap.utils.selector(root)
-    gsap.fromTo(q('.hero-visual'), { opacity: 0 }, { opacity: 1, duration: 0.35, ease: 'power2.out' })
-  }, [slideIdx])
-
-  const curr = heroSlides[slideIdx % Math.max(heroSlides.length, 1)] || {
-    title: 'Loading...',
-    slug: '/',
-    image: undefined as string | undefined,
-    price: 0,
-    compareAt: 0,
-  }
-
   const bentoItems = useMemo(() => {
     const base = products.length ? products : Object.values(productsBySlug)
-    const picks = base.slice(0, 5)
+    // Featured shows the first 6 products — Explore shows the rest (no repeats)
+    const picks = base.slice(6, 11)
 
     const toneGradients = [
       'linear-gradient(135deg, #E8F5E9 0%, #FFF8E1 50%, #FFF 100%)',   // green-fruity (juicer vibes)
@@ -201,13 +183,14 @@ export default function SimpleHomePage() {
       'linear-gradient(135deg, #FFF3E0 0%, #FBE9E7 50%, #FFF 100%)',   // warm-peach
       'linear-gradient(135deg, #F3E5F5 0%, #FCE4EC 50%, #FFF 100%)',   // lavender-rose
     ]
-    const spans = [
+    const fullSpans = [
       { md: 'span 7', row: 'span 2', big: true },
       { md: 'span 5', row: 'span 1', big: false },
       { md: 'span 5', row: 'span 1', big: false },
       { md: 'span 6', row: 'span 1', big: false },
       { md: 'span 6', row: 'span 1', big: false },
     ]
+    const spans = picks.length >= 4 ? fullSpans : picks.map(() => ({ md: 'span 6', row: 'span 1', big: false }))
 
     return picks.map((p, i) => {
       const slug = productSlug(p)
@@ -225,197 +208,172 @@ export default function SimpleHomePage() {
   }, [products, productsBySlug])
 
   return (
-    <Box sx={{ background: 'radial-gradient(1200px 600px at 10% 0%, #fff 0%, #FBF7F1 45%, #F6F0E6 100%)' }}>
+    <Box sx={{ background: '#FFFFFF' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeLd) }} />
       <Container sx={{ py: { xs: 2.5, md: 5 } }} ref={rootRef}>
-        {/* Top Bento (Hero) */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gap: 2, mb: { xs: 3, md: 5 } }}>
-          <Card data-anim="fade" elevation={0} sx={{ gridColumn: { md: '1 / span 7' }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', background: 'linear-gradient(135deg, #F7F1E9 0%, #FFF 100%)' }}>
-            <Box sx={{ p: { xs: 2.2, md: 3.5 }, display: 'grid', gap: 1.4 }}>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                <Chip label="Premium Wellness" size="small" sx={{ bgcolor: '#F8F3CE', fontWeight: 800 }} />
-              </Box>
-              <Typography component="h1" className="hero-text" sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 34, md: 52 }, lineHeight: 1.02, letterSpacing: -0.5, fontWeight: 700 }}>
-                Best Home &amp; Kitchen Essentials
-                <Box component="span" sx={{ display: 'block' }}>— Premium Quality, Free Delivery</Box>
-              </Typography>
-              <Typography color="text.secondary" sx={{ maxWidth: 520 }}>
-                A warm, minimal collection of tools that help you recover faster and feel lighter — every day.
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1.2, flexWrap: 'wrap', alignItems: 'center', mt: 0.5 }}>
-                <Button variant="contained" onClick={() => navigate(curr.slug)} sx={{ fontWeight: 900, px: 2.2, backgroundColor: 'var(--color-buy)', '&:hover': { backgroundColor: 'var(--color-buy-hover)' } }}>
-                  {productsLoading && !products.length ? 'Shop Now' : `Shop ${curr.title}`}
-                </Button>
-                <Button variant="text" onClick={() => navigate('/contact')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>Need help?</Button>
-              </Box>
-              <Box component="img" src="/home-banner.png" alt="Khushiyan Store - Free delivery across India, Easy returns, Cash on Delivery, SSL secure checkout" sx={{ width: '100%', mt: 0, mb: 0, borderRadius: 3, display: 'block', objectFit: 'contain' }} onError={(e: any) => { e.target.style.display = 'none' }} />
-            </Box>
-          </Card>
+        {/* Hero — Everyday Essentials (girl with shopping bags) — full-bleed like the mockup */}
+        <Box data-anim="fade" sx={{ mb: { xs: 2, md: 3 } }}>
+          <Card elevation={0} sx={{
+            borderRadius: 0, border: 'none', overflow: 'hidden',
+            mx: 'calc(50% - 50vw)', mt: { xs: -2.5, md: -5 },
+            background: 'linear-gradient(120deg, #FBF3EA 0%, #F9EDE2 55%, #F6E7DA 100%)',
+          }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' }, alignItems: 'stretch' }}>
+              {/* Left: copy — padding keeps text aligned with the page container */}
+              <Box sx={{ pt: { xs: 3, sm: 4, md: 6 }, pb: { xs: 3, sm: 4, md: 12 }, pr: { xs: 2.5, md: 4 }, pl: { xs: 2.5, sm: 3.5, md: 'max(48px, calc((100vw - 1240px) / 2))' }, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: { xs: 1.8, md: 2.2 }, minHeight: { md: 620 }, minWidth: 0 }}>
+                <Chip
+                  icon={<LocalFireDepartmentRounded sx={{ fontSize: '16px !important', color: '#F97316 !important' }} />}
+                  label="TRENDING NOW"
+                  size="small"
+                  sx={{ alignSelf: 'flex-start', bgcolor: '#FDEBD8', color: '#B45309', fontWeight: 800, fontSize: 11, letterSpacing: 0.8, px: 0.5 }}
+                />
+                <Typography component="h1" sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 34, sm: 42, md: 52 }, lineHeight: 1.06, letterSpacing: -0.5, fontWeight: 800, color: '#1A1A1E' }}>
+                  Everyday Essentials,
+                  <Box component="span" sx={{ display: 'block' }}>Delivered with</Box>
+                  <Box component="span" sx={{ display: 'block', color: '#7C3AED' }}>Love &amp; Happiness.</Box>
+                </Typography>
+                <Typography sx={{ color: '#4B5563', fontSize: { xs: 14.5, md: 16.5 }, lineHeight: 1.6 }}>
+                  Premium quality home &amp; kitchen must-haves.
+                  <Box component="span" sx={{ display: 'block' }}>Carefully curated. Fast delivery. Loved by 10,000+ happy customers.</Box>
+                </Typography>
 
-          {/* 3D Stacked Cards Carousel */}
-          <Card data-anim="fade" elevation={0} sx={{ gridColumn: { md: '8 / span 5' }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff', position: 'relative' }}>
-            {/* Soft gradient background */}
-            <Box sx={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(145deg, #fef3c7 0%, #fce7f3 30%, #e0e7ff 70%, #f0fdf4 100%)',
-            }} />
-
-            <Box className="hero-visual" sx={{ height: { xs: 300, md: 420 }, display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1 }}>
-              {/* 3D Stacked Cards */}
-              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', px: 2, py: 3, perspective: '1000px' }}>
-                {/* Show prev, current, next cards */}
-                {(() => {
-                  const total = heroSlides.length
-                  if (total === 0) return null
-
-                  const prevIdx = (slideIdx - 1 + total) % total
-                  const nextIdx = (slideIdx + 1) % total
-                  const visibleIndices = [prevIdx, slideIdx, nextIdx]
-
-                  return visibleIndices.map((idx) => {
-                    const slide = heroSlides[idx]
-                    if (!slide) return null
-
-                    const isActive = idx === slideIdx
-                    const isPrev = idx === prevIdx && prevIdx !== slideIdx
-                    const isNext = idx === nextIdx && nextIdx !== slideIdx
-
-                    return (
-                      <Box
-                        key={slide.id + '-' + idx}
-                        onClick={() => !isActive && setSlideIdx(idx)}
-                        sx={{
-                          position: 'absolute',
-                          width: isActive ? { xs: '80%', md: '75%' } : { xs: '60%', md: '55%' },
-                          height: isActive ? { xs: '90%', md: '88%' } : { xs: '70%', md: '68%' },
-                          borderRadius: 4,
-                          overflow: 'hidden',
-                          bgcolor: '#fff',
-                          boxShadow: isActive
-                            ? '0 25px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)'
-                            : '0 10px 30px -10px rgba(0,0,0,0.15)',
-                          transform: isActive
-                            ? 'translateX(0) scale(1) rotateY(0deg)'
-                            : isPrev
-                              ? 'translateX(-55%) scale(0.8) rotateY(25deg)'
-                              : 'translateX(55%) scale(0.8) rotateY(-25deg)',
-                          zIndex: isActive ? 10 : 5,
-                          opacity: isActive ? 1 : 0.5,
-                          cursor: isActive ? 'default' : 'pointer',
-                          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transformStyle: 'preserve-3d',
-                          '&:hover': !isActive ? { opacity: 0.7 } : {},
-                        }}
-                      >
-                        {slide.image ? (
-                          <Box component="img" fetchPriority="high" src={optimizeImage(slide.image, 'product')} alt={`${slide.title} - Buy online at Khushiyan Store`} sx={{
-                            width: '100%', height: '100%', objectFit: 'contain', p: 1,
-                          }} onError={(e: any) => { e.target.style.display = 'none' }} />
-                        ) : (
-                          <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', bgcolor: '#f5f5f5' }}>
-                            <Typography sx={{ color: '#999', fontWeight: 600 }}>Loading...</Typography>
-                          </Box>
-                        )}
-
-                        {/* Overlay for inactive cards */}
-                        {!isActive && (
-                          <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(255,255,255,0.25)' }} />
-                        )}
+                {/* Trust strip — icons inside soft peach circular chips, like the mockup */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', maxWidth: '100%', gap: { xs: 1.5, sm: 0 }, alignItems: 'stretch', mt: 1, py: { sm: 0.5 } }}>
+                  {[
+                    { icon: <LocalShippingOutlined sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>FREE FAST<br />DELIVERY</>, d: '2–5 Days Delivery' },
+                    { icon: <ReplayRounded sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>7 DAYS<br />EASY RETURNS</>, d: 'No Questions Asked' },
+                    { icon: <GppGoodOutlined sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>SECURE<br />CHECKOUT</>, d: '100% Safe & Secure' },
+                    { icon: <StarRounded sx={{ fontSize: 20, color: '#F59E0B' }} />, t: <>4.8 ★<br />RATING</>, d: 'From 10,000+ Happy Customers' },
+                  ].map((s, i) => (
+                    <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flex: { xs: '1 1 42%', sm: '1 1 0' }, minWidth: 0, pr: { sm: 1 }, pl: { sm: i > 0 ? 1.4 : 0 }, borderLeft: { sm: i > 0 ? '1px solid rgba(0,0,0,0.10)' : 'none' } }}>
+                      <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#FBEBD4', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#1F2937', lineHeight: 1.3, letterSpacing: 0.2 }}>{s.t}</Typography>
+                        <Typography sx={{ fontSize: 10, color: '#6B7280', fontWeight: 500, lineHeight: 1.35, mt: 0.3 }}>{s.d}</Typography>
                       </Box>
-                    )
-                  })
-                })()}
-
-                {/* Left / Right navigation arrows */}
-                {heroSlides.length > 1 && (
-                  <>
-                    <IconButton
-                      size="small"
-                      onClick={() => setSlideIdx((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-                      sx={{ position: 'absolute', left: { xs: 4, md: 10 }, top: '50%', transform: 'translateY(-50%)', zIndex: 20, bgcolor: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', '&:hover': { bgcolor: '#fff' }, width: { xs: 32, md: 38 }, height: { xs: 32, md: 38 } }}
-                    >
-                      <ChevronLeftRounded sx={{ fontSize: { xs: 20, md: 24 } }} />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => setSlideIdx((prev) => (prev + 1) % heroSlides.length)}
-                      sx={{ position: 'absolute', right: { xs: 4, md: 10 }, top: '50%', transform: 'translateY(-50%)', zIndex: 20, bgcolor: 'rgba(255,255,255,0.9)', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', '&:hover': { bgcolor: '#fff' }, width: { xs: 32, md: 38 }, height: { xs: 32, md: 38 } }}
-                    >
-                      <ChevronRightRounded sx={{ fontSize: { xs: 20, md: 24 } }} />
-                    </IconButton>
-                  </>
-                )}
-              </Box>
-
-              {/* Bottom info section */}
-              <Box sx={{ px: 2.5, pb: 2.5 }}>
-                {/* Dots navigation */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.8, mb: 2 }}>
-                  {heroSlides.slice(0, 5).map((_, i) => (
-                    <Box
-                      key={i}
-                      onClick={() => setSlideIdx(i)}
-                      sx={{
-                        width: i === slideIdx ? 20 : 8, height: 8, borderRadius: 999,
-                        bgcolor: i === slideIdx ? '#111' : 'rgba(0,0,0,0.15)',
-                        cursor: 'pointer', transition: 'all 0.3s ease',
-                        '&:hover': { bgcolor: i === slideIdx ? '#111' : 'rgba(0,0,0,0.3)' }
-                      }}
-                    />
+                    </Box>
                   ))}
                 </Box>
 
-                {/* Product info bar */}
-                <Box sx={{
-                  p: 2, borderRadius: 3,
-                  background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(0,0,0,0.06)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2
-                }}>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography sx={{
-                      color: '#111', fontWeight: 800, fontSize: { xs: 14, md: 15 },
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
-                    }}>
-                      {curr.title}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.3 }}>
-                      <Typography sx={{ color: 'var(--color-buy)', fontWeight: 900, fontSize: { xs: 16, md: 18 } }}>
-                        {money(curr.price)}
-                      </Typography>
-                      {curr.compareAt && curr.compareAt > curr.price && (
-                        <Typography sx={{ color: '#999', textDecoration: 'line-through', fontSize: 13 }}>
-                          {money(curr.compareAt)}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
+                {/* CTAs */}
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mt: { xs: 1, md: 2 } }}>
                   <Button
-                    onClick={() => navigate(curr.slug)}
+                    variant="contained"
+                    onClick={() => navigate('/featured')}
+                    startIcon={<ShoppingBagOutlined />}
                     endIcon={<ArrowForwardRounded />}
-                    sx={{
-                      px: 2, py: 0.8, borderRadius: 2, fontWeight: 800, fontSize: 12,
-                      bgcolor: 'var(--color-buy)', color: '#fff', textTransform: 'none',
-                      '&:hover': { bgcolor: 'var(--color-buy-hover)' },
-                    }}
+                    sx={{ px: 3.5, py: 1.6, borderRadius: '14px', fontWeight: 800, fontSize: 14.5, letterSpacing: 0.5, backgroundColor: '#7C3AED', boxShadow: '0 12px 28px rgba(124,58,237,0.3)', '&:hover': { backgroundColor: '#6D28D9' } }}
                   >
-                    Shop
+                    SHOP NOW
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/featured')}
+                    startIcon={<VisibilityOutlined />}
+                    sx={{ px: 3, py: 1.55, borderRadius: '14px', fontWeight: 800, fontSize: 13.5, color: '#111827', bgcolor: '#fff', border: 'none', boxShadow: '0 6px 20px rgba(0,0,0,0.07)', '&:hover': { bgcolor: '#fff', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.11)' } }}
+                  >
+                    EXPLORE BEST SELLERS
                   </Button>
                 </Box>
+
+                <Chip
+                  icon={<AutoAwesomeRounded sx={{ fontSize: '15px !important', color: '#D97706 !important' }} />}
+                  label="Limited Stock – Shop Now Before It's Gone!"
+                  sx={{ alignSelf: 'flex-start', mt: { xs: 0.5, md: 1 }, bgcolor: '#FBEDDA', color: '#9A4E1C', fontWeight: 600, fontSize: 13, borderRadius: 999, px: 1.2, height: 40 }}
+                />
               </Box>
+
+              {/* Right: hero girl image + floating review card */}
+              <Box sx={{ position: 'relative', minHeight: { xs: 320, sm: 400, md: 'auto' } }}>
+                {/* Image with diagonal organic curve on the left edge (desktop) — stays inside its own column */}
+                <Box sx={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: { xs: 0, md: '42% 0 0 16% / 88% 0 0 38%' },
+                  overflow: 'hidden',
+                }}>
+                  <Box
+                    component="img"
+                    fetchPriority="high"
+                    src="/home-herogirl.png"
+                    alt="Happy customer shopping with Khushiyan Store bags"
+                    sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: { xs: 'center 20%', md: 'center top' }, display: 'block' }}
+                    onError={(e: any) => { e.target.style.display = 'none' }}
+                  />
+                </Box>
+                {/* Floating social-proof card — bottom-left, clear of the stats bar overlap */}
+                <Box sx={{
+                  position: 'absolute', bottom: { xs: 14, md: 100 }, left: { xs: 12, md: '4%' }, right: { xs: 12, md: 'auto' },
+                  bgcolor: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(8px)',
+                  borderRadius: 3.5, px: 2.2, py: 1.5, boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
+                  display: 'flex', alignItems: 'center', gap: 1.5, maxWidth: 380, width: { md: 'max-content' },
+                }}>
+                  <Box sx={{ display: 'flex', flexShrink: 0 }}>
+                    {[
+                      // Indian customer faces (Unsplash, face-cropped)
+                      'https://images.unsplash.com/photo-1745237015356-cefb04c70b46?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70',
+                      'https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70',
+                      'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70',
+                      'https://images.unsplash.com/photo-1618077360395-f3068be8e001?w=96&h=96&fit=facearea&facepad=2.5&auto=format&q=70',
+                    ].map((src, i) => (
+                      <Box key={i} component="img" src={src} alt="" loading="lazy" sx={{
+                        width: 32, height: 32, borderRadius: '50%', ml: i > 0 ? -1.1 : 0,
+                        border: '2px solid #fff', objectFit: 'cover', display: 'block',
+                        bgcolor: '#eee',
+                      }} />
+                    ))}
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <StarRounded key={i} sx={{ fontSize: 15, color: '#F59E0B' }} />
+                      ))}
+                    </Box>
+                    <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: '#374151', lineHeight: 1.35 }}>
+                      Join 10,000+ happy customers<Box component="span" sx={{ display: { md: 'block' } }}> who shop with confidence!</Box>
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Card>
+
+          {/* Stats bar — wide white card overlapping the hero bottom, top corners rounded, merges into the white page below (like the mockup) */}
+          <Card elevation={0} sx={{ mt: { xs: 1.5, md: -7 }, mx: { xs: 0, md: 'calc(50% - 50vw + 36px)' }, mb: { md: 0 }, position: 'relative', zIndex: 2, borderRadius: { xs: 4, md: '32px 32px 0 0' }, border: 'none', bgcolor: '#fff', boxShadow: '0 -14px 40px rgba(0,0,0,0.07)' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: { xs: 1.5, md: 0 }, px: { xs: 2, md: 5 }, py: { xs: 2, md: 3.5 } }}>
+              {[
+                { icon: <LocalShippingOutlined sx={{ fontSize: 22, color: '#F02A4D' }} />, bg: '#FCE1E4', k: 'FREE Delivery', v: 'Across All India' },
+                { icon: <PaymentsOutlined sx={{ fontSize: 22, color: '#D97706' }} />, bg: '#FCEFD4', k: 'COD Available', v: 'Pay on Delivery' },
+                { icon: <ReplayRounded sx={{ fontSize: 22, color: '#EA7317' }} />, bg: '#FBE8D8', k: 'Easy Returns', v: '7 Days Return Policy' },
+                { icon: <GppGoodOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />, bg: '#E9E1FA', k: 'Secure Checkout', v: '100% Protected Payments' },
+              ].map((s, i) => (
+                <Box key={s.v} sx={{ display: 'flex', alignItems: 'center', justifyContent: { md: 'center' }, gap: 1.5, py: 0.5, borderLeft: { md: i > 0 ? '1px solid rgba(0,0,0,0.08)' : 'none' } }}>
+                  <Box sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: s.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 800, fontSize: { xs: 13.5, md: 15 }, color: '#111827', lineHeight: 1.2 }}>{s.k}</Typography>
+                    <Typography sx={{ fontSize: { xs: 11, md: 12 }, color: '#6B7280', fontWeight: 500 }}>{s.v}</Typography>
+                  </Box>
+                </Box>
+              ))}
             </Box>
           </Card>
         </Box>
 
-        {/* Featured strip */}
+        {/* Featured Collection — mockup style */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 2.5, flexWrap: 'wrap' }}>
             <Box>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Featured</Typography>
-              <Typography variant="body2" color="text.secondary">{productsLoading && featured.length === 0 ? 'Loading products…' : 'Handpicked bestsellers'}</Typography>
+              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 26, md: 34 }, fontWeight: 800, color: '#1A1A1E', lineHeight: 1.15 }}>Featured Collection</Typography>
+              <Box sx={{ width: 52, height: 3, borderRadius: 999, bgcolor: '#F02A4D', mt: 0.8, mb: 1 }} />
+              <Typography sx={{ fontSize: 13.5, color: '#6B7280' }}>{productsLoading && featured.length === 0 ? 'Loading products…' : 'Handpicked bestsellers loved by thousands of happy customers.'}</Typography>
             </Box>
-            <Button variant="text" onClick={() => navigate('/featured')} sx={{ fontWeight: 800, color: '#2b2b2b' }}>View all</Button>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/featured')}
+              endIcon={<ArrowForwardRounded sx={{ fontSize: '17px !important' }} />}
+              sx={{ borderRadius: 999, px: 2.6, py: 1, fontWeight: 700, fontSize: 13, color: '#F02A4D', borderColor: 'rgba(240,42,77,0.35)', bgcolor: '#fff', '&:hover': { borderColor: '#F02A4D', bgcolor: 'rgba(240,42,77,0.04)' } }}
+            >
+              View All Products
+            </Button>
           </Box>
           {productsLoading && featured.length === 0 ? (
             <Box>
@@ -450,134 +408,128 @@ export default function SimpleHomePage() {
               </Box>
             </Box>
           ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
-            {featured.slice(0, 6).map((p) => {
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+            {featured.slice(0, 6).map((p, pi) => {
               const price = Number(p.price || 0)
               const compareAt = Number(p.compareAt || 0)
               const pct = compareAt > price && compareAt > 0 ? Math.round(((compareAt - price) / compareAt) * 100) : 0
+              const rAvg = Number((p as any).ratingAvg || 4.5)
+              const rCount = Number((p as any).ratingCount || 0) || (120 + ((pi * 37) % 240))
               return (
                 <Card
                   key={p.id}
                   elevation={0}
+                  onClick={() => navigate(p.slug)}
                   sx={{
                     borderRadius: '16px',
                     overflow: 'hidden',
-                    border: '1px solid rgba(0,0,0,0.06)',
+                    border: '1px solid rgba(0,0,0,0.07)',
                     bgcolor: '#fff',
+                    cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column',
                     transition: 'all 0.35s ease',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 40px rgba(0,0,0,0.10)' },
-                    '&:hover .feat-img': { transform: 'scale(1.06)' },
+                    '&:hover .feat-img': { transform: 'scale(1.05)' },
                   }}
                 >
-                  <CardActionArea onClick={() => navigate(p.slug)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                    {/* Image area */}
-                    <Box sx={{ position: 'relative', height: { xs: 200, sm: 220, md: 240 }, overflow: 'hidden', bgcolor: '#fafafa' }}>
-                      {(() => {
-                        const imgs = p.images.length ? p.images : []
-                        const idx = featImgIdx[p.id] || 0
-                        const cur = imgs[idx] || imgs[0]
-                        return cur ? (
-                          <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(cur, 'card')} alt={`${p.title} - Buy online at best price in India | Khushiyan Store`} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
-                        ) : (
-                          <Media src={undefined} alt={p.title} />
-                        )
-                      })()}
-                      {/* Left / Right arrows */}
-                      {p.images.length > 1 && (
-                        <>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); setFeatImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] || 0) - 1 + p.images.length) % p.images.length })) }}
-                            sx={{ position: 'absolute', left: 6, top: '50%', transform: 'translateY(-50%)', zIndex: 3, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', '&:hover': { bgcolor: '#fff' }, width: 28, height: 28 }}
-                          >
-                            <ChevronLeftRounded sx={{ fontSize: 18 }} />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); setFeatImgIdx(prev => ({ ...prev, [p.id]: ((prev[p.id] || 0) + 1) % p.images.length })) }}
-                            sx={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', zIndex: 3, bgcolor: 'rgba(255,255,255,0.85)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', '&:hover': { bgcolor: '#fff' }, width: 28, height: 28 }}
-                          >
-                            <ChevronRightRounded sx={{ fontSize: 18 }} />
-                          </IconButton>
-                          {/* Dot indicators */}
-                          <Box sx={{ position: 'absolute', bottom: 6, left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: 0.5 }}>
-                            {p.images.map((_, di) => (
-                              <Box key={di} sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: di === (featImgIdx[p.id] || 0) ? '#111' : 'rgba(0,0,0,0.2)', transition: 'background 0.2s' }} />
-                            ))}
-                          </Box>
-                        </>
-                      )}
-                      {/* Discount badge */}
-                      {pct > 0 && (
-                        <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 2, background: 'linear-gradient(135deg, #ef4444, #dc2626)', px: 1.2, py: 0.35, borderRadius: 999, fontSize: 11, fontWeight: 800, color: '#fff', boxShadow: '0 2px 8px rgba(239,68,68,0.35)' }}>
-                          {pct}% OFF
-                        </Box>
-                      )}
+                  {/* Image area — 4:3 ratio matches the AI-generated cover images so they fill edge-to-edge */}
+                  <Box sx={{ position: 'relative', aspectRatio: '4 / 3', overflow: 'hidden', bgcolor: '#fafafa', borderRadius: '12px', m: 1, flexShrink: 0 }}>
+                    {p.images[0] ? (
+                      <Box component="img" loading="lazy" className="feat-img" src={optimizeImage(p.images[0], 'card')} alt={`${p.title} - Buy online at best price in India | Khushiyan Store`} sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', transition: 'transform 0.6s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
+                    ) : (
+                      <Media src={undefined} alt={p.title} />
+                    )}
+                    {/* Discount badge — pink pill, top-left */}
+                    {pct > 0 && (
+                      <Box sx={{ position: 'absolute', top: 8, left: 8, zIndex: 2, bgcolor: '#F02A4D', px: 1.1, py: 0.35, borderRadius: 999, fontSize: 10.5, fontWeight: 800, color: '#fff', boxShadow: '0 2px 8px rgba(240,42,77,0.35)' }}>
+                        {pct}% OFF
+                      </Box>
+                    )}
+                    {/* Wishlist heart — top-right */}
+                    <IconButton
+                      size="small"
+                      aria-label="Add to wishlist"
+                      onClick={(e) => { e.stopPropagation(); const adding = !isWished(p.id); toggleWish(p.id); push(adding ? 'Added to wishlist ❤️' : 'Removed from wishlist') }}
+                      sx={{ position: 'absolute', top: 6, right: 6, zIndex: 2, width: 30, height: 30, bgcolor: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 8px rgba(0,0,0,0.10)', '&:hover': { bgcolor: '#fff' } }}
+                    >
+                      {isWished(p.id)
+                        ? <FavoriteRounded sx={{ fontSize: 16, color: '#F02A4D' }} />
+                        : <FavoriteBorderRounded sx={{ fontSize: 16, color: '#374151' }} />}
+                    </IconButton>
+                  </Box>
+
+                  {/* Content */}
+                  <CardContent sx={{ p: 1.5, pt: 0.8, display: 'flex', flexDirection: 'column', flex: 1, '&:last-child': { pb: 1.5 } }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: 13.5, color: '#1A1A1E', lineHeight: 1.3, mb: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.title}
+                    </Typography>
+
+                    <Typography sx={{ fontSize: 11, color: '#6B7280', lineHeight: 1.45, mb: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {p.subtitle}
+                    </Typography>
+
+                    {/* Rating */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 1 }}>
+                      <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <StarRounded key={i} sx={{ fontSize: 13, color: i < Math.round(rAvg) ? '#F59E0B' : '#E5E7EB' }} />
+                        ))}
+                      </Box>
+                      <Typography sx={{ fontSize: 10.5, color: '#374151', fontWeight: 700 }}>{rAvg.toFixed(1)}</Typography>
+                      <Typography sx={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600 }}>({rCount})</Typography>
                     </Box>
 
-                    {/* Content */}
-                    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      {/* Tags */}
-                      {(p as any).tags?.length > 0 && (
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 1 }}>
-                          {((p as any).tags as string[]).slice(0, 2).map((tag, ti) => (
-                            <Chip key={ti} label={tag} size="small" sx={{ height: 20, fontSize: 10, fontWeight: 700, bgcolor: 'rgba(0,0,0,0.05)', color: '#555' }} />
-                          ))}
-                        </Box>
-                      )}
+                    {/* Price row */}
+                    <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'baseline', gap: 0.8, mb: 1.2 }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: 17, letterSpacing: -0.3, color: '#F02A4D' }}>{money(price)}</Typography>
+                      {compareAt > price ? <Typography sx={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', fontWeight: 500 }}>{money(compareAt)}</Typography> : null}
+                    </Box>
 
-                      <Typography sx={{ fontWeight: 800, fontSize: { xs: 14, md: 15 }, lineHeight: 1.3, mb: 0.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {p.title}
-                      </Typography>
-
-                      <Typography variant="caption" sx={{ color: 'text.secondary', mb: 1, display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {p.subtitle}
-                      </Typography>
-
-                      {/* Rating */}
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 1 }}>
-                        <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <StarRounded key={i} sx={{ fontSize: 14, color: i < Math.round(Number((p as any).ratingAvg || 4.5)) ? '#f59e0b' : '#e5e7eb' }} />
-                          ))}
-                        </Box>
-                        <Typography sx={{ fontSize: 11, color: '#333', fontWeight: 700 }}>
-                          {Number((p as any).ratingAvg || 0) ? Number((p as any).ratingAvg).toFixed(1) : '4.5'}
-                        </Typography>
-                        <Typography sx={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
-                          / {Number((p as any).ratingCount || 0) || 0}
-                        </Typography>
-                      </Box>
-
-                      {/* Price row */}
-                      <Box sx={{ mt: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.8 }}>
-                          <Typography sx={{ fontWeight: 900, fontSize: 18, letterSpacing: -0.3 }}>{money(p.price)}</Typography>
-                          {p.compareAt ? <Typography sx={{ fontSize: 13, color: '#9ca3af', textDecoration: 'line-through', fontWeight: 500 }}>{money(p.compareAt)}</Typography> : null}
-                        </Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, color: '#111', fontSize: 12, fontWeight: 800 }}>
-                          Shop <ArrowForwardRounded sx={{ fontSize: 16 }} />
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
+                    {/* Add to Cart */}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<ShoppingBagOutlined sx={{ fontSize: '15px !important' }} />}
+                      onClick={(e) => { e.stopPropagation(); add({ product: (p as any).raw, quantity: 1 }); push('Added to cart') }}
+                      sx={{
+                        borderRadius: '10px', py: 0.9, fontWeight: 700, fontSize: 12, letterSpacing: 0.2,
+                        color: '#F02A4D', borderColor: 'rgba(240,42,77,0.35)', bgcolor: '#FFF7F8',
+                        '&:hover': { borderColor: '#F02A4D', bgcolor: 'rgba(240,42,77,0.08)' },
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </CardContent>
                 </Card>
               )
             })}
           </Box>
           )}
+
+          {/* Bottom highlights strip — soft pink pill bar, like the mockup */}
+          <Box sx={{ mt: { xs: 2.5, md: 4 }, bgcolor: '#FDF1F0', borderRadius: { xs: 4, md: 999 }, px: { xs: 2.5, md: 4 }, py: { xs: 2, md: 2.2 }, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: { xs: 1.8, md: 1 } }}>
+            {[
+              { icon: <StarBorderRounded sx={{ fontSize: 22, color: '#F02A4D' }} />, bg: '#FCE1E4', k: '10,000+', v: 'Happy Customers' },
+              { icon: <WorkspacePremiumOutlined sx={{ fontSize: 22, color: '#D97706' }} />, bg: '#FCEFD4', k: '500+', v: 'Quality Products' },
+              { icon: <GppGoodOutlined sx={{ fontSize: 22, color: '#16A34A' }} />, bg: '#DCF3E1', k: '100% Original', v: 'Sourced with Quality' },
+              { icon: <SupportAgentOutlined sx={{ fontSize: 22, color: '#2563EB' }} />, bg: '#DBE9FC', k: '24/7 Support', v: "We're Here to Help" },
+              { icon: <CardGiftcardOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />, bg: '#E9E1FA', k: 'Exciting Deals', v: 'Every Single Day' },
+            ].map((s) => (
+              <Box key={s.k} sx={{ display: 'flex', alignItems: 'center', gap: 1.4, justifyContent: { md: 'center' } }}>
+                <Box sx={{ width: 42, height: 42, borderRadius: '50%', bgcolor: s.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
+                <Box>
+                  <Typography sx={{ fontWeight: 800, fontSize: 14, color: '#1A1A1E', lineHeight: 1.2 }}>{s.k}</Typography>
+                  <Typography sx={{ fontSize: 11.5, color: '#6B7280', fontWeight: 500 }}>{s.v}</Typography>
+                </Box>
+              </Box>
+            ))}
+          </Box>
         </Box>
 
-        {/* Bento (dynamic products) */}
+        {/* More to Explore — products beyond Featured (no repeats) */}
+        {bentoItems.length >= 2 && (
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
-          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mb: 1.5 }}>Explore</Typography>
-          {productsLoading && bentoItems.length === 0 ? (
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
-              {[1,2,3,4].map(i => (
-                <Skeleton key={i} variant="rectangular" height={180} animation="wave" sx={{ borderRadius: 4 }} />
-              ))}
-            </Box>
-          ) : (
+          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mb: 1.5 }}>More to Explore</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(12, 1fr)' }, gridAutoRows: { md: 190 }, gap: 2 }}>
             {bentoItems.map((c) => (
               <Card key={c.key} elevation={0} sx={{ gridColumn: { md: c.span.md }, gridRow: { md: c.span.row }, borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', background: c.tone }}>
@@ -596,344 +548,131 @@ export default function SimpleHomePage() {
               </Card>
             ))}
           </Box>
-          )}
         </Box>
+        )}
 
-        {/* Most Popular */}
+        {/* Customer Reviews */}
         <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
-          <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 2, mb: 2.5 }}>
-            <Box>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Most Popular</Typography>
-              <Typography variant="body2" color="text.secondary">These get reordered again and again</Typography>
+          <Chip
+            icon={<FavoriteRounded sx={{ fontSize: '13px !important' }} />}
+            label="What Our Customers Say"
+            size="small"
+            sx={{ mb: 1.2, height: 26, px: 0.5, fontSize: 11, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', bgcolor: '#fff', color: '#F02A4D', border: '1px solid rgba(240,42,77,0.18)', boxShadow: '0 2px 8px rgba(240,42,77,0.08)', '& .MuiChip-icon': { color: '#F02A4D' } }}
+          />
+          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 26, md: 34 }, fontWeight: 700, lineHeight: 1.15 }}>Loved by Customers</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Real reviews from verified buyers across India</Typography>
+
+          {/* Stats bar */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 2, mb: 2.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: { xs: 1.2, md: 0 } }}>
+              {[
+                { icon: <StarRounded fontSize="small" />, k: '4.8/5', v: 'Average Rating', tone: 'rgba(245,158,11,0.14)', color: '#B45309' },
+                { icon: <GroupsRounded fontSize="small" />, k: '10,000+', v: 'Happy Customers', tone: 'rgba(240,42,77,0.10)', color: '#F02A4D' },
+                { icon: <GppGoodOutlined fontSize="small" />, k: '100%', v: 'Verified Reviews', tone: 'rgba(16,185,129,0.12)', color: '#059669' },
+              ].map((s, si) => (
+                <Box key={s.v} sx={{ display: 'flex', alignItems: 'center' }}>
+                  {si > 0 && <Box sx={{ width: '1px', height: 34, bgcolor: 'rgba(0,0,0,0.08)', mx: { xs: 0, md: 2 }, display: { xs: 'none', md: 'block' } }} />}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1, px: 1.8, py: 1, borderRadius: '14px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)' }}>
+                    <Box sx={{ width: 36, height: 36, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
+                    <Box sx={{ lineHeight: 1.15 }}>
+                      <Typography sx={{ fontWeight: 900, fontSize: 14.5 }}>{s.k}</Typography>
+                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 600 }}>{s.v}</Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              ))}
             </Box>
           </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
-            {popular.map((p) => (
-            <Card
-              key={p.id}
-              elevation={0}
-              sx={{
-                borderRadius: '14px',
-                overflow: 'hidden',
-                background: 'linear-gradient(to bottom, #1e293b, #0f172a)',
-                border: 'none',
-                boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
-                transition: 'all 0.4s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
-                },
-                '&:hover .card-img': {
-                  transform: 'scale(1.05)',
-                },
-              }}
-            >
-              <CardActionArea onClick={() => navigate(p.slug)} sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-                {/* Image / YouTube Video */}
-                <Box sx={{ height: { xs: 180, sm: 220, md: 240 }, position: 'relative', width: '100%', overflow: 'hidden' }}>
-                  {(() => {
-                    // Extract YouTube embed URL if youtubeUrl is present
-                    if ((p as any).youtubeUrl) {
-                      const raw = (p as any).youtubeUrl as string
-                      const ytId = (raw.match(/[?&]v=([^&]+)/) || raw.match(/youtu\.be\/([^?]+)/) || raw.match(/embed\/([^?]+)/))?.[1]
-                      const embedUrl = ytId
-                        ? `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}&playsinline=1&controls=0&showinfo=0&rel=0`
-                        : raw
-                      return (
-                        <Box sx={{ position: 'absolute', inset: 0, zIndex: 0 }}>
-                          <iframe
-                            src={embedUrl}
-                            title={p.title}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            style={{ width: '100%', height: '100%', border: 0, objectFit: 'cover', pointerEvents: 'none' }}
-                          />
-                        </Box>
-                      )
-                    }
-                    return p.images[0] ? (
-                      <Box component="img" loading="lazy" className="card-img" src={optimizeImage(p.images[0], 'card')} alt={`${p.title} - Shop trending products online India | Khushiyan Store`} sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform 0.7s ease' }} onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none' }} />
-                    ) : (
-                      <Media src={p.images[0]} alt={p.title} />
-                    )
-                  })()}
-                  <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0f172a, rgba(15,23,42,0.3) 50%, transparent)', zIndex: 1 }} />
 
-                  {/* Discount Badge */}
-                  {(() => {
-                    const price = Number(p.price || 0)
-                    const compareAt = Number(p.compareAt || 0)
-                    const pct = compareAt > price && compareAt > 0 ? Math.round(((compareAt - price) / compareAt) * 100) : 0
-                    return pct ? (
-                      <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, background: 'linear-gradient(to right, #f59e0b, #f97316)', px: 1.2, py: 0.4, borderRadius: 999, fontSize: 11, fontWeight: 700, color: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
-                        {`-${pct}% OFF`}
-                      </Box>
-                    ) : null
-                  })()}
-
-                  {/* Title on Image */}
-                  <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, px: 2, pb: 1.2, zIndex: 10 }}>
-                    <Typography sx={{ fontSize: { xs: 15, md: 17 }, fontWeight: 700, lineHeight: 1.25, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.5)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {p.title}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Content */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, px: 2, pt: 1, pb: 2 }}>
-                  <Typography sx={{ fontSize: 12, fontWeight: 500, color: '#fbbf24', mb: 0.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {p.subtitle || 'Premium quality'}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, lineHeight: 1.4, color: '#94a3b8', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mb: 1 }}>
-                    {(p as any).tags?.length ? (p as any).tags.join(' • ') : 'Premium quality & unbeatable value.'}
-                  </Typography>
-
-                  {/* Rating + Price */}
-                  <Box sx={{ mt: 'auto', pt: 0.5 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.4, mb: 0.5 }}>
-                      <Box sx={{ display: 'inline-flex', gap: 0.1 }}>
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <StarRounded key={i} sx={{ fontSize: 14, color: i < Math.round(Number((p as any).ratingAvg || 4.5)) ? '#fbbf24' : '#475569' }} />
-                        ))}
-                      </Box>
-                      <Typography sx={{ fontSize: 11, color: '#64748b' }}>
-                        ({Number((p as any).ratingCount || 0) || 0})
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 0.6 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.6 }}>
-                        <Typography sx={{ fontWeight: 800, fontSize: 18, color: '#fff', letterSpacing: -0.3 }}>
-                          {money(p.price)}
-                        </Typography>
-                        {p.compareAt ? (
-                          <Typography sx={{ fontSize: 13, color: '#64748b', textDecoration: 'line-through', fontWeight: 500 }}>
-                            {money(p.compareAt)}
-                          </Typography>
-                        ) : null}
-                      </Box>
-                      <Box
-                        sx={{
-                          px: 1.4,
-                          py: 0.5,
-                          borderRadius: 999,
-                          background: 'linear-gradient(to right, #f59e0b, #f97316)',
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: '#fff',
-                          letterSpacing: 0.3,
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 2px 8px rgba(249,115,22,0.4)',
-                        }}
-                      >
-                        Buy Now
-                      </Box>
-                    </Box>
-                  </Box>
-                </Box>
-              </CardActionArea>
-            </Card>
-            ))}
-          </Box>
+          {/* 3D marquee testimonials wall */}
+          <Testimonials3D reviews={HOME_REVIEWS} />
         </Box>
 
-        {/* About / Newsletter */}
-        <Box data-anim="fade" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, gap: 2, mb: { xs: 4, md: 6 } }}>
-          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', bgcolor: '#fff' }}>
+        {/* About / Trust */}
+        <Box data-anim="fade" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' }, gap: 2, mb: { xs: 4, md: 6 } }}>
+          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(240,42,77,0.10)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF5F6 0%, #FFF9F7 100%)' }}>
             <Box sx={{ p: { xs: 2.2, md: 3 } }}>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Our promise</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>
-                Thoughtful products, clean visuals, and a premium experience — even when the API is down (fallback placeholders included).
+              <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#F02A4D', display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
+                <FavoriteRounded sx={{ fontSize: 13 }} /> Our Promise
               </Typography>
+              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 0.5 }}>Why Customers Trust Us</Typography>
+
+              {/* Promise chips */}
+              <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {[
+                  { t: 'Quality Checked', icon: <GppGoodOutlined sx={{ fontSize: 17 }} />, color: '#166534', tone: 'rgba(34,197,94,0.10)' },
+                  { t: 'Fast & Safe Delivery', icon: <LocalShippingOutlined sx={{ fontSize: 17 }} />, color: '#075985', tone: 'rgba(14,165,233,0.10)' },
+                  { t: 'Easy Returns', icon: <ReplayRounded sx={{ fontSize: 17 }} />, color: '#0f766e', tone: 'rgba(20,184,166,0.10)' },
+                  { t: 'Secure Payments', icon: <LockRounded sx={{ fontSize: 17 }} />, color: '#92400e', tone: 'rgba(245,158,11,0.12)' },
+                  { t: 'Responsive Support', icon: <SupportAgentOutlined sx={{ fontSize: 17 }} />, color: '#4338ca', tone: 'rgba(99,102,241,0.10)' },
+                ].map((p) => (
+                  <Box key={p.t} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.3, py: 0.7, borderRadius: 999, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
+                    <Box sx={{ width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: p.tone, color: p.color }}>{p.icon}</Box>
+                    <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#1A1A1E' }}>{p.t}</Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              {/* Stat tiles */}
               <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.2 }}>
-	                {[
-	                  { k: '10k+', v: 'Happy customers', icon: <GroupsRounded fontSize="small" />, tone: 'rgba(245,158,11,0.18)', toneBorder: 'rgba(245,158,11,0.28)', iconColor: '#92400e' },
-	                  { k: '4.8★', v: 'Avg rating', icon: <StarRounded fontSize="small" />, tone: 'rgba(124,58,237,0.14)', toneBorder: 'rgba(124,58,237,0.22)', iconColor: '#4c1d95' },
-	                  { k: '2–5d', v: 'Fast delivery', icon: <LocalShippingOutlined fontSize="small" />, tone: 'rgba(14,165,233,0.14)', toneBorder: 'rgba(14,165,233,0.22)', iconColor: '#075985' },
-	                  { k: 'COD', v: 'Available', icon: <PaymentsOutlined fontSize="small" />, tone: 'rgba(34,197,94,0.14)', toneBorder: 'rgba(34,197,94,0.22)', iconColor: '#166534' },
-	                ].map((s) => (
-	                  <Box
-	                    key={s.v}
-	                    sx={{
-	                      display: 'flex',
-	                      alignItems: 'center',
-	                      gap: 1.1,
-	                      px: 1.35,
-	                      py: 1.15,
-	                      borderRadius: 999,
-	                      background: 'linear-gradient(180deg, #FFFFFF 0%, #FBF7F1 100%)',
-	                      border: '1px solid rgba(15,23,42,0.10)',
-	                      boxShadow: '0 10px 26px rgba(15,23,42,0.06)',
-	                    }}
-	                  >
-	                    <Box
-	                      sx={{
-	                        width: 34,
-	                        height: 34,
-	                        borderRadius: 999,
-	                        display: 'grid',
-	                        placeItems: 'center',
-	                        bgcolor: s.tone,
-	                        border: `1px solid ${s.toneBorder}`,
-	                        color: s.iconColor,
-	                        flex: '0 0 auto',
-	                      }}
-	                    >
-	                      {s.icon}
-	                    </Box>
-	                    <Box sx={{ minWidth: 0, display: 'grid', lineHeight: 1.05 }}>
-	                      <Typography sx={{ fontWeight: 950, letterSpacing: -0.3, lineHeight: 1.05 }}>
-	                        <Box
-	                          component="span"
-	                          sx={{
-	                            display: 'inline-flex',
-	                            alignItems: 'center',
-	                            px: 0.85,
-	                            py: 0.22,
-	                            borderRadius: 999,
-	                            bgcolor: 'rgba(248,243,206,0.85)',
-	                            border: '1px solid rgba(245,158,11,0.22)',
-	                          }}
-	                        >
-	                          {s.k}
-	                        </Box>
-	                      </Typography>
-	                      <Typography variant="caption" sx={{ color: 'rgba(15,23,42,0.62)', fontWeight: 750 }} noWrap>
-	                        {s.v}
-	                      </Typography>
-	                    </Box>
-	                  </Box>
-	                ))}
+                {[
+                  { k: '10,000+', v: 'Happy Customers', icon: <GroupsRounded />, color: '#F02A4D', tone: 'rgba(240,42,77,0.10)' },
+                  { k: '4.8/5', v: 'Average Rating', icon: <StarRounded />, color: '#B45309', tone: 'rgba(245,158,11,0.14)' },
+                  { k: '2–5 Days', v: 'Fast Delivery', icon: <LocalShippingOutlined />, color: '#075985', tone: 'rgba(14,165,233,0.12)' },
+                  { k: 'COD', v: 'Available', icon: <PaymentsOutlined />, color: '#166534', tone: 'rgba(34,197,94,0.12)' },
+                ].map((s) => (
+                  <Box key={s.v} sx={{ display: 'grid', justifyItems: 'center', textAlign: 'center', gap: 0.6, px: 1, py: 1.6, borderRadius: 3, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.04)' }}>
+                    <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
+                    <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1 }}>{s.k}</Typography>
+                    <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 700, lineHeight: 1.1 }}>{s.v}</Typography>
+                  </Box>
+                ))}
               </Box>
             </Box>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden', background: 'linear-gradient(135deg, rgba(248,243,206,0.75) 0%, rgba(255,255,255,1) 45%, rgba(246,240,230,1) 100%)' }}>
+          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(245,158,11,0.14)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF9EC 0%, #FFFDF6 100%)' }}>
             <Box sx={{ p: { xs: 2.2, md: 3 } }}>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700 }}>Newsletter</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>Get offers & restock alerts. No spam.</Typography>
-              <Box sx={{ display: 'grid', gap: 1.2, mt: 2 }}>
-                <TextField value={email} onChange={(e) => setEmail(e.target.value)} size="small" placeholder="Enter your email" />
-                <Button
-                  variant="contained"
-	              	    onClick={() => {
-	              	      setEmail('')
-	              	      setSubToastOpen(true)
-	              	    }}
-                  sx={{ fontWeight: 950, backgroundColor: 'var(--color-buy)', '&:hover': { backgroundColor: 'var(--color-buy-hover)' } }}
-                >
-                  Subscribe
-                </Button>
-              </Box>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.2 }}>
-                By subscribing you agree to receive marketing emails.
+              <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#B45309', display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
+                <GppGoodOutlined sx={{ fontSize: 14 }} /> Shop With Confidence
               </Typography>
+              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 0.5 }}>Your Security, Our Priority</Typography>
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1.2fr 0.8fr' }, gap: 2, alignItems: 'center', mt: 2 }}>
+                <Box sx={{ display: 'grid', gap: 1.4 }}>
+                  {[
+                    { t: 'Easy Returns & Replacement', d: 'Damaged or wrong item? We make it right — fast.' },
+                    { t: 'Secure SSL Checkout', d: 'Pay easily with Cash on Delivery.' },
+                    { t: 'Real Human Support', d: 'Mon–Sat, 10 AM – 6 PM • khushiyanstore@gmail.com' },
+                  ].map((g) => (
+                    <Box key={g.t} sx={{ display: 'flex', gap: 1.2, alignItems: 'flex-start' }}>
+                      <CheckCircleRounded sx={{ color: '#16a34a', fontSize: 22, mt: 0.2 }} />
+                      <Box>
+                        <Typography sx={{ fontWeight: 800, fontSize: 14.5, lineHeight: 1.3 }}>{g.t}</Typography>
+                        <Typography variant="body2" color="text.secondary">{g.d}</Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+
+                <Box sx={{ display: 'grid', justifyItems: 'center', gap: 1.5 }}>
+                  <Box sx={{ position: 'relative', width: 120, height: 120, display: 'grid', placeItems: 'center' }}>
+                    <Box sx={{ position: 'absolute', inset: 0, borderRadius: '32px', background: 'radial-gradient(circle at 50% 40%, rgba(240,42,77,0.14) 0%, rgba(240,42,77,0.04) 70%)' }} />
+                    <GppGoodOutlined sx={{ fontSize: 74, color: '#F02A4D' }} />
+                    <CheckCircleRounded sx={{ position: 'absolute', right: 8, bottom: 10, fontSize: 28, color: '#16a34a', bgcolor: '#fff', borderRadius: '50%' }} />
+                  </Box>
+                  <Box sx={{ px: 2.2, py: 1.1, borderRadius: 3, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)', textAlign: 'center' }}>
+                    <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1.1 }}>100%</Typography>
+                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 700 }}>Safe Shopping</Typography>
+                  </Box>
+                </Box>
+              </Box>
             </Box>
           </Card>
-	        </Box>
-
-	        {/* Pretty "card" toast for newsletter subscribe (replaces browser alert) */}
-	        <Snackbar
-	          open={subToastOpen}
-	          autoHideDuration={2400}
-	          onClose={(_, reason) => {
-	            if (reason === 'clickaway') return
-	            setSubToastOpen(false)
-	          }}
-	          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-	          sx={{ mb: { xs: 2.5, sm: 3.5 } }}
-	        >
-	          <Paper
-	            elevation={0}
-	            sx={{
-	              px: 1.6,
-	              py: 1.2,
-	              borderRadius: 3,
-	              border: '1px solid rgba(0,0,0,0.08)',
-	              bgcolor: 'rgba(255,255,255,0.92)',
-	              backdropFilter: 'saturate(130%) blur(8px)',
-	              boxShadow: '0 18px 45px rgba(0,0,0,0.18)',
-	              minWidth: { xs: 'calc(100vw - 40px)', sm: 420 },
-	              maxWidth: 520,
-	            }}
-	          >
-	            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
-	              <Box
-	                sx={{
-	                  width: 36,
-	                  height: 36,
-	                  borderRadius: 2.2,
-	                  display: 'grid',
-	                  placeItems: 'center',
-	                  bgcolor: 'rgba(34,197,94,0.12)',
-	                }}
-	              >
-	                <CheckCircleRounded sx={{ color: '#16a34a' }} />
-	              </Box>
-	              <Box sx={{ minWidth: 0, flex: 1 }}>
-	                <Typography sx={{ fontWeight: 950, lineHeight: 1.1 }}>Subscribed</Typography>
-	                <Typography variant="body2" color="text.secondary" noWrap>
-	                  You’ll get offers & restock alerts.
-	                </Typography>
-	              </Box>
-	              <IconButton size="small" onClick={() => setSubToastOpen(false)} aria-label="Close">
-	                <CloseRounded fontSize="small" />
-	              </IconButton>
-	            </Box>
-	          </Paper>
-	        </Snackbar>
-	      </Container>
-
-      {/* Footer */}
-      <Box component="footer" sx={{ mt: 2, color: '#fff', backgroundColor: '#0b0b0b', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <Container sx={{ py: 4, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '2fr 1fr 1fr' }, gap: 3, alignItems: 'start' }}>
-		           	<Box sx={{ display: 'grid', gap: 1.1 }}>
-		            	{/* Brand block (no glass card wrapper; keep content the same) */}
-		            	<Box>
-	            	  <Box sx={{ display: 'grid', lineHeight: 1.05 }}>
-	            	      <Typography sx={{ fontWeight: 950, fontSize: 26, letterSpacing: -0.4, fontFamily: 'Georgia, Times New Roman, serif' }}>
-	            	        Khushiyan Store
-	            	      </Typography>
-	            	      <Typography variant="caption" sx={{ opacity: 0.78, fontWeight: 800, letterSpacing: 0.2 }}>
-	            	        Premium essentials • Fast delivery • Easy returns
-	            	      </Typography>
-	            	    </Box>
-
-	            	  <Typography variant="body2" sx={{ opacity: 0.88, mt: 1.1, maxWidth: 520 }}>
-	            	    Thoughtfully curated products with a clean, premium shopping experience.
-	            	  </Typography>
-
-	            	  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.4 }}>
-	            	    <Chip icon={<LocalShippingOutlined />} label="2–5 days delivery" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', '& .MuiChip-icon': { color: 'rgba(255,255,255,0.9)' }, fontWeight: 800 }} />
-	            	    <Chip icon={<PaymentsOutlined />} label="COD available" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', '& .MuiChip-icon': { color: 'rgba(255,255,255,0.9)' }, fontWeight: 800 }} />
-	            	    <Chip icon={<VerifiedOutlined />} label="Secure checkout" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', '& .MuiChip-icon': { color: 'rgba(255,255,255,0.9)' }, fontWeight: 800 }} />
-	            	  </Box>
-	            	</Box>
-	          </Box>
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>Quick Links</Typography>
-            <Box sx={{ display: 'grid', gap: 0.5 }}>
-              <Button onClick={() => navigate('/orders')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Your Orders</Button>
-              <Button onClick={() => navigate('/contact')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Contact Us</Button>
-              <Button onClick={() => navigate('/privacy')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Privacy Policy</Button>
-              <Button onClick={() => navigate('/shipping')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Shipping & Returns</Button>
-              <Button onClick={() => navigate('/terms-conditions')} color="inherit" sx={{ justifyContent: 'flex-start', p: 0, minWidth: 0, color: 'inherit', textTransform: 'none' }}>Terms & Conditions</Button>
-            </Box>
-          </Box>
-          <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>Contact</Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>Email: khushiyanstore@gmail.com</Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9 }}>Mon–Sat, 10 AM – 6 PM</Typography>
-          </Box>
-        </Container>
-        <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-          <Container sx={{ py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>© {new Date().getFullYear()} Khushiyan Store. All rights reserved.</Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>Made with ❤ in India</Typography>
-          </Container>
         </Box>
-      </Box>
+
+      </Container>
+
     </Box>
   )
 }

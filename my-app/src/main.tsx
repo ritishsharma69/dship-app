@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { RouterProvider } from './lib/router'
 import { CartProvider } from './lib/cart'
+import { WishlistProvider } from './lib/wishlist'
 import { ToastProvider } from './lib/toast'
 import { ProductsProvider } from './lib/products'
 import { ThemeProvider, CssBaseline } from '@mui/material'
@@ -17,9 +18,13 @@ let loaderTimer: number | null = null
 const origFetch = window.fetch
 
 window.fetch = async (input: any, init?: any) => {
-  // Skip loader for ping, analytics, and chat requests (chatbot has its own loader)
+  // Skip loader for ping, analytics, chat, and product listing requests.
+  // Product fetches already show inline skeletons — a full-screen overlay on top of
+  // an already-rendered page feels broken (page appears, then loader covers it).
   const url = typeof input === 'string' ? input : (input as Request)?.url || ''
+  const method = String(init?.method || (input as Request)?.method || 'GET').toUpperCase()
   const skipLoader = url.includes('/api/ping') || url.includes('collect?') || url.includes('analytics') || url.includes('/api/chat')
+    || (method === 'GET' && /\/api\/products(\?|$)/.test(url))
 
   if (!skipLoader) {
     activeRequests++
@@ -57,9 +62,11 @@ createRoot(document.getElementById('root')!).render(
       <RouterProvider>
         <ProductsProvider>
           <CartProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
+            <WishlistProvider>
+              <ToastProvider>
+                <App />
+              </ToastProvider>
+            </WishlistProvider>
           </CartProvider>
         </ProductsProvider>
       </RouterProvider>

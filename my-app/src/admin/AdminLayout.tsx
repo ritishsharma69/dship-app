@@ -63,8 +63,8 @@ export default function AdminLayout({ title, children, actions }: { title: strin
   }
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #ffffff 0%, #faf5f0 100%)' }}>
-      <Box sx={{ px: 2, py: 2.25, background: 'linear-gradient(135deg, #FF3F6C 0%, #FF6B8A 100%)', color: '#fff', borderRadius: '0 0 12px 0' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'linear-gradient(180deg, #ffffff 0%, #faf7ff 100%)' }}>
+      <Box sx={{ px: 2, py: 2.25, background: 'linear-gradient(135deg, #5B3FC4 0%, #7C3AED 60%, #A458E8 100%)', color: '#fff', borderRadius: '0 0 12px 0' }}>
         <Typography variant="subtitle2" sx={{ opacity: 0.9, fontWeight: 900, letterSpacing: 0.4 }}>
           DSHIP
         </Typography>
@@ -87,8 +87,11 @@ export default function AdminLayout({ title, children, actions }: { title: strin
             sx={{
               borderRadius: 2,
               mb: 0.75,
-              '&.Mui-selected': { background: 'linear-gradient(90deg, rgba(255,63,108,0.12) 0%, rgba(76,29,149,0.08) 100%)' },
-              '&.Mui-selected .MuiListItemIcon-root': { color: '#FF3F6C' },
+              transition: 'background 0.2s ease',
+              '&:hover': { background: 'rgba(124,58,237,0.06)' },
+              '&.Mui-selected': { background: 'rgba(124,58,237,0.1)', '&:hover': { background: 'rgba(124,58,237,0.14)' } },
+              '&.Mui-selected .MuiListItemIcon-root': { color: '#7C3AED' },
+              '&.Mui-selected .MuiListItemText-primary': { color: '#7C3AED' },
             }}
           >
             <ListItemIcon sx={{ minWidth: 38 }}>{it.icon}</ListItemIcon>
@@ -100,11 +103,11 @@ export default function AdminLayout({ title, children, actions }: { title: strin
       <Divider />
       <Box sx={{ p: 1.25, display: 'grid', gap: 1 }}>
         <Button variant="outlined" startIcon={<StorefrontIcon />} onClick={() => window.location.assign('/')}
-          sx={{ borderRadius: 2, justifyContent: 'flex-start', borderColor: '#FF3F6C', color: '#FF3F6C', '&:hover': { background: 'rgba(255,63,108,0.08)' } }}>
+          sx={{ borderRadius: 2, justifyContent: 'flex-start', borderColor: '#7C3AED', color: '#7C3AED', '&:hover': { borderColor: '#6D28D9', background: 'rgba(124,58,237,0.08)' } }}>
           View Store
         </Button>
         <Button variant="contained" startIcon={<LogoutIcon />} onClick={onLogout}
-          sx={{ borderRadius: 2, justifyContent: 'flex-start', background: 'linear-gradient(90deg, #FF3F6C 0%, #FF6B8A 100%)', '&:hover': { background: 'linear-gradient(90deg, #E73962 0%, #E75A7A 100%)' } }}>
+          sx={{ borderRadius: 2, justifyContent: 'flex-start', background: 'linear-gradient(90deg, #7C3AED 0%, #A458E8 100%)', '&:hover': { background: 'linear-gradient(90deg, #6D28D9 0%, #9333EA 100%)' } }}>
           Logout
         </Button>
       </Box>
@@ -112,9 +115,10 @@ export default function AdminLayout({ title, children, actions }: { title: strin
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #f8f8f8 0%, #faf5f0 100%)' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #fafafa 0%, #faf7ff 100%)' }}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1, background: 'linear-gradient(90deg, #2D3748 0%, #4A5568 100%)', width: `calc(100% - ${drawerWidth}px)`, marginLeft: `${drawerWidth}px` }}>
+      {/* AppBar must only offset for the drawer on md+ — the drawer is temporary (hidden) on mobile */}
+      <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1, background: 'linear-gradient(90deg, #2a1946 0%, #4C1D95 60%, #5B3FC4 100%)', width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` }, ml: { xs: 0, md: `${drawerWidth}px` } }}>
         <Toolbar sx={{ gap: 1.5 }}>
           {!mdUp && (
             <IconButton color="inherit" edge="start" onClick={() => setMobileOpen(true)}>

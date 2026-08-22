@@ -850,7 +850,7 @@ async function warmProductsCache() {
   try {
     const database = await getDb()
     const projection = {
-      title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1,
+      title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1, cardImages: 1,
       bullets: 1, description: 1, descriptionHeading: 1, descriptionPoints: 1,
       youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
       ratingAvg: 1, ratingCount: 1
@@ -865,6 +865,7 @@ async function warmProductsCache() {
       compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
       images: Array.isArray(d.images) ? d.images : [],
       heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
+      cardImages: Array.isArray(d.cardImages) ? d.cardImages : [],
       bullets: Array.isArray(d.bullets) ? d.bullets : [],
       description: d.description == null ? '' : String(d.description),
       descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
@@ -894,7 +895,7 @@ try {
       }
       const database = await getDb()
       const projection = {
-        title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1,
+        title: 1, brand: 1, price: 1, compareAtPrice: 1, images: 1, heroImages: 1, cardImages: 1,
         bullets: 1, description: 1, descriptionHeading: 1, descriptionPoints: 1,
         youtubeUrl: 1, video: 1, testimonials: 1, sku: 1, slug: 1, inventoryStatus: 1,
         ratingAvg: 1, ratingCount: 1
@@ -909,6 +910,7 @@ try {
         compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
         images: Array.isArray(d.images) ? d.images : [],
         heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
+        cardImages: Array.isArray(d.cardImages) ? d.cardImages : [],
         bullets: Array.isArray(d.bullets) ? d.bullets : [],
         description: d.description == null ? '' : String(d.description),
         descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),
@@ -998,6 +1000,7 @@ try {
         compareAtPrice: d.compareAtPrice == null ? null : (Number(d.compareAtPrice) || 0),
         images: Array.isArray(d.images) ? d.images : [],
         heroImages: Array.isArray(d.heroImages) ? d.heroImages : [],
+        cardImages: Array.isArray(d.cardImages) ? d.cardImages : [],
         bullets: Array.isArray(d.bullets) ? d.bullets : [],
         description: d.description == null ? '' : String(d.description),
         descriptionHeading: d.descriptionHeading == null ? '' : String(d.descriptionHeading),

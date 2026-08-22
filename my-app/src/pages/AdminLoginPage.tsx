@@ -70,11 +70,11 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #4C1D95 0%, #6D28D9 25%, #FF3F6C 75%, #FF6B8A 100%)' }}>
+    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #5B3FC4 0%, #7C4FD8 35%, #A458E8 70%, #E687C8 100%)' }}>
       <Container maxWidth="sm" sx={{ py: 5 }}>
         <Paper sx={{ p: { xs: 2.5, sm: 4 }, borderRadius: 3, background: 'rgba(255,255,255,0.98)', backdropFilter: 'blur(12px)', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
           <Stack spacing={1.25}>
-            <Box sx={{ background: 'linear-gradient(135deg, #FF3F6C 0%, #FF6B8A 100%)', color: '#fff', p: 2, borderRadius: 2, mb: 1 }}>
+            <Box sx={{ background: 'linear-gradient(135deg, #5B3FC4 0%, #7C3AED 60%, #A458E8 100%)', color: '#fff', p: 2, borderRadius: 2, mb: 1 }}>
               <Typography variant="overline" sx={{ fontWeight: 900, letterSpacing: 0.8, opacity: 0.9 }}>
                 DSHIP
               </Typography>
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
                 </Typography>
               ) : null}
 
-              <Button size="large" variant="contained" disabled={!validEmail || !validPassword || busy} onClick={handleLogin} sx={{ background: 'linear-gradient(90deg, #FF3F6C 0%, #FF6B8A 100%)', '&:hover': { background: 'linear-gradient(90deg, #E73962 0%, #E75A7A 100%)' }, '&:disabled': { background: 'rgba(0,0,0,0.12)' } }}>
+              <Button size="large" variant="contained" disabled={!validEmail || !validPassword || busy} onClick={handleLogin} sx={{ background: 'linear-gradient(90deg, #7C3AED 0%, #A458E8 100%)', '&:hover': { background: 'linear-gradient(90deg, #6D28D9 0%, #9333EA 100%)' }, '&:disabled': { background: 'rgba(0,0,0,0.12)' } }}>
                 {busy ? 'Logging in…' : 'Login'}
               </Button>
 

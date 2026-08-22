@@ -12,6 +12,22 @@ import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import Skeleton from '@mui/material/Skeleton'
+import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined'
+import MailOutlineRounded from '@mui/icons-material/MailOutlineRounded'
+import RefreshRounded from '@mui/icons-material/RefreshRounded'
+import LogoutRounded from '@mui/icons-material/LogoutRounded'
+import ExpandMoreRounded from '@mui/icons-material/ExpandMoreRounded'
+import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined'
+import LocalPhoneOutlined from '@mui/icons-material/LocalPhoneOutlined'
+import ShoppingBagOutlined from '@mui/icons-material/ShoppingBagOutlined'
+import ReplayRounded from '@mui/icons-material/ReplayRounded'
+
+// Shared pill-button style for the logged-in header actions
+const PILL_BTN = {
+  px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700,
+  color: '#374151', bgcolor: '#fff', border: '1px solid #E5E7EB',
+  '&:hover': { borderColor: '#7C3AED', color: '#7C3AED', bgcolor: '#fff' },
+} as const
 
 interface OrderLite { id: string; createdAt: string; status: string; total?: number; itemsCount?: number; customer?: any; address?: any; items?: any[]; paymentMethod?: string; totals?: any; hasReturn?: boolean }
 
@@ -186,63 +202,82 @@ export default function OrdersPage() {
 
 
   return (
-    <Container className="orders-page" sx={{ py: { xs: 4, md: 6 } }}>
-      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
-
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
-          <Box sx={{ fontSize: 48, mb: 1 }}>📋</Box>
-          <Typography sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: 28, md: 36 }, fontWeight: 800, color: '#1f2937' }}>Your Orders</Typography>
-          {!token && <Typography color="text.secondary" sx={{ mt: 1, fontSize: 15 }}>Enter your email to login</Typography>}
+    <Box sx={{ minHeight: '70vh', bgcolor: '#fff' }}>
+    <Container className="orders-page" sx={{ pt: { xs: 2, md: 2.5 }, pb: { xs: 4, md: 6 } }}>
+      {/* Hero banner — matches homepage/featured gradient language */}
+      <Box sx={{
+        position: 'relative', borderRadius: '24px', overflow: 'hidden', textAlign: 'center',
+        background: 'linear-gradient(100deg, #5B3FC4 0%, #7C4FD8 40%, #A458E8 78%, #E687C8 100%)',
+        px: { xs: 2.5, md: 6 }, py: { xs: 4, md: 5 }, mb: { xs: 3, md: 4 },
+      }}>
+        <Box sx={{ position: 'absolute', top: -70, left: -50, width: 220, height: 220, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%)' }} />
+        <Box sx={{ position: 'absolute', bottom: -80, right: -40, width: 260, height: 260, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 70%)' }} />
+        <Box sx={{ position: 'relative' }}>
+          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.7, px: 1.5, py: 0.55, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.16)', border: '1px solid rgba(255,255,255,0.25)', mb: 1.5 }}>
+            <LocalShippingOutlined sx={{ fontSize: 14, color: '#FBBF24' }} />
+            <Typography sx={{ fontSize: 11.5, fontWeight: 700, color: '#fff', letterSpacing: 0.4, lineHeight: 1, textTransform: 'uppercase' }}>Track Order</Typography>
+          </Box>
+          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 28, md: 40 }, fontWeight: 700, color: '#fff', lineHeight: 1.15 }}>Your Orders</Typography>
+          <Typography sx={{ mt: 1, fontSize: { xs: 14, md: 15.5 }, color: 'rgba(255,255,255,0.88)', maxWidth: 560, mx: 'auto' }}>
+            {token ? 'View, track and manage your recent orders' : 'Login with your email OTP to view and track your orders'}
+          </Typography>
         </Box>
+      </Box>
 
+      <Box sx={{ maxWidth: 760, mx: 'auto' }}>
         {!token ? (
-          <Box sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', maxWidth: 520, mx: 'auto' }}>
-            <Stack spacing={1.25}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-                <TextField id="orders-email" name="email" autoComplete="email" fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="small" />
-                {!otpSent ? (
-                  <Button variant="contained" onClick={requestOtp} disabled={!validEmail || sendingOtp} sx={{ minWidth: 120, borderRadius: 2, py: 1, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
-                    {sendingOtp ? 'Sending…' : 'Send OTP'}
+          <Box sx={{ maxWidth: 460, mx: 'auto', p: { xs: 2.5, md: 3.5 }, borderRadius: '24px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 30px rgba(15,23,42,0.06)', textAlign: 'center' }}>
+            <Box sx={{ width: 52, height: 52, borderRadius: '16px', mx: 'auto', display: 'grid', placeItems: 'center', bgcolor: 'rgba(124,58,237,0.10)', color: '#7C3AED', mb: 1.5 }}>
+              <MailOutlineRounded />
+            </Box>
+            <Typography sx={{ fontWeight: 800, fontSize: 17 }}>{otpSent ? 'Enter OTP' : 'Login with Email'}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, mb: 2.2 }}>
+              {otpSent ? 'We\u2019ve sent a 6-digit code to your email' : 'We\u2019ll send a one-time password to verify it\u2019s you'}
+            </Typography>
+            <Stack spacing={1.4}>
+              <TextField id="orders-email" name="email" autoComplete="email" fullWidth value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" size="small" />
+              {!otpSent ? (
+                <Button variant="contained" fullWidth onClick={requestOtp} disabled={!validEmail || sendingOtp} sx={{ borderRadius: '12px', py: 1.1, fontWeight: 800, textTransform: 'none', fontSize: 14, backgroundColor: '#7C3AED', color: '#fff', boxShadow: '0 6px 16px rgba(124,58,237,0.30)', '&:hover': { backgroundColor: '#6D28D9' }, '&.Mui-disabled': { backgroundColor: 'rgba(124,58,237,0.35)', color: '#fff' } }}>
+                  {sendingOtp ? 'Sending…' : 'Send OTP'}
+                </Button>
+              ) : (
+                <>
+                  <TextField id="orders-otp" name="otp" autoComplete="one-time-code" fullWidth value={code} onChange={e=>setCode(e.target.value)} placeholder="6-digit OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6, style: { textAlign: 'center', letterSpacing: 6, fontWeight: 800 } }} />
+                  <Button variant="contained" fullWidth onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ borderRadius: '12px', py: 1.1, fontWeight: 800, textTransform: 'none', fontSize: 14, backgroundColor: '#7C3AED', color: '#fff', boxShadow: '0 6px 16px rgba(124,58,237,0.30)', '&:hover': { backgroundColor: '#6D28D9' }, '&.Mui-disabled': { backgroundColor: 'rgba(124,58,237,0.35)', color: '#fff' } }}>
+                    {verifyingOtp ? 'Verifying…' : 'Verify & View Orders'}
                   </Button>
-                ) : (
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                    <TextField id="orders-otp" name="otp" autoComplete="one-time-code" value={code} onChange={e=>setCode(e.target.value)} placeholder="OTP" size="small" inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 6 }} sx={{ width: 140 }} />
-                    <Button variant="contained" onClick={verifyOtp} disabled={!code || verifyingOtp} sx={{ minWidth: 100, borderRadius: 2, py: 0.9, fontWeight: 'bold', backgroundColor: '#FF3F6C', color: '#FFFFFF', '&:hover': { backgroundColor: '#E73962' }, '&.Mui-disabled': { backgroundColor: '#FCA5A5', color: '#FFFFFF' } }}>
-                      {verifyingOtp ? 'Verifying…' : 'Verify'}
-                    </Button>
-                    {resendIn > 0 ? (
-                      <Typography component="div" sx={{ fontSize: 12, color: '#6b7280', lineHeight: 1, alignSelf: 'center', whiteSpace: 'nowrap' }}>Reset OTP in {resendIn}s</Typography>
-                    ) : (
-                      <Link component="button" underline="hover" onClick={requestOtp} sx={{ fontSize: 12, alignSelf: 'center', whiteSpace: 'nowrap', p: 0 }}>Reset OTP</Link>
-                    )}
-                  </Stack>
-                )}
-              </Stack>
-              {info && <Alert severity="success" sx={{ justifyContent: 'center', wordBreak: 'break-word', borderRadius: 2 }}>{info}</Alert>}
-              {error && <Alert severity="error" sx={{ justifyContent: 'center', wordBreak: 'break-word', borderRadius: 2 }}>{error}</Alert>}
+                  {resendIn > 0 ? (
+                    <Typography component="div" sx={{ fontSize: 12.5, color: '#6b7280' }}>Resend OTP in <b>{resendIn}s</b></Typography>
+                  ) : (
+                    <Link component="button" underline="hover" onClick={requestOtp} sx={{ fontSize: 12.5, fontWeight: 700, color: '#7C3AED', p: 0 }}>Resend OTP</Link>
+                  )}
+                </>
+              )}
+              {info && <Alert severity="success" sx={{ wordBreak: 'break-word', borderRadius: '12px', textAlign: 'left' }}>{info}</Alert>}
+              {error && <Alert severity="error" sx={{ wordBreak: 'break-word', borderRadius: '12px', textAlign: 'left' }}>{error}</Alert>}
             </Stack>
           </Box>
         ) : null}
 
-        {token && error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+        {token && error && <Alert severity="error" sx={{ mt: 2, borderRadius: '12px' }}>{error}</Alert>}
 
         {token && (
-          <div style={{ marginTop: 12 }}>
-            <div className="orders-head" style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-              <div className="orders-head-note" style={{ color:'#6b7280', fontSize: 12 }}>Logged in as {email}</div>
-              <div style={{ display:'flex', gap:8 }}>
-                <button className="btn" onClick={handleRefresh} title="Refresh orders" aria-label="Refresh orders">
-                  <span className="fa-solid fa-rotate-right" style={{ marginRight: 6 }} /> Refresh
-                </button>
-                <button className="btn" style={{ padding: '8px 12px' }} onClick={handleLogout} title="Logout" aria-label="Logout">
-                  <span className="fa-solid fa-right-from-bracket" style={{ marginRight: 6 }} /> Logout
-                </button>
-              </div>
-            </div>
+          <Box sx={{ mt: 1 }}>
+            {/* Logged-in header row */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.5, py: 0.6, borderRadius: 999, bgcolor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.22)' }}>
+                <Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: '#10B981', flexShrink: 0 }} />
+                <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: '#047857', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: { xs: 200, sm: 320 } }}>{email}</Typography>
+              </Box>
+              <Stack direction="row" spacing={1}>
+                <Button onClick={handleRefresh} startIcon={<RefreshRounded sx={{ fontSize: '16px !important' }} />} sx={PILL_BTN}>Refresh</Button>
+                <Button onClick={handleLogout} startIcon={<LogoutRounded sx={{ fontSize: '16px !important' }} />} sx={PILL_BTN}>Logout</Button>
+              </Stack>
+            </Box>
             {loading ? (
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {[1,2,3].map(i => (
-                  <Box key={i} sx={{ borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', p: 2 }}>
+                  <Box key={i} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.06)', background: '#fff', p: 2 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                       <Skeleton width="30%" height={22} animation="wave" />
                       <Skeleton width="20%" height={22} animation="wave" />
@@ -253,54 +288,70 @@ export default function OrdersPage() {
                 ))}
               </Box>
             ) : list.length === 0 ? (
-              <div style={{ color: '#6b7280' }}>No orders yet.</div>
+              <Box sx={{ textAlign: 'center', py: 5, px: 2, borderRadius: '24px', border: '1px dashed rgba(124,58,237,0.30)', bgcolor: 'rgba(124,58,237,0.03)' }}>
+                <Box sx={{ width: 52, height: 52, borderRadius: '16px', mx: 'auto', display: 'grid', placeItems: 'center', bgcolor: 'rgba(124,58,237,0.10)', color: '#7C3AED', mb: 1.5 }}>
+                  <ShoppingBagOutlined />
+                </Box>
+                <Typography sx={{ fontWeight: 800, fontSize: 16 }}>No orders yet</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, mb: 2 }}>When you place an order, it will show up here.</Typography>
+                <Button onClick={() => navigate('/')} sx={{ px: 2.4, py: 0.9, borderRadius: 999, textTransform: 'none', fontSize: 13.5, fontWeight: 800, color: '#fff', bgcolor: '#7C3AED', boxShadow: '0 6px 16px rgba(124,58,237,0.30)', '&:hover': { bgcolor: '#6D28D9' } }}>Start Shopping</Button>
+              </Box>
             ) : (
-              <div className="orders-list" style={{ display: 'grid', gap: 10 }}>
+              <Box className="orders-list" sx={{ display: 'grid', gap: 1.5 }}>
                 {sorted.map((o) => {
                   const isOpen = !!open[o.id]
                   const statusColor = o.status === 'pending' ? '#f59e0b' : o.status === 'accepted' ? '#3b82f6' : '#10b981'
                   const statusBg = o.status === 'pending' ? '#fffbeb' : o.status === 'accepted' ? '#eff6ff' : '#ecfdf5'
-	                  const dt = o.createdAt ? new Date(o.createdAt) : null
-	                  const dateStr = dt ? dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
-	                  const timeStr = dt ? dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''
+                  const dt = o.createdAt ? new Date(o.createdAt) : null
+                  const dateStr = dt ? dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
+                  const timeStr = dt ? dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''
                   return (
-                    <div key={o.id} style={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', background: '#fff', overflow: 'hidden' }}>
-	                      <button
-	                        onClick={() => setOpen(prev => ({ ...prev, [o.id]: !prev[o.id] }))}
-	                        style={{
-	                          all: 'unset',
-	                          cursor: 'pointer',
-	                          width: '100%',
-	                          display: 'block',
-	                          padding: 14,
-	                          boxSizing: 'border-box',
-	                        }}
-	                      >
+                    <Box key={o.id} sx={{ borderRadius: '16px', border: '1px solid rgba(0,0,0,0.07)', bgcolor: '#fff', overflow: 'hidden', transition: 'border-color 0.2s ease, box-shadow 0.2s ease', '&:hover': { borderColor: 'rgba(124,58,237,0.35)', boxShadow: '0 6px 20px rgba(15,23,42,0.06)' } }}>
+                      <button
+                        onClick={() => setOpen(prev => ({ ...prev, [o.id]: !prev[o.id] }))}
+                        style={{
+                          all: 'unset',
+                          cursor: 'pointer',
+                          width: '100%',
+                          display: 'block',
+                          padding: 16,
+                          boxSizing: 'border-box',
+                        }}
+                      >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-	                          <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-                            <div style={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>#{o.id.slice(-8)}</div>
-	                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-	                              {o.customer?.name} · {o.customer?.email}{o.address?.city ? ` · ${o.address.city}` : ''}
-	                            </div>
+                          <div style={{ minWidth: 0, flex: '1 1 auto' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ fontWeight: 800, fontSize: 15, color: '#1f2937' }}>#{o.id.slice(-8)}</span>
+                              <ExpandMoreRounded sx={{ fontSize: 18, color: '#9CA3AF', transition: 'transform 0.2s ease', transform: isOpen ? 'rotate(180deg)' : 'none' }} />
+                            </div>
+                            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {o.customer?.name} · {o.customer?.email}{o.address?.city ? ` · ${o.address.city}` : ''}
+                            </div>
                             <div style={{ fontSize: 13, color: '#374151', marginTop: 6 }}><b>Total:</b> ₹{o.total ?? o.totals?.total ?? '-'}  <b>Pay:</b> {o.paymentMethod || 'cod'}</div>
                           </div>
-	                          <div style={{ textAlign: 'right', flex: '0 1 auto', minWidth: 0, maxWidth: 210 }}>
-	                            <div style={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-	                              {dateStr}{dateStr && timeStr ? ', ' : ''}{timeStr}
-	                            </div>
+                          <div style={{ textAlign: 'right', flex: '0 1 auto', minWidth: 0, maxWidth: 210 }}>
+                            <div style={{ fontSize: 12, color: '#9ca3af', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {dateStr}{dateStr && timeStr ? ', ' : ''}{timeStr}
+                            </div>
                             <div style={{ marginTop: 6, display: 'inline-block', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600, color: statusColor, background: statusBg, border: `1px solid ${statusColor}22`, textTransform: 'capitalize' }}>{o.status}</div>
                           </div>
                         </div>
                       </button>
                       {isOpen && (
-                        <div style={{ padding: '0 14px 14px', display: 'grid', gap: 10, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                        <div style={{ padding: '0 16px 16px', display: 'grid', gap: 10, borderTop: '1px solid rgba(0,0,0,0.06)' }}>
                           <div style={{ paddingTop: 12, display: 'grid', gap: 6 }}>
-                            <div style={{ fontSize: 14 }}><b>📍 Address:</b> {o.address?.line1}{o.address?.city ? `, ${o.address.city}` : ''}{o.address?.state ? `, ${o.address.state}` : ''} {o.address?.zip || ''}</div>
-                            <div style={{ fontSize: 14 }}><b>📞 Phone:</b> {o.customer?.phone || '-'}</div>
+                            <Box sx={{ display: 'flex', gap: 0.8, alignItems: 'flex-start', fontSize: 14, color: '#374151' }}>
+                              <LocationOnOutlined sx={{ fontSize: 17, color: '#7C3AED', mt: 0.2, flexShrink: 0 }} />
+                              <span>{o.address?.line1}{o.address?.city ? `, ${o.address.city}` : ''}{o.address?.state ? `, ${o.address.state}` : ''} {o.address?.zip || ''}</span>
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 0.8, alignItems: 'center', fontSize: 14, color: '#374151' }}>
+                              <LocalPhoneOutlined sx={{ fontSize: 17, color: '#7C3AED', flexShrink: 0 }} />
+                              <span>{o.customer?.phone || '-'}</span>
+                            </Box>
                           </div>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1f2937' }}>🛒 Items</div>
-                            <div style={{ borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', padding: 10 }}>
+                            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6, color: '#1f2937' }}>Items</div>
+                            <div style={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA', padding: 10 }}>
                               {(o.items || []).map((item: any, idx: number) => (
                                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: 13, borderBottom: idx < (o.items || []).length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
                                   <span>{item.title} × {item.quantity}</span>
@@ -314,23 +365,27 @@ export default function OrdersPage() {
                             <span style={{ fontWeight: 800, fontSize: 15, color: '#1f2937' }}>Total: ₹{o.total ?? o.totals?.total ?? '-'}</span>
                           </div>
                           {o.hasReturn ? (
-                            <div style={{ padding: '8px 12px', borderRadius: 8, background: '#fef3c7', border: '1px solid #fbbf24', fontSize: 13, color: '#92400e' }}>⚠️ Return requested for this order</div>
+                            <div style={{ padding: '8px 12px', borderRadius: 12, background: '#fef3c7', border: '1px solid #fbbf24', fontSize: 13, color: '#92400e' }}>⚠️ Return requested for this order</div>
                           ) : (
                             (Date.now() - new Date(o.createdAt).getTime() <= 3 * 24 * 60 * 60 * 1000) && (
-                              <button className="btn" onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)} style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600 }}>Return / Cancel</button>
+                              <Button onClick={() => navigate(`/order/return?orderId=${encodeURIComponent(o.id)}`)} startIcon={<ReplayRounded sx={{ fontSize: '16px !important' }} />}
+                                sx={{ justifySelf: 'start', px: 2, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: '#7C3AED', bgcolor: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.25)', '&:hover': { bgcolor: 'rgba(124,58,237,0.12)' } }}>
+                                Return / Cancel
+                              </Button>
                             )
                           )}
                         </div>
                       )}
-                    </div>
+                    </Box>
                   )
                 })}
-              </div>
+              </Box>
             )}
-          </div>
+          </Box>
         )}
       </Box>
     </Container>
+    </Box>
   )
 }
 

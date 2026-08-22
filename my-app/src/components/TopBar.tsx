@@ -11,8 +11,8 @@ import Button from '@mui/material/Button'
 import Badge from '@mui/material/Badge'
 import Box from '@mui/material/Box'
 import InputBase from '@mui/material/InputBase'
-import Divider from '@mui/material/Divider'
-import { Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShipping, LocalShippingOutlined, PaymentsOutlined, CachedRounded, SearchRounded, PersonOutlineRounded, ShoppingCartOutlined, KeyboardArrowDownRounded, FavoriteBorderRounded, HomeOutlined, StorefrontOutlined, StarBorderRounded, AutoAwesomeOutlined } from '@mui/icons-material'
+import Typography from '@mui/material/Typography'
+import { Menu as MenuIcon, Lock, MailOutline, AssignmentOutlined, ArrowBackIosNew, LocalShippingOutlined, PaymentsOutlined, CachedRounded, SearchRounded, PersonOutlineRounded, ShoppingCartOutlined, KeyboardArrowDownRounded, FavoriteBorderRounded, HomeOutlined, StorefrontOutlined, StarBorderRounded, AutoAwesomeOutlined, CloseRounded, DescriptionOutlined, ChevronRightRounded, MailOutlineRounded } from '@mui/icons-material'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { useRouter } from '../lib/router'
@@ -164,89 +164,105 @@ export default function TopBar() {
         <IconButton color="inherit" aria-label="menu" onClick={() => setDrawerOpen(true)} sx={{ display: { xs: 'inline-flex', md: 'none' }, mr: 4 }}>
           <MenuIcon fontSize="medium" />
         </IconButton>
-        {/* Mobile drawer — mirrors the desktop topbar: search + same nav links + account/wishlist/cart */}
-        <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-          <Box sx={{ width: 290, maxWidth: '85vw', p: 1.5 }} role="presentation">
-            {/* Search — same style as the desktop search box */}
-            <Box sx={{ display: 'flex', alignItems: 'center', height: 40, px: 1.5, mb: 1, borderRadius: '12px', bgcolor: '#F9FAFB', border: '1px solid #E5E7EB', '&:focus-within': { borderColor: '#7C3AED', bgcolor: '#fff' } }}>
-              <InputBase
-                placeholder="Search products..."
-                onKeyDown={(e) => { if (e.key === 'Enter') go('/featured') }}
-                sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#374151', '& input::placeholder': { color: '#9CA3AF', opacity: 1, fontWeight: 500 } }}
-              />
-              <SearchRounded onClick={() => go('/featured')} sx={{ fontSize: 17, color: '#6B7280', cursor: 'pointer' }} />
+        {/* Mobile drawer — homepage-inspired: gradient header, icon tiles, section labels, support CTA */}
+        <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}
+          PaperProps={{ sx: { width: 300, maxWidth: '86vw', borderRadius: '20px 0 0 20px', overflow: 'hidden' } }}>
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }} role="presentation">
+            {/* Gradient header — matches homepage/policy hero language */}
+            <Box sx={{ position: 'relative', px: 2, pt: 2, pb: 2.2, background: 'linear-gradient(100deg, #5B3FC4 0%, #7C4FD8 45%, #A458E8 100%)', flexShrink: 0 }}>
+              <Box sx={{ position: 'absolute', top: -50, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.16) 0%, transparent 70%)' }} />
+              <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                <Box>
+                  <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: 19, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>Khushiyan Store</Typography>
+                  <Typography sx={{ fontSize: 11.5, color: 'rgba(255,255,255,0.85)', mt: 0.2 }}>Happiness, delivered to your door</Typography>
+                </Box>
+                <IconButton onClick={() => setDrawerOpen(false)} aria-label="Close menu" sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.25)', width: 32, height: 32, '&:hover': { bgcolor: 'rgba(255,255,255,0.22)' } }}>
+                  <CloseRounded sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Box>
+              {/* Search — sits inside the gradient header */}
+              <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center', height: 40, px: 1.5, borderRadius: '12px', bgcolor: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.10)' }}>
+                <InputBase
+                  placeholder="Search products..."
+                  onKeyDown={(e) => { if (e.key === 'Enter') go('/featured') }}
+                  sx={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#374151', '& input::placeholder': { color: '#9CA3AF', opacity: 1, fontWeight: 500 } }}
+                />
+                <SearchRounded onClick={() => go('/featured')} sx={{ fontSize: 17, color: '#7C3AED', cursor: 'pointer' }} />
+              </Box>
             </Box>
 
-            {/* Main nav — same items as the desktop topbar */}
-            <List sx={{ py: 0.5 }}>
-              {([
-                { to: '/', label: 'Home', icon: <HomeOutlined /> },
-                { to: '/featured', label: 'Shop', icon: <StorefrontOutlined /> },
-                { to: '/featured', label: 'Best Sellers', icon: <StarBorderRounded /> },
-                { to: '/featured', label: 'New Arrivals', icon: <AutoAwesomeOutlined /> },
-                { to: '/orders', label: 'Track Order', icon: <LocalShippingOutlined /> },
-              ]).map((l) => {
-                const isActive = active(l.to) && (l.to !== '/featured' || l.label === 'Shop')
-                return (
-                  <ListItemButton key={l.label} onClick={() => go(l.to)} sx={{ borderRadius: 2, mb: 0.25, ...(isActive && { bgcolor: 'rgba(124,58,237,0.08)', '&:hover': { bgcolor: 'rgba(124,58,237,0.12)' } }) }}>
-                    <ListItemIcon sx={{ minWidth: 38, color: isActive ? '#7C3AED' : '#6B7280' }}>{l.icon}</ListItemIcon>
-                    <ListItemText primary={l.label} primaryTypographyProps={{ fontSize: 14, fontWeight: isActive ? 800 : 600, color: isActive ? '#7C3AED' : '#374151' }} />
+            <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
+              {/* Main nav */}
+              <Typography sx={{ px: 1, pt: 0.5, pb: 0.6, fontSize: 10.5, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#9CA3AF' }}>Menu</Typography>
+              <List sx={{ py: 0 }}>
+                {([
+                  { to: '/', label: 'Home', icon: <HomeOutlined sx={{ fontSize: 18 }} /> },
+                  { to: '/featured', label: 'Shop', icon: <StorefrontOutlined sx={{ fontSize: 18 }} /> },
+                  { to: '/featured', label: 'Best Sellers', icon: <StarBorderRounded sx={{ fontSize: 18 }} /> },
+                  { to: '/featured', label: 'New Arrivals', icon: <AutoAwesomeOutlined sx={{ fontSize: 18 }} /> },
+                  { to: '/orders', label: 'Track Order', icon: <LocalShippingOutlined sx={{ fontSize: 18 }} /> },
+                ]).map((l) => {
+                  const isActive = active(l.to) && (l.to !== '/featured' || l.label === 'Shop')
+                  return (
+                    <ListItemButton key={l.label} onClick={() => go(l.to)} sx={{ borderRadius: '12px', mb: 0.4, px: 1, py: 0.7, ...(isActive && { bgcolor: 'rgba(124,58,237,0.08)', '&:hover': { bgcolor: 'rgba(124,58,237,0.12)' } }) }}>
+                      <ListItemIcon sx={{ minWidth: 44 }}>
+                        <Box sx={{ width: 34, height: 34, borderRadius: '10px', display: 'grid', placeItems: 'center', bgcolor: isActive ? '#7C3AED' : 'rgba(124,58,237,0.08)', color: isActive ? '#fff' : '#7C3AED' }}>{l.icon}</Box>
+                      </ListItemIcon>
+                      <ListItemText primary={l.label} primaryTypographyProps={{ fontSize: 14, fontWeight: isActive ? 800 : 600, color: isActive ? '#7C3AED' : '#374151' }} />
+                      {isActive && <ChevronRightRounded sx={{ fontSize: 18, color: '#7C3AED' }} />}
+                    </ListItemButton>
+                  )
+                })}
+              </List>
+
+              {/* Account / Wishlist / Cart */}
+              <Typography sx={{ px: 1, pt: 1.2, pb: 0.6, fontSize: 10.5, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#9CA3AF' }}>My Account</Typography>
+              <List sx={{ py: 0 }}>
+                {([
+                  { to: '/orders', label: 'Account', icon: <PersonOutlineRounded sx={{ fontSize: 18 }} />, tone: 'rgba(14,165,233,0.10)', color: '#0284C7', badge: 0 },
+                  { to: '/wishlist', label: 'Wishlist', icon: <FavoriteBorderRounded sx={{ fontSize: 18 }} />, tone: 'rgba(236,72,153,0.10)', color: '#DB2777', badge: wishCount },
+                  { to: '/checkout', label: 'Cart', icon: <ShoppingCartOutlined sx={{ fontSize: 18 }} />, tone: 'rgba(245,158,11,0.12)', color: '#B45309', badge: count },
+                ]).map((l) => (
+                  <ListItemButton key={l.label} onClick={() => go(l.to)} sx={{ borderRadius: '12px', mb: 0.4, px: 1, py: 0.7 }}>
+                    <ListItemIcon sx={{ minWidth: 44 }}>
+                      <Box sx={{ width: 34, height: 34, borderRadius: '10px', display: 'grid', placeItems: 'center', bgcolor: l.tone, color: l.color }}>{l.icon}</Box>
+                    </ListItemIcon>
+                    <ListItemText primary={l.label} primaryTypographyProps={{ fontSize: 14, fontWeight: 600, color: '#374151' }} />
+                    {l.badge > 0 && (
+                      <Box sx={{ minWidth: 20, height: 20, px: 0.6, borderRadius: 999, display: 'grid', placeItems: 'center', bgcolor: '#7C3AED', color: '#fff', fontSize: 11, fontWeight: 800 }}>{l.badge}</Box>
+                    )}
                   </ListItemButton>
-                )
-              })}
-            </List>
+                ))}
+              </List>
 
-            <Divider sx={{ my: 0.5 }} />
+              {/* Help & policies */}
+              <Typography sx={{ px: 1, pt: 1.2, pb: 0.6, fontSize: 10.5, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: '#9CA3AF' }}>Help & Policies</Typography>
+              <List dense sx={{ py: 0 }}>
+                {([
+                  { to: '/contact', label: 'Contact Us', icon: <MailOutline sx={{ fontSize: 16 }} /> },
+                  { to: '/shipping', label: 'Shipping Policy', icon: <LocalShippingOutlined sx={{ fontSize: 16 }} /> },
+                  { to: '/cancellation-refund', label: 'Cancellation & Refund', icon: <AssignmentOutlined sx={{ fontSize: 16 }} /> },
+                  { to: '/privacy', label: 'Privacy', icon: <Lock sx={{ fontSize: 16 }} /> },
+                  { to: '/terms-conditions', label: 'Terms & Conditions', icon: <DescriptionOutlined sx={{ fontSize: 16 }} /> },
+                ]).map((l) => (
+                  <ListItemButton key={l.label} onClick={() => go(l.to)} sx={{ borderRadius: '10px', px: 1, py: 0.55, '&:hover .drawer-help-label': { color: '#7C3AED' } }}>
+                    <ListItemIcon sx={{ minWidth: 32, color: '#9CA3AF' }}>{l.icon}</ListItemIcon>
+                    <ListItemText primary={l.label} primaryTypographyProps={{ className: 'drawer-help-label', fontSize: 13, fontWeight: 500, color: '#6B7280' }} />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Box>
 
-            {/* Account / Wishlist / Cart — same as desktop icon row */}
-            <List sx={{ py: 0.5 }}>
-              <ListItemButton onClick={() => go('/orders')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#6B7280' }}><PersonOutlineRounded /></ListItemIcon>
-                <ListItemText primary="Account" primaryTypographyProps={{ fontSize: 14, fontWeight: 600, color: '#374151' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/wishlist')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#6B7280' }}>
-                  <Badge badgeContent={wishCount} invisible={wishCount === 0} sx={{ '& .MuiBadge-badge': { bgcolor: '#7C3AED', color: '#fff', fontWeight: 800, fontSize: 10.5, minWidth: 17, height: 17 } }}>
-                    <FavoriteBorderRounded />
-                  </Badge>
-                </ListItemIcon>
-                <ListItemText primary="Wishlist" primaryTypographyProps={{ fontSize: 14, fontWeight: 600, color: '#374151' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/checkout')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#6B7280' }}>
-                  <Badge badgeContent={count} invisible={count === 0} sx={{ '& .MuiBadge-badge': { bgcolor: '#7C3AED', color: '#fff', fontWeight: 800, fontSize: 10.5, minWidth: 17, height: 17 } }}>
-                    <ShoppingCartOutlined />
-                  </Badge>
-                </ListItemIcon>
-                <ListItemText primary="Cart" primaryTypographyProps={{ fontSize: 14, fontWeight: 600, color: '#374151' }} />
-              </ListItemButton>
-            </List>
-
-            <Divider sx={{ my: 0.5 }} />
-
-            {/* Help & policies */}
-            <List dense sx={{ py: 0.5 }}>
-              <ListItemButton onClick={() => go('/contact')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#9CA3AF' }}><MailOutline fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Contact Us" primaryTypographyProps={{ fontSize: 13, color: '#6B7280' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/shipping')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#9CA3AF' }}><LocalShipping fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Shipping Policy" primaryTypographyProps={{ fontSize: 13, color: '#6B7280' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/cancellation-refund')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#9CA3AF' }}><AssignmentOutlined fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Cancellation & Refund" primaryTypographyProps={{ fontSize: 13, color: '#6B7280' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/privacy')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#9CA3AF' }}><Lock fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Privacy" primaryTypographyProps={{ fontSize: 13, color: '#6B7280' }} />
-              </ListItemButton>
-              <ListItemButton onClick={() => go('/terms-conditions')} sx={{ borderRadius: 2 }}>
-                <ListItemIcon sx={{ minWidth: 38, color: '#9CA3AF' }}><Lock fontSize="small" /></ListItemIcon>
-                <ListItemText primary="Terms & Conditions" primaryTypographyProps={{ fontSize: 13, color: '#6B7280' }} />
-              </ListItemButton>
-            </List>
+            {/* Support CTA — pinned at the bottom */}
+            <Box sx={{ flexShrink: 0, m: 1.5, mt: 0, p: 1.6, borderRadius: '16px', bgcolor: 'rgba(124,58,237,0.05)', border: '1px solid rgba(124,58,237,0.14)', display: 'flex', alignItems: 'center', gap: 1.2 }}>
+              <Box sx={{ width: 36, height: 36, borderRadius: '12px', display: 'grid', placeItems: 'center', bgcolor: '#7C3AED', color: '#fff', flexShrink: 0 }}>
+                <MailOutlineRounded sx={{ fontSize: 18 }} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#1F2937', lineHeight: 1.2 }}>Need help?</Typography>
+                <Typography onClick={() => go('/contact')} sx={{ fontSize: 12, fontWeight: 700, color: '#7C3AED', cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Contact support →</Typography>
+              </Box>
+            </Box>
           </Box>
         </Drawer>
       </Toolbar>

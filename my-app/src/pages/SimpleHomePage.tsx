@@ -27,7 +27,7 @@ import { optimizeImage } from '../lib/cloudinary'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { useToast } from '../lib/toast'
-import Testimonials3D from '../components/Testimonials3D'
+import TestimonialsWall from '../components/TestimonialsWall'
 
 const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v))
 
@@ -507,7 +507,7 @@ export default function SimpleHomePage() {
           )}
 
           {/* Bottom highlights strip — soft pink pill bar, like the mockup */}
-          <Box sx={{ mt: { xs: 2.5, md: 4 }, bgcolor: '#FDF1F0', borderRadius: { xs: 4, md: 999 }, px: { xs: 2.5, md: 4 }, py: { xs: 2, md: 2.2 }, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: { xs: 1.8, md: 1 } }}>
+          <Box sx={{ mt: { xs: 2.5, md: 4 }, bgcolor: '#FDF1F0', borderRadius: '24px', px: { xs: 2.5, md: 4 }, py: { xs: 2, md: 2.2 }, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: { xs: 1.8, md: 1 } }}>
             {[
               { icon: <StarBorderRounded sx={{ fontSize: 22, color: '#F02A4D' }} />, bg: '#FCE1E4', k: '10,000+', v: 'Happy Customers' },
               { icon: <WorkspacePremiumOutlined sx={{ fontSize: 22, color: '#D97706' }} />, bg: '#FCEFD4', k: '500+', v: 'Quality Products' },
@@ -551,46 +551,46 @@ export default function SimpleHomePage() {
         </Box>
         )}
 
-        {/* Customer Reviews */}
-        <Box data-anim="fade" sx={{ mb: { xs: 3, md: 5 } }}>
+        {/* Customer Reviews — Wall of Love */}
+        <Box data-anim="fade" sx={{ mb: { xs: 4, md: 6 }, textAlign: 'center' }}>
           <Chip
             icon={<FavoriteRounded sx={{ fontSize: '13px !important' }} />}
-            label="What Our Customers Say"
+            label="Wall of Love"
             size="small"
-            sx={{ mb: 1.2, height: 26, px: 0.5, fontSize: 11, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', bgcolor: '#fff', color: '#F02A4D', border: '1px solid rgba(240,42,77,0.18)', boxShadow: '0 2px 8px rgba(240,42,77,0.08)', '& .MuiChip-icon': { color: '#F02A4D' } }}
+            sx={{ mb: 1.2, height: 26, px: 0.5, fontSize: 11, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', bgcolor: 'rgba(124,58,237,0.08)', color: '#7C3AED', border: '1px solid rgba(124,58,237,0.18)', '& .MuiChip-icon': { color: '#7C3AED' } }}
           />
-          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 26, md: 34 }, fontWeight: 700, lineHeight: 1.15 }}>Loved by Customers</Typography>
+          <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 26, md: 34 }, fontWeight: 700, lineHeight: 1.15 }}>
+            Loved by <Box component="span" sx={{ color: '#7C3AED' }}>10,000+</Box> Customers
+          </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Real reviews from verified buyers across India</Typography>
 
           {/* Stats bar */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mt: 2, mb: 2.5, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: { xs: 1.2, md: 0 } }}>
-              {[
-                { icon: <StarRounded fontSize="small" />, k: '4.8/5', v: 'Average Rating', tone: 'rgba(245,158,11,0.14)', color: '#B45309' },
-                { icon: <GroupsRounded fontSize="small" />, k: '10,000+', v: 'Happy Customers', tone: 'rgba(240,42,77,0.10)', color: '#F02A4D' },
-                { icon: <GppGoodOutlined fontSize="small" />, k: '100%', v: 'Verified Reviews', tone: 'rgba(16,185,129,0.12)', color: '#059669' },
-              ].map((s, si) => (
-                <Box key={s.v} sx={{ display: 'flex', alignItems: 'center' }}>
-                  {si > 0 && <Box sx={{ width: '1px', height: 34, bgcolor: 'rgba(0,0,0,0.08)', mx: { xs: 0, md: 2 }, display: { xs: 'none', md: 'block' } }} />}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1, px: 1.8, py: 1, borderRadius: '14px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)' }}>
-                    <Box sx={{ width: 36, height: 36, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
-                    <Box sx={{ lineHeight: 1.15 }}>
-                      <Typography sx={{ fontWeight: 900, fontSize: 14.5 }}>{s.k}</Typography>
-                      <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 600 }}>{s.v}</Typography>
-                    </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: { xs: 1.2, md: 0 }, mt: 2.2 }}>
+            {[
+              { icon: <StarRounded fontSize="small" />, k: '4.8/5', v: 'Average Rating', tone: 'rgba(245,158,11,0.14)', color: '#B45309' },
+              { icon: <GroupsRounded fontSize="small" />, k: '10,000+', v: 'Happy Customers', tone: 'rgba(124,58,237,0.10)', color: '#7C3AED' },
+              { icon: <GppGoodOutlined fontSize="small" />, k: '100%', v: 'Verified Reviews', tone: 'rgba(16,185,129,0.12)', color: '#059669' },
+            ].map((s, si) => (
+              <Box key={s.v} sx={{ display: 'flex', alignItems: 'center' }}>
+                {si > 0 && <Box sx={{ width: '1px', height: 34, bgcolor: 'rgba(0,0,0,0.08)', mx: { xs: 0, md: 2 }, display: { xs: 'none', md: 'block' } }} />}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.1, px: 1.8, py: 1, borderRadius: '14px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)' }}>
+                  <Box sx={{ width: 36, height: 36, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
+                  <Box sx={{ lineHeight: 1.15, textAlign: 'left' }}>
+                    <Typography sx={{ fontWeight: 900, fontSize: 14.5 }}>{s.k}</Typography>
+                    <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 600 }}>{s.v}</Typography>
                   </Box>
                 </Box>
-              ))}
-            </Box>
+              </Box>
+            ))}
           </Box>
 
-          {/* 3D marquee testimonials wall */}
-          <Testimonials3D reviews={HOME_REVIEWS} />
+          {/* Upright marquee testimonial wall */}
+          <TestimonialsWall reviews={HOME_REVIEWS} />
         </Box>
 
         {/* About / Trust */}
         <Box data-anim="fade" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' }, gap: 2, mb: { xs: 4, md: 6 } }}>
-          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(240,42,77,0.10)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF5F6 0%, #FFF9F7 100%)' }}>
+          <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid rgba(240,42,77,0.10)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF5F6 0%, #FFF9F7 100%)' }}>
             <Box sx={{ p: { xs: 2.2, md: 3 } }}>
               <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#F02A4D', display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
                 <FavoriteRounded sx={{ fontSize: 13 }} /> Our Promise
@@ -621,7 +621,7 @@ export default function SimpleHomePage() {
                   { k: '2–5 Days', v: 'Fast Delivery', icon: <LocalShippingOutlined />, color: '#075985', tone: 'rgba(14,165,233,0.12)' },
                   { k: 'COD', v: 'Available', icon: <PaymentsOutlined />, color: '#166534', tone: 'rgba(34,197,94,0.12)' },
                 ].map((s) => (
-                  <Box key={s.v} sx={{ display: 'grid', justifyItems: 'center', textAlign: 'center', gap: 0.6, px: 1, py: 1.6, borderRadius: 3, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.04)' }}>
+                  <Box key={s.v} sx={{ display: 'grid', justifyItems: 'center', textAlign: 'center', gap: 0.6, px: 1, py: 1.6, borderRadius: '16px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.04)' }}>
                     <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
                     <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1 }}>{s.k}</Typography>
                     <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 700, lineHeight: 1.1 }}>{s.v}</Typography>
@@ -631,7 +631,7 @@ export default function SimpleHomePage() {
             </Box>
           </Card>
 
-          <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(245,158,11,0.14)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF9EC 0%, #FFFDF6 100%)' }}>
+          <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid rgba(245,158,11,0.14)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF9EC 0%, #FFFDF6 100%)' }}>
             <Box sx={{ p: { xs: 2.2, md: 3 } }}>
               <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#B45309', display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
                 <GppGoodOutlined sx={{ fontSize: 14 }} /> Shop With Confidence
@@ -661,7 +661,7 @@ export default function SimpleHomePage() {
                     <GppGoodOutlined sx={{ fontSize: 74, color: '#F02A4D' }} />
                     <CheckCircleRounded sx={{ position: 'absolute', right: 8, bottom: 10, fontSize: 28, color: '#16a34a', bgcolor: '#fff', borderRadius: '50%' }} />
                   </Box>
-                  <Box sx={{ px: 2.2, py: 1.1, borderRadius: 3, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)', textAlign: 'center' }}>
+                  <Box sx={{ px: 2.2, py: 1.1, borderRadius: '16px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)', textAlign: 'center' }}>
                     <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1.1 }}>100%</Typography>
                     <Typography sx={{ fontSize: 11.5, color: 'text.secondary', fontWeight: 700 }}>Safe Shopping</Typography>
                   </Box>

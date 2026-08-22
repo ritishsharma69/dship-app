@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Box, Container, Typography, Card, IconButton, Skeleton, Button, Menu, MenuItem } from '@mui/material'
+import { Box, Container, Typography, Card, IconButton, Skeleton, Button, Menu, MenuItem, Drawer } from '@mui/material'
 import {
   StarRounded, ChevronLeft, ChevronRight, FavoriteBorderRounded, FavoriteRounded,
   ShoppingCartRounded, GridViewRounded, FilterAltOutlined, SwapVertRounded, KeyboardArrowDownRounded,
   VerifiedUserOutlined, CachedRounded, KitchenOutlined, HomeOutlined, SpaOutlined,
-  DevicesOutlined, LocalMallOutlined, VisibilityOutlined,
+  DevicesOutlined, LocalMallOutlined, VisibilityOutlined, TuneRounded, CloseRounded, CheckCircleRounded,
 } from '@mui/icons-material'
 import { useProducts, productSlug } from '../lib/products'
 import { useWishlist } from '../lib/wishlist'
@@ -47,6 +47,7 @@ export default function FeaturedProductsPage() {
   const [activeCat, setActiveCat] = useState('All Products')
   const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc'>('featured')
   const [sortAnchor, setSortAnchor] = useState<null | HTMLElement>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
   const [featImgIdx, setFeatImgIdx] = useState<Record<string, number>>({})
 
   const featured = useMemo(() => {
@@ -90,7 +91,7 @@ export default function FeaturedProductsPage() {
       {/* Hero banner — rounded, inside container (mockup style) */}
       <Container sx={{ pt: { xs: 2, md: 2.5 } }}>
         <Box sx={{
-          position: 'relative', borderRadius: { xs: 3, md: 3 }, overflow: 'hidden',
+          position: 'relative', borderRadius: '24px', overflow: 'hidden',
           background: 'linear-gradient(100deg, #5B3FC4 0%, #7C4FD8 32%, #A458E8 64%, #E687C8 100%)',
           px: { xs: 2.5, md: 8 }, py: { xs: 3.5, md: 4.5 },
           '&::before': {
@@ -122,9 +123,9 @@ export default function FeaturedProductsPage() {
               {/* Trust items */}
               <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 2.5, md: 4.5 }, mt: { xs: 2.5, md: 3.5 }, flexWrap: 'wrap' }}>
                 {[
-                  { icon: <VerifiedUserOutlined sx={{ fontSize: { xs: 16, md: 19 } }} />, l1: '100% Original', l2: 'Products' },
-                  { icon: <CachedRounded sx={{ fontSize: { xs: 16, md: 19 } }} />, l1: 'Easy Returns', l2: 'No Questions' },
-                  { icon: <FavoriteBorderRounded sx={{ fontSize: { xs: 16, md: 19 } }} />, l1: 'Loved by', l2: 'Thousands' },
+                  { icon: <VerifiedUserOutlined sx={{ fontSize: { xs: 24, md: 30 } }} />, l1: '100% Original', l2: 'Products' },
+                  { icon: <CachedRounded sx={{ fontSize: { xs: 24, md: 30 } }} />, l1: 'Easy Returns', l2: 'No Questions' },
+                  { icon: <FavoriteBorderRounded sx={{ fontSize: { xs: 24, md: 30 } }} />, l1: 'Loved by', l2: 'Thousands' },
                 ].map((t, i) => (
                   <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.7, md: 1 }, color: 'rgba(255,255,255,0.95)' }}>
                     {t.icon}
@@ -141,33 +142,83 @@ export default function FeaturedProductsPage() {
 
       <Container sx={{ py: { xs: 2.5, md: 3 } }}>
         {/* Category chips + count + Filter/Sort (mockup toolbar) */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 1.2 }}>
-          <Box onClick={() => setActiveCat('All Products')} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.8, py: 0.9, borderRadius: 999, cursor: 'pointer', bgcolor: activeCat === 'All Products' ? '#7C3AED' : '#fff', color: activeCat === 'All Products' ? '#fff' : '#374151', border: '1px solid', borderColor: activeCat === 'All Products' ? '#7C3AED' : '#E5E7EB', boxShadow: activeCat === 'All Products' ? '0 6px 16px rgba(124,58,237,0.30)' : 'none', transition: 'all 0.2s' }}>
-            <GridViewRounded sx={{ fontSize: 15 }} />
-            <Typography sx={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1 }}>All Products</Typography>
+        <Box sx={{ mb: 3 }}>
+          {/* Chips: single scrollable row on mobile, wrapping row with inline actions on desktop */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, flexWrap: { xs: 'nowrap', md: 'wrap' }, overflowX: { xs: 'auto', md: 'visible' }, pb: { xs: 0.5, md: 0 }, mx: { xs: -2, md: 0 }, px: { xs: 2, md: 0 }, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+            <Box onClick={() => setActiveCat('All Products')} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.8, py: 0.9, borderRadius: 999, cursor: 'pointer', flexShrink: 0, bgcolor: activeCat === 'All Products' ? '#7C3AED' : '#fff', color: activeCat === 'All Products' ? '#fff' : '#374151', border: '1px solid', borderColor: activeCat === 'All Products' ? '#7C3AED' : '#E5E7EB', boxShadow: activeCat === 'All Products' ? '0 6px 16px rgba(124,58,237,0.30)' : 'none', transition: 'all 0.2s' }}>
+              <GridViewRounded sx={{ fontSize: 15 }} />
+              <Typography sx={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', lineHeight: 1 }}>All Products</Typography>
+            </Box>
+            {CATEGORIES.map((c) => {
+              const Icon = c.icon
+              const on = activeCat === c.label
+              return (
+                <Box key={c.label} onClick={() => setActiveCat(on ? 'All Products' : c.label)} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.8, py: 0.9, borderRadius: 999, cursor: 'pointer', flexShrink: 0, bgcolor: on ? '#7C3AED' : '#fff', color: on ? '#fff' : '#374151', border: '1px solid', borderColor: on ? '#7C3AED' : '#E5E7EB', boxShadow: on ? '0 6px 16px rgba(124,58,237,0.30)' : 'none', transition: 'all 0.2s', '&:hover': { borderColor: '#7C3AED' } }}>
+                  <Icon sx={{ fontSize: 15 }} />
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1 }}>{c.label}</Typography>
+                </Box>
+              )
+            })}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'block' } }} />
+            <Typography sx={{ display: { xs: 'none', md: 'block' }, fontSize: 13, color: '#6B7280', fontWeight: 600, whiteSpace: 'nowrap' }}>{visible.length} Products</Typography>
+            <Button onClick={() => setFilterOpen(true)} startIcon={<FilterAltOutlined sx={{ fontSize: '17px !important' }} />} sx={{ display: { xs: 'none', md: 'inline-flex' }, px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: '#374151', bgcolor: '#fff', border: '1px solid #E5E7EB', flexShrink: 0, '&:hover': { borderColor: '#7C3AED', bgcolor: '#fff' } }}>Filter</Button>
+            <Button onClick={(e) => setSortAnchor(e.currentTarget)} startIcon={<SwapVertRounded sx={{ fontSize: '17px !important' }} />} endIcon={<KeyboardArrowDownRounded sx={{ fontSize: '17px !important' }} />} sx={{ display: { xs: 'none', md: 'inline-flex' }, px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: '#374151', bgcolor: '#fff', border: '1px solid #E5E7EB', flexShrink: 0, '&:hover': { borderColor: '#7C3AED', bgcolor: '#fff' } }}>Sort</Button>
           </Box>
-          {CATEGORIES.map((c) => {
-            const Icon = c.icon
-            const on = activeCat === c.label
-            return (
-              <Box key={c.label} onClick={() => setActiveCat(on ? 'All Products' : c.label)} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.8, py: 0.9, borderRadius: 999, cursor: 'pointer', bgcolor: on ? '#7C3AED' : '#fff', color: on ? '#fff' : '#374151', border: '1px solid', borderColor: on ? '#7C3AED' : '#E5E7EB', boxShadow: on ? '0 6px 16px rgba(124,58,237,0.30)' : 'none', transition: 'all 0.2s', '&:hover': { borderColor: '#7C3AED' } }}>
-                <Icon sx={{ fontSize: 15 }} />
-                <Typography sx={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', lineHeight: 1 }}>{c.label}</Typography>
-              </Box>
-            )
-          })}
-          <Box sx={{ width: 30, height: 30, borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', bgcolor: '#fff', border: '1px solid #E5E7EB', color: '#6B7280', flexShrink: 0, '&:hover': { borderColor: '#7C3AED', color: '#7C3AED' } }}>
-            <ChevronRight sx={{ fontSize: 17 }} />
+
+          {/* Mobile action row: count left, Filter/Sort right */}
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 1, mt: 1.4 }}>
+            <Typography sx={{ fontSize: 13, color: '#6B7280', fontWeight: 600, whiteSpace: 'nowrap' }}>{visible.length} Products</Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            <Button onClick={() => setFilterOpen(true)} startIcon={<FilterAltOutlined sx={{ fontSize: '17px !important' }} />} sx={{ px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: activeCat !== 'All Products' ? '#7C3AED' : '#374151', bgcolor: '#fff', border: '1px solid', borderColor: activeCat !== 'All Products' ? '#7C3AED' : '#E5E7EB' }}>Filter</Button>
+            <Button onClick={(e) => setSortAnchor(e.currentTarget)} startIcon={<SwapVertRounded sx={{ fontSize: '17px !important' }} />} endIcon={<KeyboardArrowDownRounded sx={{ fontSize: '17px !important' }} />} sx={{ px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: sortBy !== 'featured' ? '#7C3AED' : '#374151', bgcolor: '#fff', border: '1px solid', borderColor: sortBy !== 'featured' ? '#7C3AED' : '#E5E7EB' }}>Sort</Button>
           </Box>
-          <Box sx={{ flexGrow: 1 }} />
-          <Typography sx={{ fontSize: 13, color: '#6B7280', fontWeight: 600, whiteSpace: 'nowrap' }}>{visible.length} Products</Typography>
-          <Button onClick={() => setActiveCat('All Products')} startIcon={<FilterAltOutlined sx={{ fontSize: '17px !important' }} />} sx={{ px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: '#374151', bgcolor: '#fff', border: '1px solid #E5E7EB', '&:hover': { borderColor: '#7C3AED', bgcolor: '#fff' } }}>Filter</Button>
-          <Button onClick={(e) => setSortAnchor(e.currentTarget)} startIcon={<SwapVertRounded sx={{ fontSize: '17px !important' }} />} endIcon={<KeyboardArrowDownRounded sx={{ fontSize: '17px !important' }} />} sx={{ px: 1.8, py: 0.7, borderRadius: 999, textTransform: 'none', fontSize: 13, fontWeight: 700, color: '#374151', bgcolor: '#fff', border: '1px solid #E5E7EB', '&:hover': { borderColor: '#7C3AED', bgcolor: '#fff' } }}>Sort</Button>
+
           <Menu anchorEl={sortAnchor} open={Boolean(sortAnchor)} onClose={() => setSortAnchor(null)}>
             <MenuItem selected={sortBy === 'featured'} onClick={() => { setSortBy('featured'); setSortAnchor(null) }}>Featured</MenuItem>
             <MenuItem selected={sortBy === 'price_asc'} onClick={() => { setSortBy('price_asc'); setSortAnchor(null) }}>Price: Low to High</MenuItem>
             <MenuItem selected={sortBy === 'price_desc'} onClick={() => { setSortBy('price_desc'); setSortAnchor(null) }}>Price: High to Low</MenuItem>
           </Menu>
+
+          {/* Filter & Sort bottom sheet */}
+          <Drawer anchor="bottom" open={filterOpen} onClose={() => setFilterOpen(false)} PaperProps={{ sx: { borderRadius: '24px 24px 0 0', maxHeight: '82vh' } }}>
+            <Box sx={{ p: 2.5, pb: 3, maxWidth: 560, width: '100%', mx: 'auto' }}>
+              <Box sx={{ width: 40, height: 4, borderRadius: 999, bgcolor: '#E5E7EB', mx: 'auto', mb: 2 }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: 17, display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                  <TuneRounded sx={{ fontSize: 20, color: '#7C3AED' }} /> Filter & Sort
+                </Typography>
+                <IconButton size="small" onClick={() => setFilterOpen(false)} sx={{ bgcolor: '#F3F4F6' }}><CloseRounded sx={{ fontSize: 18 }} /></IconButton>
+              </Box>
+
+              <Typography sx={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: '#6B7280', mb: 1.2 }}>Category</Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {['All Products', ...CATEGORIES.map((c) => c.label)].map((label) => {
+                  const on = activeCat === label
+                  return (
+                    <Box key={label} onClick={() => setActiveCat(label)} sx={{ px: 1.6, py: 0.8, borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 700, bgcolor: on ? '#7C3AED' : '#fff', color: on ? '#fff' : '#374151', border: '1px solid', borderColor: on ? '#7C3AED' : '#E5E7EB', transition: 'all 0.2s' }}>{label}</Box>
+                  )
+                })}
+              </Box>
+
+              <Typography sx={{ fontSize: 11.5, fontWeight: 800, letterSpacing: 0.6, textTransform: 'uppercase', color: '#6B7280', mt: 2.5, mb: 1.2 }}>Sort By</Typography>
+              <Box sx={{ display: 'grid', gap: 1 }}>
+                {([['featured', 'Featured'], ['price_asc', 'Price: Low to High'], ['price_desc', 'Price: High to Low']] as const).map(([val, label]) => {
+                  const on = sortBy === val
+                  return (
+                    <Box key={val} onClick={() => setSortBy(val)} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1.6, py: 1.2, borderRadius: '14px', cursor: 'pointer', border: '1px solid', borderColor: on ? '#7C3AED' : '#E5E7EB', bgcolor: on ? 'rgba(124,58,237,0.06)' : '#fff', transition: 'all 0.2s' }}>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: on ? 800 : 600, color: on ? '#7C3AED' : '#374151' }}>{label}</Typography>
+                      {on && <CheckCircleRounded sx={{ fontSize: 18, color: '#7C3AED' }} />}
+                    </Box>
+                  )
+                })}
+              </Box>
+
+              <Box sx={{ display: 'flex', gap: 1.2, mt: 3 }}>
+                <Button fullWidth onClick={() => { setActiveCat('All Products'); setSortBy('featured') }} sx={{ borderRadius: '14px', border: '1px solid #E5E7EB', color: '#374151', fontWeight: 700, textTransform: 'none', py: 1.1 }}>Clear All</Button>
+                <Button fullWidth onClick={() => setFilterOpen(false)} sx={{ borderRadius: '14px', bgcolor: '#7C3AED', color: '#fff', fontWeight: 800, textTransform: 'none', py: 1.1, boxShadow: '0 6px 16px rgba(124,58,237,0.30)', '&:hover': { bgcolor: '#6D28D9' } }}>Show {visible.length} Products</Button>
+              </Box>
+            </Box>
+          </Drawer>
         </Box>
 
         {/* Products Grid */}

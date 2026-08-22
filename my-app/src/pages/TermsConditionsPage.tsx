@@ -1,60 +1,43 @@
-import { useEffect } from 'react'
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
-
-const Section = ({ icon, title, items }: { icon: string; title: string; items: string[] }) => (
-  <Box sx={{ p: 2.5, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', background: '#FAFAFA' }}>
-    <Typography sx={{ fontWeight: 700, fontSize: 16, mb: 1, color: '#1f2937' }}>{icon} {title}</Typography>
-    <ul style={{ margin: 0, paddingLeft: 20, listStyle: 'disc', color: '#374151', lineHeight: 1.8, fontSize: 14 }}>
-      {items.map((t, i) => <li key={i}>{t}</li>)}
-    </ul>
-  </Box>
-)
+import PolicyLayout, { PolicySection } from '../components/PolicyLayout'
+import GavelRounded from '@mui/icons-material/GavelRounded'
+import LanguageRounded from '@mui/icons-material/LanguageRounded'
+import ShoppingCartOutlined from '@mui/icons-material/ShoppingCartOutlined'
+import PaymentsOutlined from '@mui/icons-material/PaymentsOutlined'
+import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined'
+import ReplayRounded from '@mui/icons-material/ReplayRounded'
 
 export default function TermsConditionsPage() {
-  const email = 'khushiyanstore@gmail.com'
-  useEffect(() => { document.title = 'Terms & Conditions — Khushiyan Store' }, [])
   return (
-    <Container sx={{ py: { xs: 4, md: 6 } }}>
-      <Box sx={{ maxWidth: 720, mx: 'auto' }}>
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Box sx={{ fontSize: 48, mb: 1 }}>📜</Box>
-          <Typography sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: 28, md: 36 }, fontWeight: 800, color: '#1f2937' }}>Terms & Conditions</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1, fontSize: 15 }}>
-            By using our website and placing an order, you agree to the terms below.
-          </Typography>
-        </Box>
-        <Box sx={{ display: 'grid', gap: 2 }}>
-          <Section icon="🌐" title="Use of the Website" items={[
-            'You agree to provide accurate information and not misuse the site.',
-            'Content (text, images) is for personal, non-commercial use.',
-          ]} />
-          <Section icon="🛒" title="Orders & Pricing" items={[
-            'All orders are subject to availability and acceptance.',
-            'Prices may change without notice. Obvious pricing errors may be cancelled/refunded.',
-          ]} />
-          <Section icon="💳" title="Payments" items={[
-            'We currently accept Cash on Delivery (COD). You pay when your order arrives.',
-          ]} />
-          <Section icon="🚚" title="Shipping" items={[
-            'Dispatch in 24-48 business hours. Delivery typically 3-7 working days depending on location.',
-            'Tracking details are shared via SMS/Email after dispatch.',
-          ]} />
-          <Section icon="🔄" title="Cancellations & Refunds" items={[
-            'You may request cancellation before dispatch for a full refund.',
-            'For returns due to genuine product issues/defects, please raise a request with photos/video. Eligibility is subject to inspection.',
-          ]} />
-          <Section icon="⚖️" title="Warranty & Liability" items={[
-            'Products are intended for normal home use. Khushiyan is not liable for indirect or consequential damages.',
-          ]} />
-        </Box>
-        <Box sx={{ mt: 3, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            Need help? Write to <a href={`mailto:${email}?subject=Terms%20query`} style={{ color: '#6D28D9', fontWeight: 600 }}>{email}</a>
-          </Typography>
-        </Box>
-      </Box>
-    </Container>
+    <PolicyLayout
+      docTitle="Terms & Conditions — Khushiyan Store"
+      chip="The Fine Print, Simplified"
+      chipIcon={<GavelRounded />}
+      title="Terms & Conditions"
+      subtitle="By using our website and placing an order, you agree to the terms below."
+      emailSubject="Terms query"
+    >
+      <PolicySection icon={<LanguageRounded />} tone="rgba(124,58,237,0.10)" color="#7C3AED" title="Use of the Website" items={[
+        'You agree to provide accurate information and not misuse the site.',
+        'Content (text, images) is for personal, non-commercial use.',
+      ]} />
+      <PolicySection icon={<ShoppingCartOutlined />} tone="rgba(240,42,77,0.10)" color="#F02A4D" title="Orders & Pricing" items={[
+        'All orders are subject to availability and acceptance.',
+        'Prices may change without notice. Obvious pricing errors may be cancelled/refunded.',
+      ]} />
+      <PolicySection icon={<PaymentsOutlined />} tone="rgba(34,197,94,0.12)" color="#166534" title="Payments" items={[
+        'We currently accept Cash on Delivery (COD). You pay when your order arrives.',
+      ]} />
+      <PolicySection icon={<LocalShippingOutlined />} tone="rgba(14,165,233,0.12)" color="#075985" title="Shipping" items={[
+        'Dispatch in 24-48 business hours. Delivery typically 3-7 working days depending on location.',
+        'Tracking details are shared via SMS/Email after dispatch.',
+      ]} />
+      <PolicySection icon={<ReplayRounded />} tone="rgba(245,158,11,0.14)" color="#B45309" title="Cancellations & Refunds" items={[
+        'You may request cancellation before dispatch for a full refund.',
+        'For returns due to genuine product issues/defects, please raise a request with photos/video. Eligibility is subject to inspection.',
+      ]} />
+      <PolicySection icon={<GavelRounded />} tone="rgba(99,102,241,0.10)" color="#4338CA" title="Warranty & Liability" items={[
+        'Products are intended for normal home use. Khushiyan is not liable for indirect or consequential damages.',
+      ]} />
+    </PolicyLayout>
   )
 }

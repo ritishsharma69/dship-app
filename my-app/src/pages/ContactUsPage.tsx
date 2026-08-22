@@ -1,38 +1,46 @@
-import { useEffect } from 'react'
-import Container from '@mui/material/Container'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
+import { Box, Typography } from '@mui/material'
+import PolicyLayout, { SUPPORT_EMAIL } from '../components/PolicyLayout'
+import SupportAgentOutlined from '@mui/icons-material/SupportAgentOutlined'
+import MailOutlineRounded from '@mui/icons-material/MailOutlineRounded'
+import ScheduleRounded from '@mui/icons-material/ScheduleRounded'
+import LocalShippingOutlined from '@mui/icons-material/LocalShippingOutlined'
+import { useRouter } from '../lib/router'
 
-export default function ContactUsPage() {
-  const support = 'khushiyanstore@gmail.com'
-  useEffect(() => { document.title = 'Contact Us — Khushiyan Store | Email, Support & Help' }, [])
+function InfoCard({ icon, tone, color, title, desc, right }: {
+  icon: React.ReactNode; tone: string; color: string; title: string; desc: string; right: React.ReactNode
+}) {
   return (
-    <Container sx={{ py: { xs: 4, md: 6 } }}>
-      <Box sx={{ maxWidth: 620, mx: 'auto', textAlign: 'center' }}>
-        <Box sx={{ fontSize: 48, mb: 1 }}>📬</Box>
-        <Typography sx={{ fontFamily: 'Georgia, serif', fontSize: { xs: 28, md: 36 }, fontWeight: 800, mb: 1, color: '#1f2937' }}>Contact Us</Typography>
-        <Typography color="text.secondary" sx={{ mb: 4, fontSize: 15 }}>
-          We'd love to hear from you. Reach out and we'll respond within a few hours.
-        </Typography>
-
-        <Box sx={{ display: 'grid', gap: 2, textAlign: 'left' }}>
-          <Box sx={{ p: 2.5, borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', background: 'linear-gradient(135deg, #F3E8FF 0%, #FFF 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-            <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>📧 Email</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3 }}>For orders, returns & support</Typography>
-            </Box>
-            <a href={`mailto:${support}?subject=Support%20request`} style={{ color: '#6D28D9', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{support}</a>
-          </Box>
-          <Box sx={{ p: 2.5, borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', background: 'linear-gradient(135deg, #E0F7FA 0%, #FFF 100%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-            <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: 15, color: '#1f2937' }}>🕐 Business Hours</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.3 }}>When we're available</Typography>
-            </Box>
-            <Typography sx={{ fontWeight: 600, fontSize: 14, color: '#374151' }}>Mon–Sat, 10 AM – 6 PM</Typography>
-          </Box>
+    <Box sx={{ p: { xs: 2.2, md: 2.8 }, borderRadius: '20px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.4 }}>
+        <Box sx={{ width: 40, height: 40, borderRadius: '12px', display: 'grid', placeItems: 'center', bgcolor: tone, color, flexShrink: 0 }}>{icon}</Box>
+        <Box>
+          <Typography sx={{ fontWeight: 800, fontSize: 15 }}>{title}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.2 }}>{desc}</Typography>
         </Box>
       </Box>
-    </Container>
+      {right}
+    </Box>
+  )
+}
+
+export default function ContactUsPage() {
+  const { navigate } = useRouter()
+  return (
+    <PolicyLayout
+      docTitle="Contact Us — Khushiyan Store | Email, Support & Help"
+      chip="We're Here to Help"
+      chipIcon={<SupportAgentOutlined />}
+      title="Contact Us"
+      subtitle="We'd love to hear from you. Reach out and we'll respond within a few hours."
+      emailSubject="Support request"
+    >
+      <InfoCard icon={<MailOutlineRounded />} tone="rgba(124,58,237,0.10)" color="#7C3AED" title="Email" desc="For orders, returns & support"
+        right={<a href={`mailto:${SUPPORT_EMAIL}?subject=Support%20request`} style={{ color: '#7C3AED', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{SUPPORT_EMAIL}</a>} />
+      <InfoCard icon={<ScheduleRounded />} tone="rgba(245,158,11,0.14)" color="#B45309" title="Business Hours" desc="When we're available"
+        right={<Typography sx={{ fontWeight: 700, fontSize: 14, color: '#374151' }}>Mon–Sat, 10 AM – 6 PM</Typography>} />
+      <InfoCard icon={<LocalShippingOutlined />} tone="rgba(14,165,233,0.12)" color="#075985" title="Track Your Order" desc="Check status, request returns or cancellations"
+        right={<Typography onClick={() => navigate('/orders')} sx={{ color: '#7C3AED', fontWeight: 800, fontSize: 14, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}>Your Orders →</Typography>} />
+    </PolicyLayout>
   )
 }
 

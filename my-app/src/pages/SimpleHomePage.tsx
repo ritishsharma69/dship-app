@@ -207,6 +207,14 @@ export default function SimpleHomePage() {
     })
   }, [products, productsBySlug])
 
+  // Shared trust stats — desktop: stats bar under the hero; mobile: swipeable cards under Featured
+  const trustStats = [
+    { icon: <LocalShippingOutlined sx={{ fontSize: 22, color: '#F02A4D' }} />, bg: '#FCE1E4', k: 'FREE Delivery', v: 'Across All India' },
+    { icon: <PaymentsOutlined sx={{ fontSize: 22, color: '#D97706' }} />, bg: '#FCEFD4', k: 'COD Available', v: 'Pay on Delivery' },
+    { icon: <ReplayRounded sx={{ fontSize: 22, color: '#EA7317' }} />, bg: '#FBE8D8', k: 'Easy Returns', v: '7 Days Return Policy' },
+    { icon: <GppGoodOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />, bg: '#E9E1FA', k: 'Secure Checkout', v: '100% Protected Payments' },
+  ]
+
   return (
     <Box sx={{ background: '#FFFFFF' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(homeLd) }} />
@@ -219,8 +227,8 @@ export default function SimpleHomePage() {
             background: 'linear-gradient(120deg, #FBF3EA 0%, #F9EDE2 55%, #F6E7DA 100%)',
           }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' }, alignItems: 'stretch' }}>
-              {/* Left: copy — padding keeps text aligned with the page container */}
-              <Box sx={{ pt: { xs: 3, sm: 4, md: 6 }, pb: { xs: 3, sm: 4, md: 12 }, pr: { xs: 2.5, md: 4 }, pl: { xs: 2.5, sm: 3.5, md: 'max(48px, calc((100vw - 1240px) / 2))' }, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: { xs: 1.8, md: 2.2 }, minHeight: { md: 620 }, minWidth: 0 }}>
+              {/* Left: copy — padding keeps text aligned with the page container. On mobile this renders below the image. */}
+              <Box sx={{ order: { xs: 2, md: 0 }, pt: { xs: 2.5, sm: 3, md: 6 }, pb: { xs: 3, sm: 4, md: 12 }, pr: { xs: 2.5, md: 4 }, pl: { xs: 2.5, sm: 3.5, md: 'max(48px, calc((100vw - 1240px) / 2))' }, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: { xs: 1.8, md: 2.2 }, minHeight: { md: 620 }, minWidth: 0 }}>
                 <Chip
                   icon={<LocalFireDepartmentRounded sx={{ fontSize: '16px !important', color: '#F97316 !important' }} />}
                   label="TRENDING NOW"
@@ -237,32 +245,37 @@ export default function SimpleHomePage() {
                   <Box component="span" sx={{ display: 'block' }}>Carefully curated. Fast delivery. Loved by 10,000+ happy customers.</Box>
                 </Typography>
 
-                {/* Trust strip — icons inside soft peach circular chips, like the mockup */}
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', maxWidth: '100%', gap: { xs: 1.5, sm: 0 }, alignItems: 'stretch', mt: 1, py: { sm: 0.5 } }}>
+                {/* Trust strip — icons inside soft peach circular chips; compact 2x2 card grid on mobile (shown after CTAs there) */}
+                <Box sx={{ order: { xs: 5, md: 0 }, display: { xs: 'grid', sm: 'flex' }, gridTemplateColumns: { xs: '1fr 1fr' }, flexWrap: 'wrap', maxWidth: '100%', gap: { xs: 1, sm: 0 }, alignItems: 'stretch', mt: 1, py: { sm: 0.5 } }}>
                   {[
                     { icon: <LocalShippingOutlined sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>FREE FAST<br />DELIVERY</>, d: '2–5 Days Delivery' },
                     { icon: <ReplayRounded sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>7 DAYS<br />EASY RETURNS</>, d: 'No Questions Asked' },
                     { icon: <GppGoodOutlined sx={{ fontSize: 20, color: '#AC420C' }} />, t: <>SECURE<br />CHECKOUT</>, d: '100% Safe & Secure' },
                     { icon: <StarRounded sx={{ fontSize: 20, color: '#F59E0B' }} />, t: <>4.8 ★<br />RATING</>, d: 'From 10,000+ Happy Customers' },
                   ].map((s, i) => (
-                    <Box key={i} sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', flex: { xs: '1 1 42%', sm: '1 1 0' }, minWidth: 0, pr: { sm: 1 }, pl: { sm: i > 0 ? 1.4 : 0 }, borderLeft: { sm: i > 0 ? '1px solid rgba(0,0,0,0.10)' : 'none' } }}>
-                      <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: '#FBEBD4', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
+                    <Box key={i} sx={{
+                      display: 'flex', gap: 1, alignItems: { xs: 'center', sm: 'flex-start' }, flex: { sm: '1 1 0' }, minWidth: 0,
+                      pr: { sm: 1 }, pl: { sm: i > 0 ? 1.4 : 0 }, borderLeft: { xs: 'none', sm: i > 0 ? '1px solid rgba(0,0,0,0.10)' : 'none' },
+                      bgcolor: { xs: 'rgba(255,255,255,0.75)', sm: 'transparent' }, borderRadius: { xs: '14px', sm: 0 },
+                      border: { xs: '1px solid rgba(0,0,0,0.05)', sm: 'none' }, p: { xs: 1.1, sm: 0 },
+                    }}>
+                      <Box sx={{ width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, borderRadius: '50%', bgcolor: '#FBEBD4', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
                       <Box sx={{ minWidth: 0 }}>
                         <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#1F2937', lineHeight: 1.3, letterSpacing: 0.2 }}>{s.t}</Typography>
-                        <Typography sx={{ fontSize: 10, color: '#6B7280', fontWeight: 500, lineHeight: 1.35, mt: 0.3 }}>{s.d}</Typography>
+                        <Typography sx={{ fontSize: 10, color: '#6B7280', fontWeight: 500, lineHeight: 1.35, mt: 0.3, display: { xs: 'none', sm: 'block' } }}>{s.d}</Typography>
                       </Box>
                     </Box>
                   ))}
                 </Box>
 
-                {/* CTAs */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mt: { xs: 1, md: 2 } }}>
+                {/* CTAs — mobile: full-width stacked (primary first); desktop: inline pair */}
+                <Box sx={{ order: { xs: 4, md: 0 }, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 1.2, md: 2 }, flexWrap: 'wrap', alignItems: { xs: 'stretch', md: 'center' }, mt: { xs: 0.5, md: 2 } }}>
                   <Button
                     variant="contained"
                     onClick={() => navigate('/featured')}
                     startIcon={<ShoppingBagOutlined />}
                     endIcon={<ArrowForwardRounded />}
-                    sx={{ px: 3.5, py: 1.6, borderRadius: '14px', fontWeight: 800, fontSize: 14.5, letterSpacing: 0.5, backgroundColor: '#7C3AED', boxShadow: '0 12px 28px rgba(124,58,237,0.3)', '&:hover': { backgroundColor: '#6D28D9' } }}
+                    sx={{ width: { xs: '100%', md: 'auto' }, px: 3.5, py: 1.6, borderRadius: '14px', fontWeight: 800, fontSize: 14.5, letterSpacing: 0.5, backgroundColor: '#7C3AED', boxShadow: '0 12px 28px rgba(124,58,237,0.3)', '&:hover': { backgroundColor: '#6D28D9' } }}
                   >
                     SHOP NOW
                   </Button>
@@ -270,7 +283,7 @@ export default function SimpleHomePage() {
                     variant="outlined"
                     onClick={() => navigate('/featured')}
                     startIcon={<VisibilityOutlined />}
-                    sx={{ px: 3, py: 1.55, borderRadius: '14px', fontWeight: 800, fontSize: 13.5, color: '#111827', bgcolor: '#fff', border: 'none', boxShadow: '0 6px 20px rgba(0,0,0,0.07)', '&:hover': { bgcolor: '#fff', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.11)' } }}
+                    sx={{ width: { xs: '100%', md: 'auto' }, px: 3, py: { xs: 1.4, md: 1.55 }, borderRadius: '14px', fontWeight: 800, fontSize: 13.5, color: '#111827', bgcolor: '#fff', border: { xs: '1.5px solid rgba(17,24,39,0.15)', md: 'none' }, boxShadow: { xs: 'none', md: '0 6px 20px rgba(0,0,0,0.07)' }, '&:hover': { bgcolor: '#fff', border: { xs: '1.5px solid rgba(17,24,39,0.28)', md: 'none' }, boxShadow: { xs: 'none', md: '0 8px 24px rgba(0,0,0,0.11)' } } }}
                   >
                     EXPLORE BEST SELLERS
                   </Button>
@@ -279,15 +292,15 @@ export default function SimpleHomePage() {
                 <Chip
                   icon={<AutoAwesomeRounded sx={{ fontSize: '15px !important', color: '#D97706 !important' }} />}
                   label="Limited Stock – Shop Now Before It's Gone!"
-                  sx={{ alignSelf: 'flex-start', mt: { xs: 0.5, md: 1 }, bgcolor: '#FBEDDA', color: '#9A4E1C', fontWeight: 600, fontSize: 13, borderRadius: 999, px: 1.2, height: 40 }}
+                  sx={{ order: { xs: 6, md: 0 }, alignSelf: 'flex-start', mt: { xs: 0.5, md: 1 }, bgcolor: '#FBEDDA', color: '#9A4E1C', fontWeight: 600, fontSize: 13, borderRadius: 999, px: 1.2, height: 40 }}
                 />
               </Box>
 
-              {/* Right: hero girl image + floating review card */}
-              <Box sx={{ position: 'relative', minHeight: { xs: 320, sm: 400, md: 'auto' } }}>
+              {/* Right: hero girl image + review card. Mobile: image renders first with a glass review card pinned on top; desktop: image fills the right column. */}
+              <Box sx={{ order: { xs: 1, md: 0 }, position: 'relative', minHeight: { md: 'auto' } }}>
                 {/* Image with diagonal organic curve on the left edge (desktop) — stays inside its own column */}
                 <Box sx={{
-                  position: 'absolute', inset: 0,
+                  position: { xs: 'relative', md: 'absolute' }, inset: { md: 0 },
                   borderRadius: { xs: 0, md: '42% 0 0 16% / 88% 0 0 38%' },
                   overflow: 'hidden',
                 }}>
@@ -296,16 +309,19 @@ export default function SimpleHomePage() {
                     fetchPriority="high"
                     src="/home-herogirl.png"
                     alt="Happy customer shopping with Khushiyan Store bags"
-                    sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: { xs: 'center 20%', md: 'center top' }, display: 'block' }}
+                    sx={{ width: '100%', height: { xs: 320, sm: 380, md: '100%' }, objectFit: 'cover', objectPosition: { xs: 'center 20%', md: 'center top' }, display: 'block' }}
                     onError={(e: any) => { e.target.style.display = 'none' }}
                   />
                 </Box>
-                {/* Floating social-proof card — bottom-left, clear of the stats bar overlap */}
+                {/* Social-proof card — glass overlay pinned to the image bottom on mobile; floating bottom-left on desktop */}
                 <Box sx={{
-                  position: 'absolute', bottom: { xs: 14, md: 100 }, left: { xs: 12, md: '4%' }, right: { xs: 12, md: 'auto' },
-                  bgcolor: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(8px)',
-                  borderRadius: 3.5, px: 2.2, py: 1.5, boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
-                  display: 'flex', alignItems: 'center', gap: 1.5, maxWidth: 380, width: { md: 'max-content' },
+                  position: 'absolute', bottom: { xs: 12, md: 100 }, left: { xs: 12, md: '4%' }, right: { xs: 12, md: 'auto' },
+                  bgcolor: { xs: 'rgba(255,255,255,0.82)', md: 'rgba(255,255,255,0.97)' }, backdropFilter: 'blur(14px)',
+                  borderRadius: 3.5, px: 2.2, py: 1.5,
+                  boxShadow: '0 16px 40px rgba(0,0,0,0.18)',
+                  border: { xs: '1px solid rgba(255,255,255,0.7)', md: 'none' },
+                  display: 'flex', alignItems: 'center', justifyContent: { xs: 'center', md: 'flex-start' },
+                  gap: 1.5, maxWidth: { xs: 'none', md: 380 }, width: { md: 'max-content' },
                 }}>
                   <Box sx={{ display: 'flex', flexShrink: 0 }}>
                     {[
@@ -337,15 +353,10 @@ export default function SimpleHomePage() {
             </Box>
           </Card>
 
-          {/* Stats bar — wide white card overlapping the hero bottom, top corners rounded, merges into the white page below (like the mockup) */}
-          <Card elevation={0} sx={{ mt: { xs: 1.5, md: -7 }, mx: { xs: 0, md: 'calc(50% - 50vw + 36px)' }, mb: { md: 0 }, position: 'relative', zIndex: 2, borderRadius: { xs: 4, md: '32px 32px 0 0' }, border: 'none', bgcolor: '#fff', boxShadow: '0 -14px 40px rgba(0,0,0,0.07)' }}>
+          {/* Stats bar — desktop only (mobile shows a swipeable trust slider below Featured instead) */}
+          <Card elevation={0} sx={{ display: { xs: 'none', md: 'block' }, mt: { xs: 1.5, md: -7 }, mx: { xs: 0, md: 'calc(50% - 50vw + 36px)' }, mb: { md: 0 }, position: 'relative', zIndex: 2, borderRadius: { xs: 4, md: '32px 32px 0 0' }, border: 'none', bgcolor: '#fff', boxShadow: '0 -14px 40px rgba(0,0,0,0.07)' }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: { xs: 1.5, md: 0 }, px: { xs: 2, md: 5 }, py: { xs: 2, md: 3.5 } }}>
-              {[
-                { icon: <LocalShippingOutlined sx={{ fontSize: 22, color: '#F02A4D' }} />, bg: '#FCE1E4', k: 'FREE Delivery', v: 'Across All India' },
-                { icon: <PaymentsOutlined sx={{ fontSize: 22, color: '#D97706' }} />, bg: '#FCEFD4', k: 'COD Available', v: 'Pay on Delivery' },
-                { icon: <ReplayRounded sx={{ fontSize: 22, color: '#EA7317' }} />, bg: '#FBE8D8', k: 'Easy Returns', v: '7 Days Return Policy' },
-                { icon: <GppGoodOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />, bg: '#E9E1FA', k: 'Secure Checkout', v: '100% Protected Payments' },
-              ].map((s, i) => (
+              {trustStats.map((s, i) => (
                 <Box key={s.v} sx={{ display: 'flex', alignItems: 'center', justifyContent: { md: 'center' }, gap: 1.5, py: 0.5, borderLeft: { md: i > 0 ? '1px solid rgba(0,0,0,0.08)' : 'none' } }}>
                   <Box sx={{ width: 44, height: 44, borderRadius: '50%', bgcolor: s.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
                   <Box>
@@ -395,9 +406,9 @@ export default function SimpleHomePage() {
                   </Typography>
                 </Box>
               )}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+              <Box sx={{ display: { xs: 'flex', sm: 'grid' }, gridTemplateColumns: { sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: { xs: 1.5, md: 2 }, overflowX: { xs: 'auto', sm: 'visible' }, mx: { xs: -2, sm: 0 }, px: { xs: 2, sm: 0 }, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
                 {[1,2,3,4,5,6].map(i => (
-                  <Card key={i} elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fff' }}>
+                  <Card key={i} elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)', bgcolor: '#fff', width: { xs: 235, sm: 'auto' }, flexShrink: { xs: 0, sm: 1 } }}>
                     <Skeleton variant="rectangular" height={220} animation="wave" />
                     <CardContent sx={{ p: 1.5 }}>
                       <Skeleton width="70%" height={20} animation="wave" sx={{ mb: 0.5 }} />
@@ -408,7 +419,7 @@ export default function SimpleHomePage() {
               </Box>
             </Box>
           ) : (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }, gap: { xs: 1.5, md: 2 } }}>
+          <Box sx={{ display: { xs: 'flex', sm: 'grid' }, gridTemplateColumns: { sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(6, 1fr)' }, gap: { xs: 1.5, md: 2 }, overflowX: { xs: 'auto', sm: 'visible' }, scrollSnapType: { xs: 'x mandatory', sm: 'none' }, mx: { xs: -2, sm: 0 }, px: { xs: 2, sm: 0 }, pb: { xs: 0.5, sm: 0 }, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
             {featured.slice(0, 6).map((p, pi) => {
               const price = Number(p.price || 0)
               const compareAt = Number(p.compareAt || 0)
@@ -427,6 +438,7 @@ export default function SimpleHomePage() {
                     bgcolor: '#fff',
                     cursor: 'pointer',
                     display: 'flex', flexDirection: 'column',
+                    width: { xs: 235, sm: 'auto' }, flexShrink: { xs: 0, sm: 1 }, scrollSnapAlign: { xs: 'start', sm: 'unset' },
                     transition: 'all 0.35s ease',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 16px 40px rgba(0,0,0,0.10)' },
                     '&:hover .feat-img': { transform: 'scale(1.05)' },
@@ -505,6 +517,19 @@ export default function SimpleHomePage() {
             })}
           </Box>
           )}
+
+          {/* Mobile: swipeable trust cards right below the products (desktop shows the stats bar under the hero) */}
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1.2, mt: 2, overflowX: 'auto', scrollSnapType: 'x mandatory', mx: -2, px: 2, pb: 0.5, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
+            {trustStats.map((s) => (
+              <Box key={s.k} sx={{ scrollSnapAlign: 'start', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 1.2, px: 1.8, py: 1.3, borderRadius: '16px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 4px 14px rgba(15,23,42,0.05)' }}>
+                <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: s.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{s.icon}</Box>
+                <Box>
+                  <Typography sx={{ fontWeight: 800, fontSize: 13, color: '#111827', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{s.k}</Typography>
+                  <Typography sx={{ fontSize: 11, color: '#6B7280', fontWeight: 500, whiteSpace: 'nowrap' }}>{s.v}</Typography>
+                </Box>
+              </Box>
+            ))}
+          </Box>
 
           {/* Bottom highlights strip — soft pink pill bar, like the mockup */}
           <Box sx={{ mt: { xs: 2.5, md: 4 }, bgcolor: '#FDF1F0', borderRadius: '24px', px: { xs: 2.5, md: 4 }, py: { xs: 2, md: 2.2 }, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(5, 1fr)' }, gap: { xs: 1.8, md: 1 } }}>

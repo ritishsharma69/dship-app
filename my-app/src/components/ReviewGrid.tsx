@@ -1,9 +1,12 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { useProducts } from '../lib/products'
 import Box from '@mui/material/Box'
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography'
-import { Star, StarHalf, CheckCircle } from '@mui/icons-material'
+import Button from '@mui/material/Button'
+import { Star, StarHalf, CheckCircle, ExpandMoreRounded } from '@mui/icons-material'
+
+const PAGE_SIZE = 10
 
 const AVATAR_COLORS = [
   'linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)',
@@ -17,8 +20,12 @@ function ReviewGridInner() {
   const { productsBySlug } = useProducts()
   const slug = (typeof window !== 'undefined' ? (window.location.pathname.split('/').filter(Boolean)[1]) : '') || ''
   const product = productsBySlug[slug]
-  const items = useMemo(() => (product?.testimonials ?? []).slice(0, 20), [product])
+  const all = useMemo(() => (product?.testimonials ?? []).slice(0, 20), [product])
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const items = all.slice(0, visibleCount)
+  const remaining = all.length - items.length
   return (
+    <>
     <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 1.75, textAlign: 'left' }}>
       {items.map((t, i) => (
         <Box
@@ -76,6 +83,22 @@ function ReviewGridInner() {
         </Box>
       ))}
     </Box>
+    {remaining > 0 && (
+      <Box sx={{ textAlign: 'center', mt: 0.5 }}>
+        <Button
+          onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+          endIcon={<ExpandMoreRounded />}
+          sx={{
+            borderRadius: 999, px: 3.5, py: 1.1, fontWeight: 800, fontSize: 13.5, letterSpacing: 0.3,
+            color: '#7C3AED', bgcolor: '#F2EEFC', textTransform: 'none',
+            '&:hover': { bgcolor: '#E9E1FB' },
+          }}
+        >
+          Load More Reviews ({remaining})
+        </Button>
+      </Box>
+    )}
+    </>
   )
 }
 

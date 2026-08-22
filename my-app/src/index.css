@@ -33,7 +33,7 @@
 
 
 /* Top bar */
-.topbar { position: sticky; top: 0; z-index: 1200; background: linear-gradient(90deg, #0b0b0b 0%, #15121a 35%, #2a1946 65%, #4c1d95 85%, #30124f 100%); color:#FFFFFF; border-bottom: 1px solid rgba(255,255,255,0.08); margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+.topbar { position: sticky; top: 0; z-index: 1200; background: linear-gradient(90deg, #0b0b0b 0%, #15121a 35%, #2a1946 65%, #4c1d95 85%, #30124f 100%); color:#FFFFFF; border-bottom: 1px solid rgba(255,255,255,0.08); }
 .topbar-content { max-width: 1100px; margin: 0 auto; width: 100%; display:flex; justify-content: space-between; align-items: center; padding: 12px 16px; }
 .brand-center { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 900; letter-spacing: 0.4px; font-size: 18px; text-shadow: 0 1px 0 rgba(0,0,0,0.08); cursor: pointer; }
 .logo-btn { border: none; background: transparent; color: #FFFFFF; padding: 0; cursor: pointer; display:inline-flex; align-items:center; line-height: 0; }
@@ -95,9 +95,9 @@
 html, body { height: 100%; }
 /* Reserve scrollbar space so the page doesn't shift sideways when content loads */
 html { scrollbar-gutter: stable; }
-/* Full-bleed sections use calc(50% - 50vw); clip the scrollbar-width spill so
-   the page can never scroll horizontally on any device. */
-body { overflow-x: clip; }
+/* Clip any stray horizontal overflow so the page can never scroll sideways.
+   Applied to html too — Safari doesn't reliably propagate clip from body. */
+html, body { overflow-x: clip; }
 
 body {
   margin: 0;
@@ -136,7 +136,7 @@ img, video { max-width: 100%; display: block; border-radius: 12px; }
 .product-card { background:#fff; border: 1px solid var(--color-border); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 
 /***** Sticky CTA: mobile only *****/
-.sticky-cta { position: sticky; bottom: 0; z-index: 1100; background: #fff; border-top: 1px solid var(--color-border); box-shadow: 0 -2px 12px rgba(0,0,0,0.06); margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); border-radius: 0; }
+.sticky-cta { position: sticky; bottom: 0; z-index: 1100; background: #fff; border-top: 1px solid var(--color-border); box-shadow: 0 -2px 12px rgba(0,0,0,0.06); margin-left: -16px; margin-right: -16px; border-radius: 0; }
 @media (min-width: 768px) { .sticky-cta { display: none; } }
 
 

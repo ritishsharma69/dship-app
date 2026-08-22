@@ -157,10 +157,11 @@ export default function MediaGallery({ product }: { product: Product }) {
             gap: 1.25,
             order: { xs: 2, sm: 1 },
             overflowX: { xs: 'auto', sm: 'visible' },
-            overflowY: { xs: 'visible', sm: 'auto' },
+            overflowY: { xs: 'hidden', sm: 'auto' },
             maxHeight: { sm: 480 },
             flexShrink: 0,
             pb: { xs: 0.5, sm: 0 },
+            scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
           }}
         >

@@ -42,8 +42,8 @@ export default function TopBar() {
       WebkitBackdropFilter: 'saturate(140%) blur(12px)',
       overflow: 'visible'
     }}>
-      {/* Announcement bar — light blush pink, like the mockup. Single line on all screens. */}
-      <Box sx={{ bgcolor: '#FDE9F2', color: '#1F2937', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: { xs: 1, sm: 3.5 }, px: { xs: 0.5, sm: 1 }, py: 0.7, fontSize: { xs: 9.5, sm: 12 }, fontWeight: 700, letterSpacing: { xs: 0, sm: 0.2 }, flexWrap: 'nowrap', overflow: 'hidden' }}>
+      {/* Announcement bar — dark, matches the footer (#111114). Single line on all screens. */}
+      <Box sx={{ bgcolor: '#111114', color: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: { xs: 1, sm: 3.5 }, px: { xs: 0.5, sm: 1 }, py: 0.7, fontSize: { xs: 9.5, sm: 12 }, fontWeight: 700, letterSpacing: { xs: 0, sm: 0.2 }, flexWrap: 'nowrap', overflow: 'hidden' }}>
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: { xs: 0.4, sm: 0.6 }, whiteSpace: 'nowrap', flexShrink: 0 }}>
           <LocalShippingOutlined sx={{ fontSize: { xs: 12, sm: 15 }, color: '#F59E0B' }} /> FREE Delivery All India
         </Box>

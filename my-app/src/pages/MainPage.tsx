@@ -312,7 +312,7 @@ export default function MainPage() {
 	        <div className="page-surface">
 
           {/* Visual Breadcrumb Navigation */}
-          <Container sx={{ pt: 1.5, pb: 0.5 }}>
+          <Container sx={{ pt: { xs: 0.75, md: 1.5 }, pb: 0.5 }}>
             <Box component="nav" aria-label="Breadcrumb" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: 13, color: '#6b7280' }}>
               <Box component="a" href="/" sx={{ color: '#6D28D9', textDecoration: 'none', fontWeight: 600, '&:hover': { textDecoration: 'underline' } }}>Home</Box>
               <span>›</span>
@@ -336,16 +336,17 @@ export default function MainPage() {
           </Suspense>
 
       {/* Product + Details grid (Myntra-style layout) */}
-      <Container sx={{ py: 3 }}>
-        <Box className="product-grid" sx={{ display: 'grid', gap: 4, gridTemplateColumns: { xs: '1fr', md: '1.1fr 0.9fr' }, alignItems: 'start' }}>
+      <Container sx={{ pt: { xs: 0.5, md: 3 }, pb: 3 }}>
+        {/* minmax(0, …) so the thumbnail scroller can't force the column (and page) wider than the viewport */}
+        <Box className="product-grid" sx={{ display: 'grid', gap: { xs: 2, md: 4 }, py: { xs: 0.5, md: 2 }, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1.1fr) minmax(0, 0.9fr)' }, alignItems: 'start' }}>
           {/* Left side - Product Images */}
-          <Box className="sticky-media">
+          <Box className="sticky-media" sx={{ minWidth: 0 }}>
             <Suspense fallback={<Skeleton variant="rectangular" sx={{ width: '100%', height: { xs: 300, md: 420 }, borderRadius: 2 }} animation="wave" />}>
               <MediaGallery product={p} />
             </Suspense>
 
-            {/* Feature highlights under gallery */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1.5, mt: 2.5 }}>
+            {/* Feature highlights under gallery — desktop/tablet only; on mobile they render below the CTAs to keep buttons above the fold */}
+            <Box sx={{ display: { xs: 'none', sm: 'grid' }, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1.5, mt: 2.5 }}>
               {highlights.map((h, i) => (
                 <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box sx={{ width: 38, height: 38, borderRadius: '50%', background: h.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
@@ -424,17 +425,6 @@ export default function MainPage() {
               )}
             </Stack>
 
-            {/* Premium purple card */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: '#F2EEFC', borderRadius: '16px', p: 2, mb: 2.5 }}>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(124,58,237,0.15)' }}>
-                <DiamondOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: '#7C3AED', lineHeight: 1.3 }}>{premiumHeading}</Typography>
-                <Typography sx={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>{premiumSub}</Typography>
-              </Box>
-            </Box>
-
             {/* Action Buttons */}
             {out ? (
               <Button fullWidth size="large" variant="contained" startIcon={<NotificationsNone />} onClick={() => events.cta_click({ id: p.id, step: 'add_to_cart' })} sx={{ mb: 2.5, borderRadius: '12px', py: 1.5, fontWeight: 800, backgroundColor: '#6B7280', '&:hover': { backgroundColor: '#4B5563' } }}>
@@ -476,6 +466,32 @@ export default function MainPage() {
                 </Button>
               </Stack>
             )}
+
+            {/* Premium purple card — below CTAs so buttons stay above the fold on mobile */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, background: '#F2EEFC', borderRadius: '16px', p: 2, mb: 2.5 }}>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', background: '#fff', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(124,58,237,0.15)' }}>
+                <DiamondOutlined sx={{ fontSize: 22, color: '#7C3AED' }} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontSize: 14.5, fontWeight: 800, color: '#7C3AED', lineHeight: 1.3 }}>{premiumHeading}</Typography>
+                <Typography sx={{ fontSize: 13, color: '#374151', lineHeight: 1.4 }}>{premiumSub}</Typography>
+              </Box>
+            </Box>
+
+            {/* Feature highlights — mobile only (desktop shows them under the gallery) */}
+            <Box sx={{ display: { xs: 'grid', sm: 'none' }, gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2.5 }}>
+              {highlights.map((h, i) => (
+                <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ width: 38, height: 38, borderRadius: '50%', background: h.bg, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    {h.icon}
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 800, color: '#111827', lineHeight: 1.25 }}>{h.title}</Typography>
+                    <Typography sx={{ fontSize: 11.5, color: '#6B7280', lineHeight: 1.3 }}>{h.caption}</Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
 
             {/* Trust badges */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1.25, mb: 3 }}>

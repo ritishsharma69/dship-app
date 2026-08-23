@@ -615,87 +615,86 @@ export default function SimpleHomePage() {
 
         {/* About / Trust */}
         <Box data-anim="fade" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.05fr 0.95fr' }, gap: 2, mb: { xs: 4, md: 6 } }}>
-          <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid rgba(240,42,77,0.10)', overflow: 'hidden', background: 'linear-gradient(180deg, #FFF5F6 0%, #FFF9F7 100%)' }}>
+          {/* Trust card — clean white, purple accents, matches site language */}
+          <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid #EEF0F3', overflow: 'hidden', bgcolor: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <Box sx={{ p: { xs: 2.2, md: 3 } }}>
-              <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#F02A4D', display: 'inline-flex', alignItems: 'center', gap: 0.6 }}>
-                <FavoriteRounded sx={{ fontSize: 13 }} /> Our Promise
-              </Typography>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 0.5 }}>Why Customers Trust Us</Typography>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.6, px: 1.4, py: 0.55, borderRadius: 999, bgcolor: '#F2EEFC', color: '#7C3AED' }}>
+                <FavoriteRounded sx={{ fontSize: 13 }} />
+                <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase' }}>Our Promise</Typography>
+              </Box>
+              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 1 }}>Why Customers Trust Us</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5 }}>Trusted by families across India — here's why.</Typography>
 
-              {/* Promise chips */}
-              <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {/* Promise rows */}
+              <Box sx={{ display: 'grid', gap: 1.2, mt: 2.2 }}>
                 {[
-                  { t: 'Quality Checked', icon: <GppGoodOutlined sx={{ fontSize: 17 }} />, color: '#166534', tone: 'rgba(34,197,94,0.10)' },
-                  { t: 'Fast & Safe Delivery', icon: <LocalShippingOutlined sx={{ fontSize: 17 }} />, color: '#075985', tone: 'rgba(14,165,233,0.10)' },
-                  { t: 'Easy Returns', icon: <ReplayRounded sx={{ fontSize: 17 }} />, color: '#0f766e', tone: 'rgba(20,184,166,0.10)' },
-                  { t: 'Secure Payments', icon: <LockRounded sx={{ fontSize: 17 }} />, color: '#92400e', tone: 'rgba(245,158,11,0.12)' },
-                  { t: 'Responsive Support', icon: <SupportAgentOutlined sx={{ fontSize: 17 }} />, color: '#4338ca', tone: 'rgba(99,102,241,0.10)' },
-                ].map((p) => (
-                  <Box key={p.t} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.3, py: 0.7, borderRadius: 999, bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 2px 8px rgba(15,23,42,0.04)' }}>
-                    <Box sx={{ width: 26, height: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: p.tone, color: p.color }}>{p.icon}</Box>
-                    <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#1A1A1E' }}>{p.t}</Typography>
+                  { icon: <GppGoodOutlined sx={{ fontSize: 20, color: '#059669' }} />, tone: 'rgba(16,185,129,0.10)', t: 'Quality Checked Products', d: 'Every item is inspected before it ships to you.' },
+                  { icon: <LocalShippingOutlined sx={{ fontSize: 20, color: '#7C3AED' }} />, tone: '#F2EEFC', t: 'Fast & Safe Delivery', d: 'Delivered across India in 2–5 days, packed with care.' },
+                  { icon: <LockRounded sx={{ fontSize: 20, color: '#B45309' }} />, tone: 'rgba(245,158,11,0.12)', t: 'Secure Payments', d: 'SSL-protected checkout with COD available.' },
+                ].map((g) => (
+                  <Box key={g.t} sx={{ display: 'flex', gap: 1.4, alignItems: 'center', p: 1.4, borderRadius: '16px', bgcolor: '#FAFAFB', border: '1px solid #EEF0F3' }}>
+                    <Box sx={{ width: 42, height: 42, borderRadius: '13px', bgcolor: g.tone, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{g.icon}</Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography sx={{ fontWeight: 800, fontSize: 14, lineHeight: 1.3, color: '#111827' }}>{g.t}</Typography>
+                      <Typography sx={{ fontSize: 12.5, color: '#6B7280', lineHeight: 1.4 }}>{g.d}</Typography>
+                    </Box>
                   </Box>
                 ))}
               </Box>
 
-              {/* Stat tiles */}
-              <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1.2 }}>
+              {/* Stat strip */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 1, mt: 2.2, pt: 1.8, borderTop: '1px solid #EEF0F3' }}>
                 {[
-                  { k: '10,000+', v: 'Happy Customers', icon: <GroupsRounded />, color: '#F02A4D', tone: 'rgba(240,42,77,0.10)' },
-                  { k: '4.8/5', v: 'Average Rating', icon: <StarRounded />, color: '#B45309', tone: 'rgba(245,158,11,0.14)' },
-                  { k: '2–5 Days', v: 'Fast Delivery', icon: <LocalShippingOutlined />, color: '#075985', tone: 'rgba(14,165,233,0.12)' },
-                  { k: 'COD', v: 'Available', icon: <PaymentsOutlined />, color: '#166534', tone: 'rgba(34,197,94,0.12)' },
+                  { k: '10,000+', v: 'Happy Customers' },
+                  { k: '4.8/5', v: 'Average Rating' },
+                  { k: '2–5 Days', v: 'Fast Delivery' },
                 ].map((s) => (
-                  <Box key={s.v} sx={{ display: 'grid', justifyItems: 'center', textAlign: 'center', gap: 0.6, px: 1, py: 1.6, borderRadius: '16px', bgcolor: '#fff', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 14px rgba(15,23,42,0.04)' }}>
-                    <Box sx={{ width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: s.tone, color: s.color }}>{s.icon}</Box>
-                    <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1 }}>{s.k}</Typography>
-                    <Typography sx={{ fontSize: 11, color: 'text.secondary', fontWeight: 700, lineHeight: 1.1 }}>{s.v}</Typography>
+                  <Box key={s.v} sx={{ textAlign: 'center' }}>
+                    <Typography sx={{ fontWeight: 900, fontSize: { xs: 15, md: 17 }, color: '#7C3AED', lineHeight: 1.15 }}>{s.k}</Typography>
+                    <Typography sx={{ fontSize: 10.5, color: '#6B7280', fontWeight: 700, letterSpacing: 0.3 }}>{s.v}</Typography>
                   </Box>
                 ))}
               </Box>
             </Box>
           </Card>
 
-          {/* Security card — premium dark purple gradient with glass trust tiles */}
-          <Card elevation={0} sx={{ position: 'relative', borderRadius: '24px', border: 'none', overflow: 'hidden', background: 'linear-gradient(135deg, #4C1D95 0%, #6D28D9 55%, #7C3AED 100%)' }}>
-            {/* Decorative glows */}
-            <Box sx={{ position: 'absolute', top: -70, right: -70, width: 210, height: 210, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.14) 0%, transparent 70%)' }} />
-            <Box sx={{ position: 'absolute', bottom: -80, left: -60, width: 230, height: 230, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,42,109,0.20) 0%, transparent 70%)' }} />
-            <Box sx={{ position: 'relative', p: { xs: 2.2, md: 3 } }}>
-              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.6, px: 1.4, py: 0.55, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.14)', border: '1px solid rgba(255,255,255,0.22)' }}>
-                <GppGoodOutlined sx={{ fontSize: 14, color: '#DDD6FE' }} />
-                <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase', color: '#EDE9FE' }}>Shop With Confidence</Typography>
+          {/* Security card — soft lavender tint, matches site language */}
+          <Card elevation={0} sx={{ borderRadius: '24px', border: '1px solid rgba(124,58,237,0.14)', overflow: 'hidden', background: 'linear-gradient(180deg, #F7F4FE 0%, #FDFCFF 100%)' }}>
+            <Box sx={{ p: { xs: 2.2, md: 3 } }}>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.6, px: 1.4, py: 0.55, borderRadius: 999, bgcolor: '#7C3AED', color: '#fff' }}>
+                <GppGoodOutlined sx={{ fontSize: 13 }} />
+                <Typography sx={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: 'uppercase' }}>Shop With Confidence</Typography>
               </Box>
-              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 1, color: '#fff' }}>Your Security, Our Priority</Typography>
-              <Typography sx={{ fontSize: 13, color: 'rgba(237,233,254,0.85)', mt: 0.5 }}>Every order is protected — from checkout to your doorstep.</Typography>
+              <Typography sx={{ fontFamily: 'Georgia, Times New Roman, serif', fontSize: { xs: 22, md: 28 }, fontWeight: 700, mt: 1 }}>Your Security, Our Priority</Typography>
+              <Typography sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5 }}>Every order is protected — from checkout to your doorstep.</Typography>
 
-              {/* Glass trust tiles */}
+              {/* Trust rows */}
               <Box sx={{ display: 'grid', gap: 1.2, mt: 2.2 }}>
                 {[
-                  { icon: <ReplayRounded sx={{ fontSize: 20, color: '#6EE7B7' }} />, tone: 'rgba(16,185,129,0.22)', t: '7-Day Easy Returns & Replacement', d: 'Damaged or wrong item? We make it right — fast.' },
-                  { icon: <LockRounded sx={{ fontSize: 20, color: '#FDE68A' }} />, tone: 'rgba(245,158,11,0.22)', t: 'Pay on Delivery — Zero Risk', d: 'Cash on Delivery available. Pay only when it arrives.' },
-                  { icon: <SupportAgentOutlined sx={{ fontSize: 20, color: '#BFDBFE' }} />, tone: 'rgba(59,130,246,0.24)', t: 'Real Human Support', d: 'Mon–Sat, 10 AM – 6 PM • khushiyanstore@gmail.com' },
+                  { icon: <ReplayRounded sx={{ fontSize: 20, color: '#059669' }} />, tone: 'rgba(16,185,129,0.10)', t: '7-Day Easy Returns & Replacement', d: 'Damaged or wrong item? We make it right — fast.' },
+                  { icon: <PaymentsOutlined sx={{ fontSize: 20, color: '#B45309' }} />, tone: 'rgba(245,158,11,0.12)', t: 'Pay on Delivery — Zero Risk', d: 'Cash on Delivery available. Pay only when it arrives.' },
+                  { icon: <SupportAgentOutlined sx={{ fontSize: 20, color: '#7C3AED' }} />, tone: '#F2EEFC', t: 'Real Human Support', d: 'Mon–Sat, 10 AM – 6 PM • khushiyanstore@gmail.com' },
                 ].map((g) => (
-                  <Box key={g.t} sx={{ display: 'flex', gap: 1.4, alignItems: 'center', p: 1.4, borderRadius: '16px', bgcolor: 'rgba(255,255,255,0.10)', border: '1px solid rgba(255,255,255,0.14)', backdropFilter: 'blur(8px)' }}>
+                  <Box key={g.t} sx={{ display: 'flex', gap: 1.4, alignItems: 'center', p: 1.4, borderRadius: '16px', bgcolor: '#fff', border: '1px solid rgba(124,58,237,0.10)', boxShadow: '0 2px 8px rgba(124,58,237,0.05)' }}>
                     <Box sx={{ width: 42, height: 42, borderRadius: '13px', bgcolor: g.tone, display: 'grid', placeItems: 'center', flexShrink: 0 }}>{g.icon}</Box>
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontWeight: 800, fontSize: 14, lineHeight: 1.3, color: '#fff' }}>{g.t}</Typography>
-                      <Typography sx={{ fontSize: 12.5, color: 'rgba(237,233,254,0.80)', lineHeight: 1.4 }}>{g.d}</Typography>
+                      <Typography sx={{ fontWeight: 800, fontSize: 14, lineHeight: 1.3, color: '#111827' }}>{g.t}</Typography>
+                      <Typography sx={{ fontSize: 12.5, color: '#6B7280', lineHeight: 1.4 }}>{g.d}</Typography>
                     </Box>
                   </Box>
                 ))}
               </Box>
 
               {/* Guarantee strip */}
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 1, mt: 2.2, pt: 1.8, borderTop: '1px solid rgba(255,255,255,0.16)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: 1, mt: 2.2, pt: 1.8, borderTop: '1px solid rgba(124,58,237,0.12)' }}>
                 {[
                   { k: '100%', v: 'Safe Shopping' },
                   { k: 'SSL', v: 'Secure Checkout' },
                   { k: '10,000+', v: 'Orders Delivered' },
                 ].map((s) => (
                   <Box key={s.v} sx={{ textAlign: 'center' }}>
-                    <Typography sx={{ fontWeight: 900, fontSize: { xs: 15, md: 17 }, color: '#fff', lineHeight: 1.15 }}>{s.k}</Typography>
-                    <Typography sx={{ fontSize: 10.5, color: 'rgba(237,233,254,0.75)', fontWeight: 700, letterSpacing: 0.3 }}>{s.v}</Typography>
+                    <Typography sx={{ fontWeight: 900, fontSize: { xs: 15, md: 17 }, color: '#7C3AED', lineHeight: 1.15 }}>{s.k}</Typography>
+                    <Typography sx={{ fontSize: 10.5, color: '#6B7280', fontWeight: 700, letterSpacing: 0.3 }}>{s.v}</Typography>
                   </Box>
                 ))}
               </Box>

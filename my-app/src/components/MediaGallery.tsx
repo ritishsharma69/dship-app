@@ -10,6 +10,9 @@ import FavoriteBorderRounded from '@mui/icons-material/FavoriteBorderRounded'
 import FavoriteRounded from '@mui/icons-material/FavoriteRounded'
 import ShareRounded from '@mui/icons-material/ShareRounded'
 import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded'
+import PauseRounded from '@mui/icons-material/PauseRounded'
+import VolumeUpRounded from '@mui/icons-material/VolumeUpRounded'
+import VolumeOffRounded from '@mui/icons-material/VolumeOffRounded'
 
 export default function MediaGallery({ product }: { product: Product }) {
   const images = product.images ?? []
@@ -19,6 +22,26 @@ export default function MediaGallery({ product }: { product: Product }) {
   const liked = has(product.id)
   const [broken, setBroken] = useState<Record<number, true>>({})
   const mainRef = useRef<HTMLDivElement>(null)
+
+  // Chromeless YouTube player state (custom play/pause + mute controls via postMessage)
+  const ytRef = useRef<HTMLIFrameElement>(null)
+  const [videoPlaying, setVideoPlaying] = useState(true)
+  const [videoMuted, setVideoMuted] = useState(true)
+  const ytCmd = (func: string) => {
+    try {
+      ytRef.current?.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
+    } catch { /* ignore */ }
+  }
+  const toggleVideoPlay = () => {
+    ytCmd(videoPlaying ? 'pauseVideo' : 'playVideo')
+    setVideoPlaying((v) => !v)
+  }
+  const toggleVideoMute = () => {
+    ytCmd(videoMuted ? 'unMute' : 'mute')
+    setVideoMuted((v) => !v)
+  }
+  // Fresh iframe on media switch → reset to autoplay + muted
+  useEffect(() => { setVideoPlaying(true); setVideoMuted(true) }, [active])
 
   const pct = product.compareAtPrice && product.compareAtPrice > product.price
     ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
@@ -121,7 +144,8 @@ export default function MediaGallery({ product }: { product: Product }) {
         if (mm) start = (parseInt(mm[1]||'0')*3600) + (parseInt(mm[2]||'0')*60) + parseInt(mm[3]||'0')
       }
     }
-    return `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0${start?`&start=${start}`:''}`
+    // Chromeless: no controls/title/branding, loops forever, JS API for our custom buttons
+    return `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${ytId}&enablejsapi=1${start?`&start=${start}`:''}`
   }, [media, active])
 
   // Adjust active index bounds if media length changed
@@ -224,14 +248,34 @@ export default function MediaGallery({ product }: { product: Product }) {
           >
             {media[active]?.type === 'youtube' ? (
               <Box sx={{ position: 'relative', width: '100%', background: '#000' }}>
-                <Box sx={{ position: 'relative', paddingTop: '56.25%' }}>
+                {/* 16:9 stage; the iframe is taller than the stage so YouTube's title bar /
+                    progress bar (which sit in the letterbox at the iframe edges) get clipped.
+                    pointerEvents none = no hover UI ever; our own buttons drive the player. */}
+                <Box sx={{ position: 'relative', paddingTop: '56.25%', overflow: 'hidden' }}>
                   <iframe
+                    ref={ytRef}
                     src={embedSrc || media[active].src}
                     title="Product video"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+                    style={{ position: 'absolute', left: 0, top: -90, width: '100%', height: 'calc(100% + 180px)', border: 0, pointerEvents: 'none' }}
                   />
+                  {/* Custom controls: play/pause + sound on/off only */}
+                  <Box sx={{ position: 'absolute', left: 12, bottom: 12, display: 'flex', gap: 1 }}>
+                    <IconButton
+                      aria-label={videoPlaying ? 'Pause video' : 'Play video'}
+                      onClick={toggleVideoPlay}
+                      sx={{ width: 42, height: 42, background: 'rgba(17,17,20,0.62)', backdropFilter: 'blur(6px)', color: '#fff', '&:hover': { background: 'rgba(17,17,20,0.8)' } }}
+                    >
+                      {videoPlaying ? <PauseRounded sx={{ fontSize: 24 }} /> : <PlayArrowRounded sx={{ fontSize: 26 }} />}
+                    </IconButton>
+                    <IconButton
+                      aria-label={videoMuted ? 'Unmute video' : 'Mute video'}
+                      onClick={toggleVideoMute}
+                      sx={{ width: 42, height: 42, background: 'rgba(17,17,20,0.62)', backdropFilter: 'blur(6px)', color: '#fff', '&:hover': { background: 'rgba(17,17,20,0.8)' } }}
+                    >
+                      {videoMuted ? <VolumeOffRounded sx={{ fontSize: 22 }} /> : <VolumeUpRounded sx={{ fontSize: 22 }} />}
+                    </IconButton>
+                  </Box>
                 </Box>
               </Box>
             ) : (

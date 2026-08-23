@@ -157,7 +157,8 @@ try {
 
       const GEMINI_API_KEY = process.env.GEMINI_API_KEY
       const OPENAI_API_KEY = process.env.OPENAI_API_KEY
-      if (!GEMINI_API_KEY && !OPENAI_API_KEY) {
+      const GROQ_API_KEY = process.env.GROQ_API_KEY
+      if (!GEMINI_API_KEY && !OPENAI_API_KEY && !GROQ_API_KEY) {
         return res.status(500).json({ error: 'AI not configured' })
       }
 
@@ -193,39 +194,39 @@ try {
         return { reply, provider: 'gemini', model }
       }
 
-      // --- OpenAI (fallback) ---
-      const askOpenAI = async () => {
-        const model = process.env.MODEL_OPENAI_AGENT || 'gpt-4o-mini'
-        const oaMessages = [
-          { role: 'system', content: systemPrompt },
-          ...messages.map((m) => {
-            const imgs = parseImages(m.images)
-            if (m.role === 'user' && imgs.length) {
-              return { role: 'user', content: [
-                ...(String(m.content || '').trim() ? [{ type: 'text', text: String(m.content) }] : []),
-                ...imgs.map((im) => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } })),
-              ] }
-            }
-            return { role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '') }
-          }),
-        ]
-        const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      // --- OpenAI-compatible chat (OpenAI + Groq share this format) ---
+      const buildOaMessages = () => [
+        { role: 'system', content: systemPrompt },
+        ...messages.map((m) => {
+          const imgs = parseImages(m.images)
+          if (m.role === 'user' && imgs.length) {
+            return { role: 'user', content: [
+              ...(String(m.content || '').trim() ? [{ type: 'text', text: String(m.content) }] : []),
+              ...imgs.map((im) => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } })),
+            ] }
+          }
+          return { role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '') }
+        }),
+      ]
+      const askOpenAICompat = (provider, url, apiKey, model) => async () => {
+        const r = await fetch(url, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, messages: oaMessages, temperature: 0.7, max_tokens: 4096 }),
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages: buildOaMessages(), temperature: 0.7, max_tokens: 4096 }),
         })
-        if (!r.ok) throw new Error(`openai_${r.status}`)
+        if (!r.ok) throw new Error(`${provider}_${r.status}`)
         const j = await r.json()
         const reply = j.choices?.[0]?.message?.content || ''
-        if (!reply.trim()) throw new Error('openai_empty')
-        return { reply, provider: 'openai', model }
+        if (!reply.trim()) throw new Error(`${provider}_empty`)
+        return { reply, provider, model }
       }
 
-      // Combined: Gemini first, OpenAI fallback (or whichever key exists)
+      // Combined: Gemini first, then OpenAI, then Groq (whichever keys exist)
       let out
       const tries = []
       if (GEMINI_API_KEY) tries.push(askGemini)
-      if (OPENAI_API_KEY) tries.push(askOpenAI)
+      if (OPENAI_API_KEY) tries.push(askOpenAICompat('openai', 'https://api.openai.com/v1/chat/completions', OPENAI_API_KEY, process.env.MODEL_OPENAI_AGENT || 'gpt-4o-mini'))
+      if (GROQ_API_KEY) tries.push(askOpenAICompat('groq', 'https://api.groq.com/openai/v1/chat/completions', GROQ_API_KEY, process.env.MODEL_GROQ_AGENT || 'meta-llama/llama-4-scout-17b-16e-instruct'))
       let lastErr
       for (const fn of tries) {
         try { out = await fn(); break } catch (e) { lastErr = e; console.error('[admin/ai] provider failed:', e.message) }

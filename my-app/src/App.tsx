@@ -32,6 +32,7 @@ const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'))
 const AdminProductsPage = lazy(() => import('./pages/AdminProductsPage'))
 const AdminOrdersPage = lazy(() => import('./pages/AdminOrdersPage'))
 const AdminReturnsPage = lazy(() => import('./pages/AdminReturnsPage'))
+const AdminAiPage = lazy(() => import('./pages/AdminAiPage'))
 
 
 const PaymentPhonePeReturnPage = lazy(() => import('./pages/PaymentPhonePeReturnPage'))
@@ -132,6 +133,9 @@ export default function App() {
           </Route>
           <Route path="/admin/orders">
             <AdminOrdersPage />
+          </Route>
+          <Route path="/admin/ai">
+            <AdminAiPage />
           </Route>
           <Route path="/admin">
             <AdminIndexRedirect />

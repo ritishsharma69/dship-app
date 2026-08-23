@@ -26,6 +26,7 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong'
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn'
 import LogoutIcon from '@mui/icons-material/Logout'
 import StorefrontIcon from '@mui/icons-material/Storefront'
+import AutoAwesomeRoundedIcon from '@mui/icons-material/AutoAwesomeRounded'
 
 const drawerWidth = 272
 
@@ -49,6 +50,7 @@ export default function AdminLayout({ title, children, actions }: { title: strin
     { label: 'Products', path: '/admin/products', icon: <Inventory2Icon /> },
     { label: 'Orders', path: '/admin/orders', icon: <ReceiptLongIcon /> },
     { label: 'Returns', path: '/admin/returns', icon: <AssignmentReturnIcon /> },
+    { label: 'Khushiyan GPT', path: '/admin/ai', icon: <AutoAwesomeRoundedIcon /> },
   ]
 
   const go = (to: string) => {

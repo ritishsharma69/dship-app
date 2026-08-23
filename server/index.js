@@ -148,6 +148,101 @@ try {
   console.error('[routes] Failed to register /api/uploads/images:', err.message)
 }
 
+// Admin: Khushiyan GPT — multimodal AI chat (Gemini primary, OpenAI fallback; both keys combined)
+// Defined BEFORE the global express.json() so image attachments get a higher body limit.
+try {
+  app.post('/api/admin/ai', express.json({ limit: '25mb' }), async (req, res) => {
+    try {
+      if (!requireAdmin(req, res)) return
+
+      const GEMINI_API_KEY = process.env.GEMINI_API_KEY
+      const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+      if (!GEMINI_API_KEY && !OPENAI_API_KEY) {
+        return res.status(500).json({ error: 'AI not configured' })
+      }
+
+      // messages: [{ role: 'user'|'assistant', content: string, images?: [dataUrl] }]
+      const messages = Array.isArray(req.body?.messages) ? req.body.messages.slice(-30) : []
+      if (!messages.length) return res.status(400).json({ error: 'Messages required' })
+
+      const systemPrompt = 'You are Khushiyan GPT, a helpful AI assistant for the admin of Khushiyan Store (an Indian D2C e-commerce brand). Answer any question the admin asks — general knowledge, coding, marketing, product copy, image analysis, anything. Be direct, thorough and practical. Reply in the same language the admin uses (Hindi/Hinglish/English). Use markdown formatting when helpful.'
+
+      const parseImages = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 6)
+        .map((d) => { const m = String(d || '').match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i); return m ? { mime: m[1], data: m[2] } : null })
+        .filter(Boolean)
+
+      // --- Gemini (primary) ---
+      const askGemini = async () => {
+        const model = process.env.MODEL_GEMINI_AGENT || 'gemini-2.0-flash'
+        const contents = messages.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [
+            ...(String(m.content || '').trim() ? [{ text: String(m.content) }] : []),
+            ...parseImages(m.images).map((im) => ({ inline_data: { mime_type: im.mime, data: im.data } })),
+          ],
+        })).filter((c) => c.parts.length)
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ system_instruction: { parts: [{ text: systemPrompt }] }, contents, generationConfig: { temperature: 0.7, maxOutputTokens: 4096 } }),
+        })
+        if (!r.ok) throw new Error(`gemini_${r.status}`)
+        const j = await r.json()
+        const reply = j.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || ''
+        if (!reply.trim()) throw new Error('gemini_empty')
+        return { reply, provider: 'gemini', model }
+      }
+
+      // --- OpenAI (fallback) ---
+      const askOpenAI = async () => {
+        const model = process.env.MODEL_OPENAI_AGENT || 'gpt-4o-mini'
+        const oaMessages = [
+          { role: 'system', content: systemPrompt },
+          ...messages.map((m) => {
+            const imgs = parseImages(m.images)
+            if (m.role === 'user' && imgs.length) {
+              return { role: 'user', content: [
+                ...(String(m.content || '').trim() ? [{ type: 'text', text: String(m.content) }] : []),
+                ...imgs.map((im) => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } })),
+              ] }
+            }
+            return { role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '') }
+          }),
+        ]
+        const r = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, messages: oaMessages, temperature: 0.7, max_tokens: 4096 }),
+        })
+        if (!r.ok) throw new Error(`openai_${r.status}`)
+        const j = await r.json()
+        const reply = j.choices?.[0]?.message?.content || ''
+        if (!reply.trim()) throw new Error('openai_empty')
+        return { reply, provider: 'openai', model }
+      }
+
+      // Combined: Gemini first, OpenAI fallback (or whichever key exists)
+      let out
+      const tries = []
+      if (GEMINI_API_KEY) tries.push(askGemini)
+      if (OPENAI_API_KEY) tries.push(askOpenAI)
+      let lastErr
+      for (const fn of tries) {
+        try { out = await fn(); break } catch (e) { lastErr = e; console.error('[admin/ai] provider failed:', e.message) }
+      }
+      if (!out) return res.status(502).json({ error: 'All AI providers failed', detail: String(lastErr?.message || '') })
+
+      res.json(out)
+    } catch (err) {
+      console.error('POST /api/admin/ai error', err)
+      res.status(500).json({ error: 'Internal error' })
+    }
+  })
+  console.log('[routes] /api/admin/ai registered')
+} catch (err) {
+  console.error('[routes] Failed to register /api/admin/ai:', err.message)
+}
+
 app.use(express.json({ limit: '5mb' }))
 
 // Cloudinary: signed upload support (frontend uploads directly to Cloudinary CDN)

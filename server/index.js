@@ -195,11 +195,16 @@ try {
       }
 
       // --- OpenAI-compatible chat (OpenAI + Groq share this format) ---
-      const buildOaMessages = () => [
+      const buildOaMessages = (includeImages) => [
         { role: 'system', content: systemPrompt },
         ...messages.map((m) => {
           const imgs = parseImages(m.images)
           if (m.role === 'user' && imgs.length) {
+            if (!includeImages) {
+              // Text-only provider: keep the text, note the attachment
+              const note = '[user attached an image that this provider cannot see]'
+              return { role: 'user', content: [String(m.content || '').trim(), note].filter(Boolean).join('\n') }
+            }
             return { role: 'user', content: [
               ...(String(m.content || '').trim() ? [{ type: 'text', text: String(m.content) }] : []),
               ...imgs.map((im) => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } })),
@@ -208,11 +213,11 @@ try {
           return { role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content || '') }
         }),
       ]
-      const askOpenAICompat = (provider, url, apiKey, model) => async () => {
+      const askOpenAICompat = (provider, url, apiKey, model, includeImages) => async () => {
         const r = await fetch(url, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, messages: buildOaMessages(), temperature: 0.7, max_tokens: 4096 }),
+          body: JSON.stringify({ model, messages: buildOaMessages(includeImages), temperature: 0.7, max_tokens: 4096 }),
         })
         if (!r.ok) throw new Error(`${provider}_${r.status}`)
         const j = await r.json()
@@ -221,12 +226,13 @@ try {
         return { reply, provider, model }
       }
 
-      // Combined: Gemini first, then OpenAI, then Groq (whichever keys exist)
+      // Combined: Gemini first, then OpenAI, then Groq (whichever keys exist).
+      // Groq's current lineup is text-only, so images are stripped for it.
       let out
       const tries = []
       if (GEMINI_API_KEY) tries.push(askGemini)
-      if (OPENAI_API_KEY) tries.push(askOpenAICompat('openai', 'https://api.openai.com/v1/chat/completions', OPENAI_API_KEY, process.env.MODEL_OPENAI_AGENT || 'gpt-4o-mini'))
-      if (GROQ_API_KEY) tries.push(askOpenAICompat('groq', 'https://api.groq.com/openai/v1/chat/completions', GROQ_API_KEY, process.env.MODEL_GROQ_AGENT || 'meta-llama/llama-4-scout-17b-16e-instruct'))
+      if (OPENAI_API_KEY) tries.push(askOpenAICompat('openai', 'https://api.openai.com/v1/chat/completions', OPENAI_API_KEY, process.env.MODEL_OPENAI_AGENT || 'gpt-4o-mini', true))
+      if (GROQ_API_KEY) tries.push(askOpenAICompat('groq', 'https://api.groq.com/openai/v1/chat/completions', GROQ_API_KEY, process.env.MODEL_GROQ_AGENT || 'openai/gpt-oss-120b', false))
       let lastErr
       for (const fn of tries) {
         try { out = await fn(); break } catch (e) { lastErr = e; console.error('[admin/ai] provider failed:', e.message) }

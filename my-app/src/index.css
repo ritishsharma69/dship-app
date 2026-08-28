@@ -222,7 +222,7 @@ img, video { max-width: 100%; display: block; border-radius: 12px; }
 
 /* Checkout specific spacing */
 .checkout-form { padding:16px; display:grid; gap:10px; }
-.order-summary-card { padding:16px; display:grid; gap:12px; }
+.order-summary-card { padding:16px; display:block; gap:12px; }
 .address-row-2 { display:grid; gap:8px; grid-template-columns: 1fr 1fr; }
 .payment-row { display:flex; align-items:center; gap:8px; margin: 4px 0 8px; }
 .order-btn { width: 100%; }

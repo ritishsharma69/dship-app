@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { getOrderById } from '../lib/orders'
+import { events } from '../analytics'
 
 export default function OrderSuccessPage() {
   useEffect(() => {
@@ -12,6 +13,23 @@ export default function OrderSuccessPage() {
 
   const orderId = useMemo(() => new URLSearchParams(window.location.search).get('orderId') || '', [])
   const order = orderId ? getOrderById(orderId) : null
+
+  // Track Meta Pixel Purchase event when the order is loaded from local storage
+  useEffect(() => {
+    if (!order) return
+    const items = order.items.map((it) => ({
+      id: String(it.productId || ''),
+      title: String(it.title || ''),
+      quantity: Number(it.quantity || 1),
+      price: Number(it.price || 0),
+    }))
+    events.purchase({
+      orderId: order.id || orderId,
+      value: Number(order.totals?.total ?? 0),
+      currency: 'INR',
+      items,
+    })
+  }, [order, orderId])
 
   const message = order ? (
     `New COD Order\n` +

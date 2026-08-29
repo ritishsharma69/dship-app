@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { apiGetJson } from '../lib/api'
+import { events } from '../analytics'
 
 export default function SuccessPage() {
   useEffect(() => {
@@ -10,6 +12,27 @@ export default function SuccessPage() {
   }, [])
 
   const orderId = new URLSearchParams(window.location.search).get('orderId') || ''
+
+  // Track Meta Pixel Purchase event once the order details are available
+  useEffect(() => {
+    if (!orderId) return
+    apiGetJson<any>(`/api/orders/${encodeURIComponent(orderId)}`, { timeoutMs: 10000 })
+      .then((order) => {
+        const items = (order?.items || []).map((it: any) => ({
+          id: String(it.productId || it.id || ''),
+          title: String(it.title || ''),
+          quantity: Number(it.quantity || 1),
+          price: Number(it.unitPrice || it.price || 0),
+        }))
+        events.purchase({
+          orderId,
+          value: Number(order?.totals?.total ?? 0),
+          currency: 'INR',
+          items,
+        })
+      })
+      .catch(() => {})
+  }, [orderId])
 
   return (
     <div className="container" style={{ padding: 24 }}>

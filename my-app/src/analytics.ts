@@ -17,6 +17,13 @@ const send = (name: string, payload: EventPayload = {}) => {
   } else {
     console.log('[analytics]', name, payload);
   }
+
+  // Meta Pixel (Facebook Pixel) purchase event
+  if (name === 'purchase' && typeof window !== 'undefined' && (window as any).fbq) {
+    const fbPayload = { ...payload };
+    delete (fbPayload as any).event;
+    (window as any).fbq('track', 'Purchase', fbPayload);
+  }
 };
 
 export const events = {
@@ -30,5 +37,28 @@ export const events = {
   scroll_depth: (data: { percent: number }) => send('scroll_depth', data),
 
   video_play: (data: { id: string }) => send('video_play', data),
+
+  purchase: (data: {
+    orderId: string;
+    value: number;
+    currency?: string;
+    items: { id: string; title: string; quantity: number; price: number }[];
+  }) => {
+    const currency = data.currency || 'INR';
+    const contents = data.items.map((i) => ({
+      id: i.id,
+      quantity: i.quantity,
+      item_price: i.price,
+    }));
+    send('purchase', {
+      order_id: data.orderId,
+      value: Number(data.value.toFixed(2)),
+      currency,
+      content_type: 'product',
+      content_ids: data.items.map((i) => i.id),
+      contents,
+      num_items: data.items.reduce((n, i) => n + i.quantity, 0),
+    });
+  },
 };
 

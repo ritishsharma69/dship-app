@@ -264,7 +264,7 @@ export default function CheckoutPage() {
               </Box>
             </Box>
 
-            <Box className="checkout-grid" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.35fr) minmax(0, 1fr)' }, gap: 3, alignItems: 'start' }}>
+            <Box className="checkout-grid" sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.35fr) minmax(0, 1fr)' }, gap: 3, alignItems: 'start', minWidth: 0 }}>
               {/* ——— Left: form card ——— */}
               <form className="card checkout-form" onSubmit={placeOrder} ref={formRef} style={{ background: '#fff', borderRadius: 24, padding: 'clamp(20px, 3vw, 28px)', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 30px rgba(15,23,42,0.05)' }}>
 
@@ -336,15 +336,15 @@ export default function CheckoutPage() {
               </form>
 
               {/* ——— Right: sticky order summary ——— */}
-              <Box component="aside" className="card order-summary-card" sx={{ bgcolor: '#fff', borderRadius: '24px', p: { xs: 2.2, md: 2.8 }, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 30px rgba(15,23,42,0.05)', height: 'fit-content', overflow: 'hidden', position: { md: 'sticky' }, top: { md: 110 } }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box component="aside" className="card order-summary-card" sx={{ bgcolor: '#fff', borderRadius: '24px', p: { xs: 2.2, md: 2.8 }, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 30px rgba(15,23,42,0.05)', height: 'fit-content', minWidth: 0, position: { md: 'sticky' }, top: { md: 110 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.4 }}>
                     <Box sx={{ width: 40, height: 40, borderRadius: '12px', display: 'grid', placeItems: 'center', bgcolor: 'rgba(124,58,237,0.10)', color: '#7C3AED' }}>
                       <ShoppingBagOutlined sx={{ fontSize: 20 }} />
                     </Box>
                     <Typography sx={{ fontWeight: 800, fontSize: 16.5, color: '#1f2937' }}>Your Order</Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED', px: 1.2, py: 0.4, borderRadius: 999, bgcolor: 'rgba(124,58,237,0.08)' }}>{items.reduce((n, i) => n + i.quantity, 0)} item{items.reduce((n, i) => n + i.quantity, 0) > 1 ? 's' : ''}</Typography>
+                  <Typography sx={{ fontSize: 12, fontWeight: 800, color: '#7C3AED', px: 1.2, py: 0.4, borderRadius: 999, bgcolor: 'rgba(124,58,237,0.08)', flexShrink: 0, whiteSpace: 'nowrap' }}>{items.reduce((n, i) => n + i.quantity, 0)} item{items.reduce((n, i) => n + i.quantity, 0) > 1 ? 's' : ''}</Typography>
                 </Box>
 
                 {items.slice(0,5).map(i => {
@@ -357,12 +357,12 @@ export default function CheckoutPage() {
                         alt={i.product.title}
                         style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 12, border: '1px solid #eee', flexShrink: 0, background: '#fff' }}
                       />
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                         <Typography sx={{ fontWeight: 700, fontSize: 13.5, color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{i.product.title}</Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.8, mt: 0.4 }}>
-                          <Typography sx={{ fontWeight: 800, fontSize: 14.5, color: '#1f2937' }}>₹{i.product.price * i.quantity}</Typography>
-                          {mrp > 0 && <Typography sx={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through' }}>₹{mrp * i.quantity}</Typography>}
-                          {offPct > 0 && <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#047857', px: 0.8, py: 0.2, borderRadius: 999, bgcolor: 'rgba(16,185,129,0.10)' }}>{offPct}% OFF</Typography>}
+                        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.8, mt: 0.4, flexWrap: 'wrap' }}>
+                          <Typography sx={{ fontWeight: 800, fontSize: 14.5, color: '#1f2937', flexShrink: 0 }}>₹{i.product.price * i.quantity}</Typography>
+                          {mrp > 0 && <Typography sx={{ fontSize: 12, color: '#9CA3AF', textDecoration: 'line-through', flexShrink: 0 }}>₹{mrp * i.quantity}</Typography>}
+                          {offPct > 0 && <Typography sx={{ fontSize: 10.5, fontWeight: 800, color: '#047857', px: 0.8, py: 0.2, borderRadius: 999, bgcolor: 'rgba(16,185,129,0.10)', flexShrink: 0 }}>{offPct}% OFF</Typography>}
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.8, flexWrap: 'wrap' }}>
                           <div className="qty-stepper" style={{ transform: 'scale(0.85)', transformOrigin: 'left' }}>
@@ -405,30 +405,30 @@ export default function CheckoutPage() {
 
                 {/* Price breakdown */}
                 <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px dashed #E5E7EB', display: 'grid', gap: 1.1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5, fontSize: 14 }}>
                     <Typography sx={{ fontSize: 13.5, color: '#6B7280' }}>Subtotal</Typography>
-                    <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#1f2937' }}>₹{subtotal}</Typography>
+                    <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#1f2937', flexShrink: 0 }}>₹{subtotal}</Typography>
                   </Box>
                   {couponApplied && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5 }}>
                       <Typography sx={{ fontSize: 13.5, color: '#047857' }}>Coupon 🎉</Typography>
-                      <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#047857' }}>-₹50</Typography>
+                      <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#047857', flexShrink: 0 }}>-₹50</Typography>
                     </Box>
                   )}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5 }}>
                     <Typography sx={{ fontSize: 13.5, color: '#6B7280' }}>Shipping</Typography>
-                    <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: shipping === 0 ? '#047857' : '#1f2937' }}>{shipping === 0 ? 'FREE' : `₹${shipping}`}</Typography>
+                    <Typography sx={{ fontSize: 13.5, fontWeight: 800, color: shipping === 0 ? '#047857' : '#1f2937', flexShrink: 0 }}>{shipping === 0 ? 'FREE' : `₹${shipping}`}</Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1.5 }}>
                     <Typography sx={{ fontSize: 13.5, color: '#6B7280' }}>Tax</Typography>
-                    <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#1f2937' }}>₹{tax}</Typography>
+                    <Typography sx={{ fontSize: 13.5, fontWeight: 700, color: '#1f2937', flexShrink: 0 }}>₹{tax}</Typography>
                   </Box>
                 </Box>
 
                 {/* Total */}
-                <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, py: 1.6, borderRadius: '16px', background: 'linear-gradient(135deg, rgba(124,58,237,0.07) 0%, #fff 70%)', border: '2px solid #7C3AED' }}>
+                <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.5, px: 2, py: 1.6, borderRadius: '16px', background: 'linear-gradient(135deg, rgba(124,58,237,0.07) 0%, #fff 70%)', border: '2px solid #7C3AED' }}>
                   <Typography sx={{ fontWeight: 800, fontSize: 15.5, color: '#1f2937' }}>Total</Typography>
-                  <Typography sx={{ fontWeight: 900, fontSize: 21, color: '#7C3AED' }}>₹{payable}</Typography>
+                  <Typography sx={{ fontWeight: 900, fontSize: 21, color: '#7C3AED', flexShrink: 0 }}>₹{payable}</Typography>
                 </Box>
 
                 {/* Deal countdown */}

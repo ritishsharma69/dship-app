@@ -128,13 +128,20 @@ export default function MediaGallery({ product }: { product: Product }) {
     return () => ctx.revert()
   }, [])
 
-  // Compute proper YouTube embed URL (handles t/start params) so autoplay works
-  const embedSrc = useMemo(() => {
+  // Compute proper YouTube embed URL (handles watch / youtu.be / Shorts / embed links + t/start params)
+  // so autoplay works. `isShort` lets us render vertical (9:16) videos in a portrait stage.
+  const embed = useMemo(() => {
     const m = media[active]
-    if (!m || m.type !== 'youtube') return ''
+    if (!m || m.type !== 'youtube') return { src: '', isShort: false }
     const raw = m.src
-    const ytId = (raw.match(/[?&]v=([^&]+)/) || raw.match(/youtu\.be\/([^?]+)/))?.[1]
-    if (!ytId) return raw
+    const isShort = /\/shorts\//.test(raw)
+    const ytId = (
+      raw.match(/[?&]v=([^&]+)/) ||
+      raw.match(/youtu\.be\/([^?&/]+)/) ||
+      raw.match(/\/shorts\/([^?&/]+)/) ||
+      raw.match(/\/embed\/([^?&/]+)/)
+    )?.[1]
+    if (!ytId) return { src: raw, isShort }
     const tParam = (raw.match(/[?&]t=([^&]+)/) || raw.match(/[?&]start=([^&]+)/))?.[1]
     let start = 0
     if (tParam) {
@@ -145,7 +152,8 @@ export default function MediaGallery({ product }: { product: Product }) {
       }
     }
     // Chromeless: no controls/title/branding, loops forever, JS API for our custom buttons
-    return `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${ytId}&enablejsapi=1${start?`&start=${start}`:''}`
+    const src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&mute=1&playsinline=1&rel=0&controls=0&modestbranding=1&iv_load_policy=3&disablekb=1&fs=0&loop=1&playlist=${ytId}&enablejsapi=1${start?`&start=${start}`:''}`
+    return { src, isShort }
   }, [media, active])
 
   // Adjust active index bounds if media length changed
@@ -247,14 +255,21 @@ export default function MediaGallery({ product }: { product: Product }) {
             }}
           >
             {media[active]?.type === 'youtube' ? (
-              <Box sx={{ position: 'relative', width: '100%', background: '#000' }}>
-                {/* 16:9 stage; the iframe is taller than the stage so YouTube's title bar /
-                    progress bar (which sit in the letterbox at the iframe edges) get clipped.
+              <Box sx={{ position: 'relative', width: '100%', background: '#000', display: 'flex', justifyContent: 'center' }}>
+                {/* Shorts render in a portrait (9:16) stage; normal videos in a 16:9 stage.
+                    The iframe is taller than the stage so YouTube's title bar / progress bar
+                    (which sit in the letterbox at the iframe edges) get clipped.
                     pointerEvents none = no hover UI ever; our own buttons drive the player. */}
-                <Box sx={{ position: 'relative', paddingTop: '56.25%', overflow: 'hidden' }}>
+                <Box
+                  sx={
+                    embed.isShort
+                      ? { position: 'relative', height: { xs: 460, sm: 540 }, aspectRatio: '9 / 16', overflow: 'hidden' }
+                      : { position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden' }
+                  }
+                >
                   <iframe
                     ref={ytRef}
-                    src={embedSrc || media[active].src}
+                    src={embed.src || media[active].src}
                     title="Product video"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
                     style={{ position: 'absolute', left: 0, top: -90, width: '100%', height: 'calc(100% + 180px)', border: 0, pointerEvents: 'none' }}

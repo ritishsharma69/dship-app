@@ -603,7 +603,7 @@ function ProductDialog({
 	            InputLabelProps={{ shrink: true }}
 	          />
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-	            <TextField label="YouTube URL" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} fullWidth placeholder="e.g., https://www.youtube.com/embed/dQw4w9WgXcQ" InputLabelProps={{ shrink: true }} />
+	            <TextField label="YouTube URL / Shorts" value={youtubeUrl} onChange={(e) => setYoutubeUrl(e.target.value)} fullWidth placeholder="e.g., https://youtube.com/shorts/abc123 or https://youtu.be/dQw4w9WgXcQ" InputLabelProps={{ shrink: true }} />
 	            <TextField label="Video URL (mp4/webm)" value={video} onChange={(e) => setVideo(e.target.value)} fullWidth placeholder="e.g., https://commondatastorage.googleapis.com/gtv-videos-library/sample/BigBuckBunny.mp4" InputLabelProps={{ shrink: true }} />
           </Stack>
           <Divider />

@@ -263,7 +263,7 @@ export default function MediaGallery({ product }: { product: Product }) {
                 <Box
                   sx={
                     embed.isShort
-                      ? { position: 'relative', height: { xs: 460, sm: 540 }, aspectRatio: '9 / 16', overflow: 'hidden' }
+                      ? { position: 'relative', height: { xs: 560, sm: 620 }, aspectRatio: '9 / 16', overflow: 'hidden' }
                       : { position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden' }
                   }
                 >
@@ -272,7 +272,10 @@ export default function MediaGallery({ product }: { product: Product }) {
                     src={embed.src || media[active].src}
                     title="Product video"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-                    style={{ position: 'absolute', left: 0, top: -90, width: '100%', height: 'calc(100% + 180px)', border: 0, pointerEvents: 'none' }}
+                    style={embed.isShort
+                      ? { position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', border: 0, pointerEvents: 'none' }
+                      : { position: 'absolute', left: 0, top: -90, width: '100%', height: 'calc(100% + 180px)', border: 0, pointerEvents: 'none' }
+                    }
                   />
                   {/* Custom controls: play/pause + sound on/off only */}
                   <Box sx={{ position: 'absolute', left: 12, bottom: 12, display: 'flex', gap: 1 }}>

@@ -4,7 +4,9 @@ type EventPayload = Record<string, unknown>;
 const RECENT_MS = 2000; // 2s window is enough to swallow duplicate mounts/clicks
 const recent = new Map<string, number>();
 
-const send = (name: string, payload: EventPayload = {}) => {
+// name/payload: GTM dataLayer event. fbEvent/fbPayload (optional): standard Meta Pixel event
+// fired alongside it. 'purchase' keeps its existing dedicated fbq handling below.
+const send = (name: string, payload: EventPayload = {}, fbEvent?: string, fbPayload?: EventPayload) => {
   const key = `${name}:${JSON.stringify(payload)}`;
   const now = Date.now();
   const last = recent.get(key) ?? 0;
@@ -18,17 +20,43 @@ const send = (name: string, payload: EventPayload = {}) => {
     console.log('[analytics]', name, payload);
   }
 
-  // Meta Pixel (Facebook Pixel) purchase event
-  if (name === 'purchase' && typeof window !== 'undefined' && (window as any).fbq) {
-    const fbPayload = { ...payload };
-    delete (fbPayload as any).event;
-    (window as any).fbq('track', 'Purchase', fbPayload);
+  if (typeof window !== 'undefined' && (window as any).fbq) {
+    // Meta Pixel (Facebook Pixel) purchase event
+    if (name === 'purchase') {
+      const purchasePayload = { ...payload };
+      delete (purchasePayload as any).event;
+      (window as any).fbq('track', 'Purchase', purchasePayload);
+    } else if (fbEvent) {
+      // Meta Pixel (Facebook Pixel) funnel events: ViewContent, AddToCart, InitiateCheckout
+      (window as any).fbq('track', fbEvent, fbPayload ?? {});
+    }
   }
 };
 
 export const events = {
   view_item: (data: { id: string; title: string; price: number }) =>
-    send('view_item', { item_id: data.id, item_name: data.title, price: data.price }),
+    send(
+      'view_item',
+      { item_id: data.id, item_name: data.title, price: data.price },
+      'ViewContent',
+      { content_ids: [data.id], content_type: 'product', value: data.price, currency: 'INR' }
+    ),
+
+  add_to_cart: (data: { id: string; price: number }) =>
+    send(
+      'add_to_cart',
+      { item_id: data.id, price: data.price },
+      'AddToCart',
+      { content_ids: [data.id], content_type: 'product', value: data.price, currency: 'INR' }
+    ),
+
+  initiate_checkout: (data: { ids: string[]; value: number; numItems: number }) =>
+    send(
+      'initiate_checkout',
+      { item_ids: data.ids, value: data.value, num_items: data.numItems },
+      'InitiateCheckout',
+      { content_ids: data.ids, content_type: 'product', value: Number(data.value.toFixed(2)), currency: 'INR', num_items: data.numItems }
+    ),
 
   // Keep event names backwards-compatible (e.g., 'begin_checkout'), but de-dupe at source
   cta_click: (data: { id: string; step: 'add_to_cart' | 'begin_checkout' }) =>

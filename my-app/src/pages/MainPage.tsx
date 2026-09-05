@@ -252,6 +252,7 @@ export default function MainPage() {
       return navigate('/checkout')
     }
     add({ product, quantity: 1 })
+    events.add_to_cart({ id: product.id, price: product.price })
     push('Added to cart')
     if (canAnimate()) {
       const el = document.createElement('div')
@@ -270,6 +271,7 @@ export default function MainPage() {
 
   function handleBuyNow(product: Product) {
     add({ product, quantity: 1 })
+    events.add_to_cart({ id: product.id, price: product.price })
     events.cta_click({ id: product.id, step: 'begin_checkout' })
     navigate('/checkout')
   }

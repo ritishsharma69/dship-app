@@ -95,6 +95,13 @@ export default function CheckoutPage() {
     document.head.appendChild(link)
     // Analytics
     events.cta_click({ id: items[0]?.product.id ?? 'unknown', step: 'begin_checkout' })
+    if (items.length) {
+      events.initiate_checkout({
+        ids: items.map(i => i.product.id),
+        value: items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+        numItems: items.reduce((n, i) => n + i.quantity, 0),
+      })
+    }
     return () => { document.head.removeChild(mRobots); document.head.removeChild(link) }
   }, [])
 

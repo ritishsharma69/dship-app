@@ -6,6 +6,7 @@ import { useWishlist } from '../lib/wishlist'
 import { useCart } from '../lib/cart'
 import { useToast } from '../lib/toast'
 import { useRouter } from '../lib/router'
+import { events } from '../analytics'
 import { optimizeImage } from '../lib/cloudinary'
 
 const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v))
@@ -107,7 +108,7 @@ export default function WishlistPage() {
                       <IconButton
                         size="small"
                         aria-label="Add to cart"
-                        onClick={(e) => { e.stopPropagation(); add({ product: p, quantity: 1 }); push('Added to cart 🛒') }}
+                        onClick={(e) => { e.stopPropagation(); add({ product: p, quantity: 1 }); events.add_to_cart({ id: p.id, price: p.price }); push('Added to cart 🛒') }}
                         sx={{ width: 32, height: 32, bgcolor: '#7C3AED', color: '#fff', flexShrink: 0, '&:hover': { bgcolor: '#6D28D9' } }}
                       >
                         <ShoppingCartRounded sx={{ fontSize: 16 }} />

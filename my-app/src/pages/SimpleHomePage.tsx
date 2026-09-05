@@ -27,6 +27,7 @@ import { optimizeImage } from '../lib/cloudinary'
 import { useCart } from '../lib/cart'
 import { useWishlist } from '../lib/wishlist'
 import { useToast } from '../lib/toast'
+import { events } from '../analytics'
 import TestimonialsWall from '../components/TestimonialsWall'
 
 const money = (v?: number) => (v == null ? '' : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v))
@@ -502,7 +503,7 @@ export default function SimpleHomePage() {
                       fullWidth
                       variant="outlined"
                       startIcon={<ShoppingBagOutlined sx={{ fontSize: '15px !important' }} />}
-                      onClick={(e) => { e.stopPropagation(); add({ product: (p as any).raw, quantity: 1 }); push('Added to cart') }}
+                      onClick={(e) => { e.stopPropagation(); add({ product: (p as any).raw, quantity: 1 }); events.add_to_cart({ id: p.id, price }); push('Added to cart') }}
                       sx={{
                         borderRadius: '10px', py: 0.9, fontWeight: 700, fontSize: 12, letterSpacing: 0.2,
                         color: '#F02A4D', borderColor: 'rgba(240,42,77,0.35)', bgcolor: '#FFF7F8',
